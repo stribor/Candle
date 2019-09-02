@@ -85,7 +85,9 @@ frmMain::frmMain(QWidget *parent) :
                        << "black";
 
     // Loading settings
+#ifndef Q_OS_MAC
     m_settingsFileName = qApp->applicationDirPath() + "/settings.ini";
+#endif
     preloadSettings();
 
     m_settings = new frmSettings(this);
@@ -315,11 +317,12 @@ double frmMain::toolZPosition()
 
 void frmMain::preloadSettings()
 {
-    QSettings set(m_settingsFileName, QSettings::IniFormat);
-    set.setIniCodec("UTF-8");
 #ifdef Q_OS_MAC
-    qApp->setStyleSheet(QString(qApp->styleSheet()).replace(QRegExp("font-size:\\s*\\d+"), "font-size: " + set.value("fontSize", "12").toString()));
+	QSettings set;
+	qApp->setStyleSheet(QString(qApp->styleSheet()).replace(QRegExp("font-size:\\s*\\d+"), "font-size: " + set.value("fontSize", "12").toString()));
 #else
+	QSettings set(m_settingsFileName, QSettings::IniFormat);
+    set.setIniCodec("UTF-8");
     qApp->setStyleSheet(QString(qApp->styleSheet()).replace(QRegExp("font-size:\\s*\\d+"), "font-size: " + set.value("fontSize", "8").toString()));
 #endif
     // Update v-sync in glformat
@@ -330,8 +333,12 @@ void frmMain::preloadSettings()
 
 void frmMain::loadSettings()
 {
+#ifdef Q_OS_MAC
+	QSettings set;
+#else
     QSettings set(m_settingsFileName, QSettings::IniFormat);
     set.setIniCodec("UTF-8");
+#endif
 
     m_settingsLoading = true;
 
@@ -484,8 +491,12 @@ void frmMain::loadSettings()
 
 void frmMain::saveSettings()
 {
+#ifdef Q_OS_MAC
+	QSettings set;
+#else
     QSettings set(m_settingsFileName, QSettings::IniFormat);
     set.setIniCodec("UTF-8");
+#endif
 
     set.setValue("port", m_settings->port());
     set.setValue("baud", m_settings->baud());

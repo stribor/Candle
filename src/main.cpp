@@ -61,7 +61,10 @@ int main(int argc, char *argv[])
         if (baseTranslator->load(baseTranslationFileName)) a.installTranslator(baseTranslator); else delete baseTranslator;
     }
 
-    a.setApplicationVersion(APP_VERSION);
+    QApplication::setApplicationVersion(APP_VERSION);
+    // Set OrganizationName and Application name affect where settings are stored
+    // QApplication::setOrganizationName("Candle org"); // TODO: not really organization
+    QApplication::setApplicationName("Candle");
 
 #ifdef UNIX
     if (!styleOverrided) foreach (QString str, QStyleFactory::keys()) {
@@ -88,7 +91,9 @@ int main(int argc, char *argv[])
                     QDialog {border: 1px solid palette(mid);}");
 #endif
 
-#ifndef Q_OS_MAC
+#ifdef Q_OS_MAC
+    a.setStyleSheet(a.styleSheet() + "QWidget {font-size: 12pt}");
+#else
     a.setStyleSheet(a.styleSheet() + "QWidget {font-size: 8pt}");
 #endif
 

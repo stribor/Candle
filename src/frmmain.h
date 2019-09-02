@@ -231,7 +231,9 @@ private:
     frmSettings *m_settings;
     frmAbout m_frmAbout;
 
+#ifndef Q_OS_MAC
     QString m_settingsFileName;
+#endif
     QString m_programFileName;
     QString m_heightMapFileName;
     QString m_lastFolder;
