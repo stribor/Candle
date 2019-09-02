@@ -21,6 +21,49 @@ set(CMAKE_AUTOUIC ON)
 # to always look for includes there
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+OPTION(ENABLE_ADDRESS_SANITIZER "enable address sanitizer if available (only for Debug builds, mutual exclusive to ENABLE_UB_SANITIZER)" ON)
+OPTION(ENABLE_UNDEFINED_SANITIZER "enable undefined behaviour sanitizer if available (only for Debug builds, mutual exclusive to ENABLE_ADDRESS_SANITIZER)" OFF)
+
+# Handle sanitizer options
+if (ENABLE_ADDRESS_SANITIZER OR ENABLE_UNDEFINED_SANITIZER)
+    set(ENABLE_SANITIZER BOOL ON)
+else()
+    set(ENABLE_SANITIZER BOOL OFF)
+endif()
+if(ENABLE_SANITIZER)
+    if(ENABLE_ADDRESS_SANITIZER AND ENABLE_UNDEFINED_SANITIZER)
+        message(FATAL_ERROR "Only one option of ENABLE_ADDRESS_SANITIZER and ENABLE_UB_SANITIZER is allowed")
+    endif()
+
+    if(NOT MSVC)
+        INCLUDE(CheckCCompilerFlag)
+
+        if (ENABLE_ADDRESS_SANITIZER)
+            set(CMAKE_REQUIRED_FLAGS "-Werror -fsanitize=address") # Also needs to be a link flag for test to pass
+            check_c_compiler_flag("-fsanitize=address" HAVE_FLAG_SANITIZE_ADDRESS)
+            if(HAVE_FLAG_SANITIZE_ADDRESS)
+                message(STATUS "Address sanitizer enabled for debug builds")
+                set(SANITIZE_FLAG "-fsanitize=address")
+            else()
+                message(STATUS "Address sanitizer not supported")
+            endif()
+        endif()
+
+        if (ENABLE_UNDEFINED_SANITIZER)
+            set(CMAKE_REQUIRED_FLAGS "-Werror -fsanitize=undefined") # Also needs to be a link flag for test to pass
+            check_c_compiler_flag("-fsanitize=undefined" HAVE_FLAG_SANITIZE_UNDEFINED)
+
+            if(HAVE_FLAG_SANITIZE_UNDEFINED)
+                message(STATUS "Undefined behaviour sanitizer enabled for debug builds")
+                set(SANITIZE_FLAG "-fsanitize=undefined")
+            else()
+                message(STATUS "Undefined behaviour sanitizer not supported")
+            endif()
+        endif()
+    endif()
+endif()
+
+
 find_package(Qt5 COMPONENTS Core Widgets OpenGL SerialPort REQUIRED)
 
 include_directories(${PROJECT_SOURCE_DIR})
@@ -145,7 +188,7 @@ if(APPLE)
 
 endif()
 
-target_link_libraries(Candle
+target_link_libraries(Candle PRIVATE
     Qt5::Core
     Qt5::Widgets
     Qt5::OpenGL
@@ -161,3 +204,14 @@ target_compile_options(Candle PRIVATE
         -Wall>
         $<$<CXX_COMPILER_ID:MSVC>:
         /W4>)
+
+if (ENABLE_SANITIZER AND (HAVE_FLAG_SANITIZE_ADDRESS OR HAVE_FLAG_SANITIZE_UNDEFINED))
+    target_compile_options(Candle PRIVATE $<$<CONFIG:Debug>:${SANITIZE_FLAG}>)
+    target_link_libraries(Candle PRIVATE $<$<CONFIG:Debug>:${SANITIZE_FLAG}>)
+
+    if(APPLE)
+        # Xcode adds this when sanitizer is enabled
+        target_compile_definitions(Candle PRIVATE $<$<CONFIG:Debug>:_LIBCPP_HAS_NO_ASAN>)
+    endif()
+endif()
+
