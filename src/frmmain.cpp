@@ -317,9 +317,11 @@ void frmMain::preloadSettings()
 {
     QSettings set(m_settingsFileName, QSettings::IniFormat);
     set.setIniCodec("UTF-8");
-
+#ifdef Q_OS_MAC
+    qApp->setStyleSheet(QString(qApp->styleSheet()).replace(QRegExp("font-size:\\s*\\d+"), "font-size: " + set.value("fontSize", "12").toString()));
+#else
     qApp->setStyleSheet(QString(qApp->styleSheet()).replace(QRegExp("font-size:\\s*\\d+"), "font-size: " + set.value("fontSize", "8").toString()));
-
+#endif
     // Update v-sync in glformat
     QGLFormat fmt = QGLFormat::defaultFormat();
     fmt.setSwapInterval(set.value("vsync", false).toBool() ? 1 : 0);

@@ -88,7 +88,9 @@ int main(int argc, char *argv[])
                     QDialog {border: 1px solid palette(mid);}");
 #endif
 
+#ifndef Q_OS_MAC
     a.setStyleSheet(a.styleSheet() + "QWidget {font-size: 8pt}");
+#endif
 
     frmMain w;
     w.show();
