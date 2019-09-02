@@ -136,6 +136,13 @@ if(APPLE)
     set_property(TARGET Candle PROPERTY MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/MacOSXBundleInfo.plist.in)
 
     add_osx_resource(Candle images/candle.icns Resources)
+
+    # Touch app bundle so finder updates icon etc.
+    add_custom_command( TARGET Candle
+            POST_BUILD
+            COMMAND touch "$<TARGET_FILE_DIR:Candle>/../.."
+            COMMENT "Touching Candle")
+
 endif()
 
 target_link_libraries(Candle
