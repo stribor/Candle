@@ -148,7 +148,7 @@ private:
 
     QList<double> m_storedValues;
     QList<bool> m_storedChecks;
-    QList<QString> m_storedCombos;
+    QStringList m_storedCombos;
     QList<QColor> m_storedColors;
 
     QIntValidator m_intValidator;

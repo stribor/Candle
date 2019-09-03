@@ -1665,7 +1665,7 @@ void frmMain::resetHeightmap()
     m_heightMapChanged = false;
 }
 
-void frmMain::loadFile(QList<QString> data)
+void frmMain::loadFile(QStringList data)
 {
     QTime time;
     time.start();
@@ -1710,7 +1710,7 @@ void frmMain::loadFile(QList<QString> data)
     QString command;
     QString stripped;
     QString trimmed;
-    QList<QString> args;
+    QStringList args;
     GCodeItem item;
 
     // Prepare model
@@ -1785,7 +1785,7 @@ void frmMain::loadFile(QList<QString> data)
     updateControlsState();
 }
 
-void frmMain::loadFile(QString fileName)
+void frmMain::loadFile(const QString& fileName)
 {
     QFile file(fileName);
 
@@ -1801,7 +1801,7 @@ void frmMain::loadFile(QString fileName)
     QTextStream textStream(&file);
 
     // Read lines
-    QList<QString> data;
+    QStringList data;
     while (!textStream.atEnd()) data.append(textStream.readLine());
 
     // Load lines
@@ -2314,7 +2314,7 @@ void frmMain::updateParser()
     ui->tblProgram->setUpdatesEnabled(false);
 
     QString stripped;
-    QList<QString> args;
+    QStringList args;
 
     QProgressDialog progress(tr("Updating..."), tr("Abort"), 0, m_currentModel->rowCount() - 2, this);
     progress.setWindowModality(Qt::WindowModal);
@@ -3425,7 +3425,7 @@ void frmMain::loadHeightMap(QString fileName)
     ui->txtHeightMapGridZBottom->setValue(qQNaN());
     ui->txtHeightMapGridZTop->setValue(qQNaN());
 
-    QList<QString> list = textStream.readLine().split(";");
+    QStringList list = textStream.readLine().split(";");
     ui->txtHeightMapBorderX->setValue(list[0].toDouble());
     ui->txtHeightMapBorderY->setValue(list[1].toDouble());
     ui->txtHeightMapBorderWidth->setValue(list[2].toDouble());
@@ -3459,7 +3459,7 @@ void frmMain::loadHeightMap(QString fileName)
 //    ui->txtHeightMapGridZTop->setEnabled(false);
 
     for (int i = 0; i < m_heightMapModel.rowCount(); i++) {
-        QList<QString> row = textStream.readLine().split(";");
+        QStringList row = textStream.readLine().split(";");
         for (int j = 0; j < m_heightMapModel.columnCount(); j++) {
             m_heightMapModel.setData(m_heightMapModel.index(i, j), row[j].toDouble(), Qt::UserRole);
         }

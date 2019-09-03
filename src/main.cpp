@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 //    }
 
 //    GcodeViewParse gvp;
-//    QList<QString> commands;
+//    QStringList commands;
 
 //    commands.append("G1 X0 Y10");
 //    commands.append("G1 X10 Y0");

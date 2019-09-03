@@ -26,7 +26,7 @@ public:
     QVector3D &getMaximumExtremes();
     double getMinLength() const;
     QSize getResolution() const;
-    QList<LineSegment*> toObjRedux(QList<QString> gcode, double arcPrecision, bool arcDegreeMode);
+    QList<LineSegment*> toObjRedux(QStringList gcode, double arcPrecision, bool arcDegreeMode);
     QList<LineSegment*> getLineSegmentList();
     QList<LineSegment*> getLinesFromParser(GcodeParser *gp, double arcPrecision, bool arcDegreeMode);
 
