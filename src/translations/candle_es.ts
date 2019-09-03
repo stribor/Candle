@@ -870,8 +870,8 @@
     <message>
         <location filename="../frmmain.cpp" line="2613"/>
         <location filename="../frmmain.cpp" line="2623"/>
-        <source>G-Code files (*.nc *.ncc *.ngc *.tap *.txt)</source>
-        <translation>Archivos de G-Code (*.nc *.ncc *.ngc *.tap *.txt)</translation>
+        <source>G-Code files (*.nc *.ncc *.ngc *.tap *.gcode *.txt)</source>
+        <translation>Archivos de G-Code (*.nc *.ncc *.ngc *.tap *.gcode *.txt)</translation>
     </message>
     <message>
         <source>Connected</source>
@@ -938,8 +938,8 @@ Tiempo transcurrido: %1</translation>
     </message>
     <message>
         <location filename="../frmmain.cpp" line="1615"/>
-        <source>G-Code files (*.nc *.ncc *.ngc *.tap *.txt);;All files (*.*)</source>
-        <translation>Archivos de G-Code (*.nc *.ncc *.ngc *.tap *.txt);;Todos los archivos (*.*)</translation>
+        <source>G-Code files (*.nc *.ncc *.ngc *.tap *.gcode *.txt);;All files (*.*)</source>
+        <translation>Archivos de G-Code (*.nc *.ncc *.ngc *.tap *.gcode *.txt);;Todos los archivos (*.*)</translation>
     </message>
     <message>
         <location filename="../frmmain.cpp" line="1777"/>
