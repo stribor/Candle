@@ -80,6 +80,9 @@ public:
 
     double toolZPosition();
 
+public slots:
+	void onLoadFile(const QString& fileName);
+
 private slots:
     void updateHeightMapInterpolationDrawer(bool reset = false);
     void placeVisualizerButtons();

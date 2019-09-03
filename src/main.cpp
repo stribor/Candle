@@ -17,6 +17,46 @@
 
 #include "frmmain.h"
 
+#ifdef Q_OS_MAC
+#include <QFileOpenEvent>
+
+// simple QApplication to so QFileOpenEvent can be handled on mac os
+class CandleApplication : public QApplication
+{
+	Q_OBJECT
+public:
+	CandleApplication(int &argc, char **argv)
+			: QApplication(argc, argv)
+	{
+	}
+
+	/// \brief list of so collected QFileOpenEvent's files,
+	/// see below where it is used for explanation why is needed
+	/// todo: remove this function and m_openFileList
+	QStringList &openFileList() { return m_openFileList; }
+
+	bool event(QEvent *event) override
+	{
+		if (event->type() == QEvent::FileOpen) {
+			auto openEvent = static_cast<QFileOpenEvent *>(event);
+			m_openFileList.append(openEvent->file());
+			emit fileOpen(openEvent->file());
+		}
+
+		return QApplication::event(event);
+	}
+
+signals:
+	void fileOpen(const QString & file);
+
+private:
+	/// \brief store files passed via QFileOpenEvent in case no slots are (yet) connected
+	/// to the fileOpen signal so open file requests don't get lost
+	QStringList m_openFileList;
+};
+#include "main.moc"
+#endif
+
 int main(int argc, char *argv[])
 {
 #ifdef UNIX
@@ -27,7 +67,11 @@ int main(int argc, char *argv[])
     }
 #endif
 
+#ifdef Q_OS_MAC
+	CandleApplication a(argc, argv);
+#else
     QApplication a(argc, argv);
+#endif
 
 //    QFontDatabase::addApplicationFont(":/fonts/segoeui.ttf");
 //    QFontDatabase::addApplicationFont(":/fonts/tahoma.ttf");
@@ -98,6 +142,22 @@ int main(int argc, char *argv[])
 #endif
 
     frmMain w;
+
+#ifdef Q_OS_MAC
+    // NOTE: Ugly part: during frmMain constructor qApp->processEvents(QEventLoop::ExcludeUserInputEvents) gets called (via frmMain::updateLayouts())
+    //  and if application get started by user double clicking G-Code file QFileOpenEvent gets processed before
+    //  frmMain::onLoadFile slot is connected and fileOpen signal gets missed and file wouldn't get loaded.
+    //  That why fileList is processed and possible parameter is passed to frmMain
+    // TODO: find better solution for this
+    auto fileList = a.openFileList();
+    if (fileList.count() > 0) {
+       w.onLoadFile(fileList.last());
+    }
+
+	// if application was already running and frmMain::onLoadFile slot is connected load file as normal and no openFileList() hack needed
+	QObject::connect(&a, &CandleApplication::fileOpen, &w, &frmMain::onLoadFile);
+#endif
+
     w.show();
 
 //    qDebug() << GcodePreprocessorUtils::overrideSpeed("G0 X0 Y10 Z200 F123", 50);

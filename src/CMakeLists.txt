@@ -144,7 +144,6 @@ qt5_add_resources(SHADER_RSC
 add_executable(Candle ${SRC_FILES} ${SRC_HEADERS} ${SHADER_RSC})
 
 if(APPLE)
-    set( MACOSX_BUNDLE_ICON_FILE candle )
     set( MACOSX_BUNDLE_INFO_STRING "${CMAKE_PROJECT_NAME}")
     set( MACOSX_BUNDLE_LONG_VERSION_STRING ${CMAKE_PROJECT_VERSION})
     set( MACOSX_BUNDLE_BUNDLE_NAME "${CMAKE_PROJECT_NAME}")
@@ -179,6 +178,7 @@ if(APPLE)
     set_property(TARGET Candle PROPERTY MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/MacOSXBundleInfo.plist.in)
 
     add_osx_resource(Candle images/candle.icns Resources)
+    add_osx_resource(Candle images/gcode.icns Resources)
 
     # Touch app bundle so finder updates icon etc.
     add_custom_command( TARGET Candle

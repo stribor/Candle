@@ -1785,6 +1785,20 @@ void frmMain::loadFile(QStringList data)
     updateControlsState();
 }
 
+void frmMain::onLoadFile(const QString& fileName)
+{
+	if (!saveChanges(false) || !isGCodeFile(fileName)) return;
+
+	if (!fileName.isEmpty()) m_lastFolder = fileName.left(fileName.lastIndexOf(QRegExp("[/\\\\]+")));
+
+	if (fileName != "") {
+		addRecentFile(fileName);
+		updateRecentFilesMenu();
+
+		loadFile(fileName);
+	}
+}
+
 void frmMain::loadFile(const QString& fileName)
 {
     QFile file(fileName);
