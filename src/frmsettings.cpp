@@ -27,7 +27,7 @@ frmSettings::frmSettings(QWidget *parent) :
     }
 
     ui->listCategories->item(0)->setSelected(true);
-    connect(ui->scrollSettings->verticalScrollBar(), SIGNAL(valueChanged(int)), this, SLOT(onScrollBarValueChanged(int)));
+    connect(ui->scrollSettings->verticalScrollBar(), &QScrollBar::valueChanged, this, &frmSettings::onScrollBarValueChanged);
 
     searchPorts();
 }

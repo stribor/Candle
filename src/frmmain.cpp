@@ -131,8 +131,8 @@ frmMain::frmMain(QWidget *parent) :
 
     ui->cboJogStep->setValidator(new QDoubleValidator(0, 10000, 2));
     ui->cboJogFeed->setValidator(new QIntValidator(0, 100000));
-    connect(ui->cboJogStep, &ComboBoxKey::currentTextChanged, [=] (QString) {updateJogTitle();});
-    connect(ui->cboJogFeed, &ComboBoxKey::currentTextChanged, [=] (QString) {updateJogTitle();});
+    connect(ui->cboJogStep, &ComboBoxKey::currentTextChanged, [=] (const QString&) {updateJogTitle();});
+    connect(ui->cboJogFeed, &ComboBoxKey::currentTextChanged, [=] (const QString&) {updateJogTitle();});
 
     // Prepare "Send"-button
     ui->cmdFileSend->setMinimumWidth(qMax(ui->cmdFileSend->width(), ui->cmdFileOpen->width()));
@@ -140,10 +140,10 @@ frmMain::frmMain(QWidget *parent) :
     menuSend->addAction(tr("Send from current line"), this, SLOT(onActSendFromLineTriggered()));
     ui->cmdFileSend->setMenu(menuSend);
 
-    connect(ui->cboCommand, SIGNAL(returnPressed()), this, SLOT(onCboCommandReturnPressed()));
+    connect(ui->cboCommand, &ComboBox::returnPressed, this, &frmMain::onCboCommandReturnPressed);
 
     foreach (StyledToolButton* button, this->findChildren<StyledToolButton*>(QRegExp("cmdUser\\d"))) {
-        connect(button, SIGNAL(clicked(bool)), this, SLOT(onCmdUserClicked(bool)));
+        connect(button, &StyledToolButton::clicked, this, &frmMain::onCmdUserClicked);
     }
 
     // Setting up slider boxes
@@ -153,7 +153,7 @@ frmMain::frmMain(QWidget *parent) :
     ui->slbFeedOverride->setCurrentValue(100);
     ui->slbFeedOverride->setTitle(tr("Feed rate:"));
     ui->slbFeedOverride->setSuffix("%");
-    connect(ui->slbFeedOverride, SIGNAL(toggled(bool)), this, SLOT(onOverridingToggled(bool)));
+    connect(ui->slbFeedOverride, &SliderBox::toggled, this, &frmMain::onOverridingToggled);
     connect(ui->slbFeedOverride, &SliderBox::toggled, [=] {
         updateProgramEstimatedTime(m_currentDrawer->viewParser()->getLineSegmentList());
     });
@@ -167,7 +167,7 @@ frmMain::frmMain(QWidget *parent) :
     ui->slbRapidOverride->setCurrentValue(100);
     ui->slbRapidOverride->setTitle(tr("Rapid speed:"));
     ui->slbRapidOverride->setSuffix("%");
-    connect(ui->slbRapidOverride, SIGNAL(toggled(bool)), this, SLOT(onOverridingToggled(bool)));
+    connect(ui->slbRapidOverride, &SliderBox::toggled, this, &frmMain::onOverridingToggled);
     connect(ui->slbRapidOverride, &SliderBox::toggled, [=] {
         updateProgramEstimatedTime(m_currentDrawer->viewParser()->getLineSegmentList());
     });
@@ -181,7 +181,7 @@ frmMain::frmMain(QWidget *parent) :
     ui->slbSpindleOverride->setCurrentValue(100);
     ui->slbSpindleOverride->setTitle(tr("Spindle speed:"));
     ui->slbSpindleOverride->setSuffix("%");
-    connect(ui->slbSpindleOverride, SIGNAL(toggled(bool)), this, SLOT(onOverridingToggled(bool)));
+    connect(ui->slbSpindleOverride, &SliderBox::toggled, this, &frmMain::onOverridingToggled);
 
     m_originDrawer = new OriginDrawer();
     m_codeDrawer = new GcodeDrawer();
@@ -196,12 +196,12 @@ frmMain::frmMain(QWidget *parent) :
     QShortcut *insertShortcut = new QShortcut(QKeySequence(Qt::Key_Insert), ui->tblProgram);
     QShortcut *deleteShortcut = new QShortcut(QKeySequence(Qt::Key_Delete), ui->tblProgram);
 
-    connect(insertShortcut, SIGNAL(activated()), this, SLOT(onTableInsertLine()));
-    connect(deleteShortcut, SIGNAL(activated()), this, SLOT(onTableDeleteLines()));
+    connect(insertShortcut, &QShortcut::activated, this, &frmMain::onTableInsertLine);
+    connect(deleteShortcut, &QShortcut::activated, this, &frmMain::onTableDeleteLines);
 
     m_tableMenu = new QMenu(this);
-    m_tableMenu->addAction(tr("&Insert line"), this, SLOT(onTableInsertLine()), insertShortcut->key());
-    m_tableMenu->addAction(tr("&Delete lines"), this, SLOT(onTableDeleteLines()), deleteShortcut->key());
+    m_tableMenu->addAction(tr("&Insert line"), this, &frmMain::onTableInsertLine, insertShortcut->key());
+    m_tableMenu->addAction(tr("&Delete lines"), this, &frmMain::onTableDeleteLines, deleteShortcut->key());
 
     ui->glwVisualizer->addDrawable(m_originDrawer);
     ui->glwVisualizer->addDrawable(m_codeDrawer);
@@ -213,22 +213,22 @@ frmMain::frmMain(QWidget *parent) :
     ui->glwVisualizer->addDrawable(&m_selectionDrawer);
     ui->glwVisualizer->fitDrawable();
 
-    connect(ui->glwVisualizer, SIGNAL(rotationChanged()), this, SLOT(onVisualizatorRotationChanged()));
-    connect(ui->glwVisualizer, SIGNAL(resized()), this, SLOT(placeVisualizerButtons()));
-    connect(&m_programModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(onTableCellChanged(QModelIndex,QModelIndex)));
-    connect(&m_programHeightmapModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(onTableCellChanged(QModelIndex,QModelIndex)));
-    connect(&m_probeModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(onTableCellChanged(QModelIndex,QModelIndex)));
-    connect(&m_heightMapModel, SIGNAL(dataChangedByUserInput()), this, SLOT(updateHeightMapInterpolationDrawer()));
+    connect(ui->glwVisualizer, &GLWidget::rotationChanged, this, &frmMain::onVisualizatorRotationChanged);
+    connect(ui->glwVisualizer, &GLWidget::resized, this, &frmMain::placeVisualizerButtons);
+    connect(&m_programModel, &GCodeTableModel::dataChanged, this,  &frmMain::onTableCellChanged);
+    connect(&m_programHeightmapModel, &GCodeTableModel::dataChanged, this, &frmMain::onTableCellChanged);
+    connect(&m_probeModel, &GCodeTableModel::dataChanged, this, &frmMain::onTableCellChanged);
+    connect(&m_heightMapModel, &HeightMapTableModel::dataChangedByUserInput, this, [=](){updateHeightMapInterpolationDrawer();});
 
     ui->tblProgram->setModel(&m_programModel);
     ui->tblProgram->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Stretch);
-    connect(ui->tblProgram->verticalScrollBar(), SIGNAL(actionTriggered(int)), this, SLOT(onScroolBarAction(int)));
-    connect(ui->tblProgram->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)), this, SLOT(onTableCurrentChanged(QModelIndex,QModelIndex)));    
+    connect(ui->tblProgram->verticalScrollBar(), &QScrollBar::actionTriggered, this, &frmMain::onScroolBarAction);
+    connect(ui->tblProgram->selectionModel(), &QItemSelectionModel::currentChanged, this, &frmMain::onTableCurrentChanged);
     clearTable();
 
     // Console window handling
-    connect(ui->grpConsole, SIGNAL(resized(QSize)), this, SLOT(onConsoleResized(QSize)));
-    connect(ui->scrollAreaWidgetContents, SIGNAL(sizeChanged(QSize)), this, SLOT(onPanelsSizeChanged(QSize)));
+    connect(ui->grpConsole, &GroupBox::resized, this, &frmMain::onConsoleResized);
+    connect(ui->scrollAreaWidgetContents, &Widget::sizeChanged, this, &frmMain::onPanelsSizeChanged);
 
     m_senderErrorBox = new QMessageBox(QMessageBox::Warning, qApp->applicationDisplayName(), QString(),
                                        QMessageBox::Ignore | QMessageBox::Abort, this);
@@ -243,7 +243,9 @@ frmMain::frmMain(QWidget *parent) :
     // Prepare jog buttons
     foreach (StyledToolButton* button, ui->grpJog->findChildren<StyledToolButton*>(QRegExp("cmdJogFeed\\d")))
     {
-        connect(button, SIGNAL(clicked(bool)), this, SLOT(onCmdJogFeedClicked()));
+	    connect(button, SIGNAL(clicked(bool)), this, SLOT(onCmdJogFeedClicked()));
+    	//NOTE: slot is missing!!!
+	    //connect(button, &StyledToolButton::clicked, this, &frmMain::onCmdJogFeedClicked);
     }
 
     // Setting up spindle slider box
@@ -267,9 +269,12 @@ frmMain::frmMain(QWidget *parent) :
         m_serialPort.setBaudRate(m_settings->baud());
     }
 
-    connect(&m_serialPort, SIGNAL(readyRead()), this, SLOT(onSerialPortReadyRead()), Qt::QueuedConnection);
-    connect(&m_serialPort, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(onSerialPortError(QSerialPort::SerialPortError)));
-
+    connect(&m_serialPort, &QSerialPort::readyRead, this, &frmMain::onSerialPortReadyRead, Qt::QueuedConnection);
+#if (QT_VERSION < QT_VERSION_CHECK(5,8,0))
+	connect(&m_serialPort, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(onSerialPortError(QSerialPort::SerialPortError)));
+#else
+    connect(&m_serialPort, &QSerialPort::errorOccurred, this, &frmMain::onSerialPortError);
+#endif
     this->installEventFilter(this);
     ui->tblProgram->installEventFilter(this);
     ui->cboJogStep->installEventFilter(this);
@@ -277,8 +282,8 @@ frmMain::frmMain(QWidget *parent) :
     ui->splitPanels->handle(1)->installEventFilter(this);
     ui->splitPanels->installEventFilter(this);
 
-    connect(&m_timerConnection, SIGNAL(timeout()), this, SLOT(onTimerConnection()));
-    connect(&m_timerStateQuery, SIGNAL(timeout()), this, SLOT(onTimerStateQuery()));
+    connect(&m_timerConnection, &QTimer::timeout, this, &frmMain::onTimerConnection);
+    connect(&m_timerStateQuery, &QTimer::timeout, this, &frmMain::onTimerStateQuery);
     m_timerConnection.start(1000);
     m_timerStateQuery.start();
 
@@ -1769,7 +1774,7 @@ void frmMain::loadFile(QList<QString> data)
     ui->tblProgram->horizontalHeader()->restoreState(headerState);
 
     // Update tableview
-    connect(ui->tblProgram->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)), this, SLOT(onTableCurrentChanged(QModelIndex,QModelIndex)));
+    connect(ui->tblProgram->selectionModel(), &QItemSelectionModel::currentChanged, this, &frmMain::onTableCurrentChanged);
     ui->tblProgram->selectRow(0);
 
     //  Update code drawer
@@ -2581,7 +2586,7 @@ void frmMain::on_actFileNew_triggered()
         ui->tblProgram->horizontalHeader()->restoreState(headerState);
 
         // Update tableview
-        connect(ui->tblProgram->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)), this, SLOT(onTableCurrentChanged(QModelIndex,QModelIndex)));
+        connect(ui->tblProgram->selectionModel(), &QItemSelectionModel::currentChanged, this, &frmMain::onTableCurrentChanged);
         ui->tblProgram->selectRow(0);
 
         // Clear selection marker
@@ -3061,7 +3066,7 @@ void frmMain::updateRecentFilesMenu()
 
     foreach (QString file, !m_heightMapMode ? m_recentFiles : m_recentHeightmaps) {
         QAction *action = new QAction(file, this);
-        connect(action, SIGNAL(triggered()), this, SLOT(onActRecentFileTriggered()));
+        connect(action, &QAction::triggered, this, &frmMain::onActRecentFileTriggered);
         ui->mnuRecent->insertAction(ui->mnuRecent->actions()[0], action);
     }
 
@@ -3332,7 +3337,7 @@ void frmMain::on_cmdHeightMapMode_toggled(bool checked)
         m_probeParser.reset();
         if (!ui->chkHeightMapUse->isChecked()) {
             ui->tblProgram->setModel(&m_programModel);
-            connect(ui->tblProgram->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)), this, SLOT(onTableCurrentChanged(QModelIndex,QModelIndex)));
+            connect(ui->tblProgram->selectionModel(), &QItemSelectionModel::currentChanged, this, &frmMain::onTableCurrentChanged);
             ui->tblProgram->selectRow(0);
 
             resizeTableHeightMapSections();
@@ -3724,7 +3729,7 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
         ui->tblProgram->setModel(&m_programHeightmapModel);
         ui->tblProgram->horizontalHeader()->restoreState(headerState);
 
-        connect(ui->tblProgram->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)), this, SLOT(onTableCurrentChanged(QModelIndex,QModelIndex)));
+        connect(ui->tblProgram->selectionModel(), &QItemSelectionModel::currentChanged, this, &frmMain::onTableCurrentChanged);
 
         m_programLoading = false;
 
@@ -3742,7 +3747,7 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
         ui->tblProgram->setModel(&m_programModel);
         ui->tblProgram->horizontalHeader()->restoreState(headerState);
 
-        connect(ui->tblProgram->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)), this, SLOT(onTableCurrentChanged(QModelIndex,QModelIndex)));
+        connect(ui->tblProgram->selectionModel(), &QItemSelectionModel::currentChanged, this, &frmMain::onTableCurrentChanged);
         ui->tblProgram->selectRow(0);
 
         ui->chkHeightMapUse->setChecked(false);
@@ -3754,7 +3759,7 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
         ui->tblProgram->setModel(&m_programModel);
         ui->tblProgram->horizontalHeader()->restoreState(headerState);
 
-        connect(ui->tblProgram->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)), this, SLOT(onTableCurrentChanged(QModelIndex,QModelIndex)));
+        connect(ui->tblProgram->selectionModel(), &QItemSelectionModel::currentChanged, this, &frmMain::onTableCurrentChanged);
 
         // Store changes flag
         bool fileChanged = m_fileChanged;

@@ -23,7 +23,7 @@ ScrollArea::ScrollArea(QWidget *parent) : QScrollArea(parent)
                                              QScrollBar::add-line:vertical {border: none; background: none; height: 0px;}\
                                              QScrollBar::sub-line:vertical {border: none; background: none; height: 0px;}");
 
-    connect(this->verticalScrollBar(), SIGNAL(valueChanged(int)), this, SLOT(onVerticalScrollBarValueChanged(int)));
+    connect(this->verticalScrollBar(), &QScrollBar::valueChanged, this, &ScrollArea::onVerticalScrollBarValueChanged);
 }
 
 QSize ScrollArea::sizeHint() const
@@ -37,7 +37,7 @@ QSize ScrollArea::sizeHint() const
 
 void ScrollArea::setWidget(QWidget *widget)
 {
-    connect(static_cast<Widget*>(widget), SIGNAL(sizeChanged(QSize)), this, SLOT(onContentSizeChanged(QSize)));
+    connect(static_cast<Widget*>(widget), &Widget::sizeChanged, this, &ScrollArea::onContentSizeChanged);
     QScrollArea::setWidget(widget);
 }
 
@@ -46,8 +46,8 @@ void ScrollArea::updateMinimumWidth()
     m_width = 0;
     QList<GroupBox*> list = this->widget()->findChildren<GroupBox*>();
     foreach (GroupBox *box, list) {
-        connect(box, SIGNAL(mouseMoved(int,int)), this, SLOT(onScroll(int,int)));
-        connect(box, SIGNAL(mousePressed()), this, SLOT(onPressed()));
+        connect(box, &GroupBox::mouseMoved, this, &ScrollArea::onScroll);
+        connect(box, &GroupBox::mousePressed, this, &ScrollArea::onPressed);
         m_width = qMax<int>(m_width, box->sizeHint().width()
                         + static_cast<QWidget*>(box->parent())->layout()->contentsMargins().left()
                         + static_cast<QWidget*>(box->parent())->layout()->contentsMargins().right()); // 1 * margin
