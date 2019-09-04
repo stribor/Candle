@@ -203,7 +203,10 @@ target_link_libraries(Candle PRIVATE
     Qt5::SerialPort
     )
 
-add_compile_definitions(APP_VERSION="1.1.9")
+if(UNIX AND NOT APPLE)
+    target_compile_definitions(Candle PRIVATE UNIX )
+endif()
+
 target_compile_definitions(Candle PRIVATE APP_VERSION="${CMAKE_PROJECT_VERSION}" )
 # enable warnings
 target_compile_options(Candle PRIVATE
