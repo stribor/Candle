@@ -76,9 +76,7 @@ int main(int argc, char *argv[])
 //    QFontDatabase::addApplicationFont(":/fonts/segoeui.ttf");
 //    QFontDatabase::addApplicationFont(":/fonts/tahoma.ttf");
 
-#ifdef GLES
-    QFontDatabase::addApplicationFont(":/fonts/Ubuntu-R.ttf");
-#endif
+    QFontDatabase::addApplicationFont(":/fonts/Ubuntu-Regular.ttf");
 
     QGLFormat glf = QGLFormat::defaultFormat();
     glf.setSampleBuffers(true);
