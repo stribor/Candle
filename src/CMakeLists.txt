@@ -21,8 +21,9 @@ set(CMAKE_AUTOUIC ON)
 # to always look for includes there
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-OPTION(ENABLE_ADDRESS_SANITIZER "enable address sanitizer if available (only for Debug builds, mutual exclusive to ENABLE_UB_SANITIZER)" ON)
-OPTION(ENABLE_UNDEFINED_SANITIZER "enable undefined behaviour sanitizer if available (only for Debug builds, mutual exclusive to ENABLE_ADDRESS_SANITIZER)" OFF)
+option(UPDATE_TRANSLATIONS "Update ts files instead of just compiling them to .qm (only needed when before working on translations)" OFF)
+option(ENABLE_ADDRESS_SANITIZER "enable address sanitizer if available (only for Debug builds, mutual exclusive to ENABLE_UB_SANITIZER)" ON)
+option(ENABLE_UNDEFINED_SANITIZER "enable undefined behaviour sanitizer if available (only for Debug builds, mutual exclusive to ENABLE_ADDRESS_SANITIZER)" OFF)
 
 # Handle sanitizer options
 if (ENABLE_ADDRESS_SANITIZER OR ENABLE_UNDEFINED_SANITIZER)
@@ -141,7 +142,25 @@ qt5_add_resources(SHADER_RSC
     ${PROJECT_SOURCE_DIR}/fonts.qrc
     )
 
-qt5_add_translation( TRANSLATIONS translations/candle_ru.ts translations/candle_es.ts translations/candle_fr.ts translations/candle_pt.ts )
+set (TS_FILES
+        translations/candle_ru.ts
+        translations/candle_es.ts
+        translations/candle_fr.ts
+        translations/candle_pt.ts
+        )
+if (UPDATE_TRANSLATIONS)
+    qt5_create_translation( TRANSLATIONS ${TS_FILES}
+            ${SRC_FILES}
+            ${SRC_HEADERS}
+            frmabout.ui
+            frmmain.ui
+            frmsettings.ui
+            widgets/sliderbox.ui
+            )
+else()
+    qt5_add_translation( TRANSLATIONS ${TS_FILES})
+endif()
+
 
 add_executable(Candle ${SRC_FILES} ${SRC_HEADERS} ${SHADER_RSC})
 
