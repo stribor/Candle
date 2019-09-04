@@ -2,10 +2,6 @@
 
 #include "shaderdrawable.h"
 
-#ifdef GLES
-#include <GLES/gl.h>
-#endif
-
 ShaderDrawable::ShaderDrawable()
 {
     m_needsUpdateGeometry = true;

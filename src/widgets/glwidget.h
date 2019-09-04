@@ -4,26 +4,18 @@
 #ifndef GLWIDGET_H
 #define GLWIDGET_H
 
-#ifndef GLES
-#include <QGLWidget>
-#else
 #include <QOpenGLWidget>
-#endif
 
 #include <QTimer>
 #include <QTime>
 #include "drawers/shaderdrawable.h"
 
-#ifdef GLES
-class GLWidget : public QOpenGLWidget
-#else
-class GLWidget : public QGLWidget, protected QOpenGLFunctions
-#endif
+class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
     Q_OBJECT
 public:
     explicit GLWidget(QWidget *parent = 0);
-    ~GLWidget();
+    ~GLWidget() override;
     void addDrawable(ShaderDrawable *drawable);
     void updateExtremes(ShaderDrawable *drawable);
     void fitDrawable(ShaderDrawable *drawable = NULL);
@@ -79,7 +71,7 @@ public:
 
 signals:
     void rotationChanged();
-    void resized();
+//    void resized();
 
 public slots:
 
@@ -116,8 +108,8 @@ private:
     QString m_pinState;
     QString m_bufferState;
 
-    double normalizeAngle(double angle);
-    double calculateVolume(QVector3D size);
+    static double normalizeAngle(double angle);
+    static double calculateVolume(QVector3D size);
     void beginViewAnimation();
     void stopViewAnimation();
 
@@ -130,21 +122,17 @@ private:
     QColor m_colorText;
 
 protected:
-    void initializeGL();
-    void resizeGL(int width, int height);
+    void initializeGL() override;
+    void resizeGL(int width, int height) override;
     void updateProjection();
     void updateView();
-#ifdef GLES
-    void paintGL();
-#else
-    void paintEvent(QPaintEvent *pe);
-#endif
+    void paintGL() override;
 
-    void mousePressEvent(QMouseEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
-    void wheelEvent(QWheelEvent *we);
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void wheelEvent(QWheelEvent *we) override;
 
-    void timerEvent(QTimerEvent *);
+    void timerEvent(QTimerEvent *) override;
 };
 
 #endif // GLWIDGET_H

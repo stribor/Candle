@@ -332,9 +332,9 @@ void frmMain::preloadSettings()
     qApp->setStyleSheet(QString(qApp->styleSheet()).replace(QRegExp("font-size:\\s*\\d+"), "font-size: " + set.value("fontSize", "8").toString()));
 #endif
     // Update v-sync in glformat
-    QGLFormat fmt = QGLFormat::defaultFormat();
+    QSurfaceFormat fmt = QSurfaceFormat::defaultFormat();
     fmt.setSwapInterval(set.value("vsync", false).toBool() ? 1 : 0);
-    QGLFormat::setDefaultFormat(fmt);
+    QSurfaceFormat::setDefaultFormat(fmt);
 }
 
 void frmMain::loadSettings()
@@ -1537,7 +1537,7 @@ void frmMain::resizeCheckBoxes()
     }
 
     this->setUpdatesEnabled(true);
-    this->repaint();
+//    this->repaint();
 }
 
 void frmMain::timerEvent(QTimerEvent *te)
@@ -3036,8 +3036,9 @@ void frmMain::on_splitter_splitterMoved(int pos, int index)
 
 void frmMain::updateLayouts()
 {
-    this->update();
-    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    // apperently not needed at all everything seems to be updated nicely without this
+//    this->update();
+//    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 }
 
 void frmMain::addRecentFile(QString fileName)
