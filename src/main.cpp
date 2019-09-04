@@ -19,6 +19,7 @@
 
 #ifdef Q_OS_MAC
 #include <QFileOpenEvent>
+#include <QDir>
 
 // simple QApplication to so QFileOpenEvent can be handled on mac os
 class CandleApplication : public QApplication
@@ -29,7 +30,18 @@ public:
 			: QApplication(argc, argv)
 	{
 	}
-
+    QString applicationDirPath()
+    {
+#ifdef Q_OS_MAC
+        // on mac os applicationDirPath points to exe location inside app bundle (appname.app/Contents/MacOS)
+        // go one up and point to Resources
+        QDir dir(QApplication::applicationDirPath());
+        dir.cdUp();
+        return dir.absolutePath() + "/Resources";
+#else
+        return QApplication::applicationDirPath();
+#endif
+    }
 	/// \brief list of so collected QFileOpenEvent's files,
 	/// see below where it is used for explanation why is needed
 	/// todo: remove this function and m_openFileList
@@ -86,8 +98,8 @@ int main(int argc, char *argv[])
 //    QLocale::setDefault(QLocale("es"));
 
     QString loc = QLocale().name().left(2);
-    QString translationsFolder = qApp->applicationDirPath() + "/translations/";
-    QString translationFileName = translationsFolder + qApp->applicationDisplayName() + "_" + loc + ".qm";
+    QString translationsFolder = a.applicationDirPath() + "/translations/";
+    QString translationFileName = translationsFolder + a.applicationDisplayName() + "_" + loc + ".qm";
 
     qDebug() << "locale:" << loc;
 

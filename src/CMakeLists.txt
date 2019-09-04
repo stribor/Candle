@@ -64,7 +64,7 @@ if(ENABLE_SANITIZER)
 endif()
 
 
-find_package(Qt5 COMPONENTS Core Widgets OpenGL SerialPort REQUIRED)
+find_package(Qt5 COMPONENTS Core Widgets OpenGL SerialPort LinguistTools REQUIRED)
 
 include_directories(${PROJECT_SOURCE_DIR})
 
@@ -141,6 +141,8 @@ qt5_add_resources(SHADER_RSC
     ${PROJECT_SOURCE_DIR}/fonts.qrc
     )
 
+qt5_add_translation( TRANSLATIONS translations/candle_ru.ts translations/candle_es.ts translations/candle_fr.ts translations/candle_pt.ts )
+
 add_executable(Candle ${SRC_FILES} ${SRC_HEADERS} ${SHADER_RSC})
 
 if(APPLE)
@@ -165,7 +167,7 @@ if(APPLE)
         message(STATUS "Could not figure minimum OSX version")
     endif()
 
-        set( MACOSX_BUNDLE_GUI_IDENTIFIER "")
+    set( MACOSX_BUNDLE_GUI_IDENTIFIER "")
 
     macro(add_osx_resource TARGET ASSET LOCATION)
         set_source_files_properties("${ASSET}" PROPERTIES MACOSX_PACKAGE_LOCATION ${LOCATION} )
@@ -179,6 +181,11 @@ if(APPLE)
 
     add_osx_resource(Candle images/candle.icns Resources)
     add_osx_resource(Candle images/gcode.icns Resources)
+    add_osx_resource(Candle ../LICENSE Resources)
+
+    foreach(_qm ${TRANSLATIONS})
+        add_osx_resource(Candle ${_qm} ../LICENSE Resources/translations)
+    endforeach()
 
     # Touch app bundle so finder updates icon etc.
     add_custom_command( TARGET Candle

@@ -2,6 +2,7 @@
 // Copyright 2015-2016 Hayrullin Denis Ravilevich
 
 #include <QDesktopServices>
+#include <QDir>
 #include "frmabout.h"
 #include "ui_frmabout.h"
 
@@ -13,7 +14,15 @@ frmAbout::frmAbout(QWidget *parent) :
 
     ui->lblAbout->setText(ui->lblAbout->text().arg(qApp->applicationVersion()));
 
-    QFile file(qApp->applicationDirPath() + "/LICENSE");
+    auto appPath = qApp->applicationDirPath();
+#ifdef Q_OS_MAC
+    // on mac os applicationDirPath points to exe location inside app bundle (appname.app/Contents/MacOS)
+    // go one up and point to resources
+    QDir dir(appPath);
+    dir.cdUp();
+    appPath = dir.absolutePath() + "/Resources";
+#endif
+    QFile file(appPath + "/LICENSE");
 
     if (file.open(QIODevice::ReadOnly)) {
         ui->txtLicense->setPlainText(file.readAll());
