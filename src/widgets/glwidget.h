@@ -56,9 +56,6 @@ public:
     bool zBuffer() const;
     void setZBuffer(bool zBuffer);
 
-    bool updatesEnabled() const;
-    void setUpdatesEnabled(bool updatesEnabled);
-
     bool msaa() const;
     void setMsaa(bool msaa);
 
@@ -118,7 +115,6 @@ private:
     QString m_speedState;
     QString m_pinState;
     QString m_bufferState;
-    bool m_updatesEnabled;
 
     double normalizeAngle(double angle);
     double calculateVolume(QVector3D size);

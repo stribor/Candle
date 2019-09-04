@@ -22,7 +22,6 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent), m_shaderProgram(0)
 
 {
     m_animateView = false;
-    m_updatesEnabled = false;
 
     m_xRot = 90;
     m_yRot = 0;
@@ -208,16 +207,6 @@ bool GLWidget::msaa() const
 void GLWidget::setMsaa(bool msaa)
 {
     m_msaa = msaa;
-}
-
-bool GLWidget::updatesEnabled() const
-{
-    return m_updatesEnabled;
-}
-
-void GLWidget::setUpdatesEnabled(bool updatesEnabled)
-{
-    m_updatesEnabled = updatesEnabled;
 }
 
 bool GLWidget::zBuffer() const
@@ -568,7 +557,7 @@ void GLWidget::timerEvent(QTimerEvent *te)
     if (te->timerId() == m_timerPaint.timerId()) {
         if (m_animateView) viewAnimation();
 #ifndef GLES
-        if (m_updatesEnabled) update();
+        update();
 #endif
     } else {
 #ifdef GLES
