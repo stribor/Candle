@@ -1781,6 +1781,8 @@ void frmMain::loadFile(QStringList data)
     m_codeDrawer->update();
     ui->glwVisualizer->fitDrawable(m_codeDrawer);
 
+    setWindowFilePath(m_programFileName);
+
     resetHeightmap();
     updateControlsState();
 }
