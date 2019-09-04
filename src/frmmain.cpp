@@ -1590,8 +1590,11 @@ void frmMain::dragEnterEvent(QDragEnterEvent *dee)
 }
 
 void frmMain::dropEvent(QDropEvent *de)
-{    
-    QString fileName = de->mimeData()->urls().at(0).toLocalFile();
+{
+    QString fileName;
+
+    if (!de->mimeData()->urls().isEmpty())
+        fileName = de->mimeData()->urls().first().toLocalFile();
 
     if (!m_heightMapMode) {
         if (!saveChanges(false)) return;
