@@ -63,9 +63,7 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent), m_shaderProgram(0)
 
 GLWidget::~GLWidget()
 {
-    if (m_shaderProgram) {
-        delete m_shaderProgram;
-    }
+    delete m_shaderProgram;
 }
 
 double GLWidget::calculateVolume(QVector3D size) {
