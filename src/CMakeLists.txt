@@ -184,7 +184,7 @@ if(APPLE)
     add_osx_resource(Candle ../LICENSE Resources)
 
     foreach(_qm ${TRANSLATIONS})
-        add_osx_resource(Candle ${_qm} ../LICENSE Resources/translations)
+        add_osx_resource(Candle ${_qm}  Resources/translations)
     endforeach()
 
     # Touch app bundle so finder updates icon etc.
