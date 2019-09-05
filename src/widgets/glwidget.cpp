@@ -390,12 +390,9 @@ void GLWidget::updateView()
 
 void GLWidget::paintGL()
 {
-    QPainter painter(this);
 
     // Segment counter
     int vertices = 0;
-
-    painter.beginNativePainting();
 
     // Clear viewport
     glClearColor(m_colorBackground.redF(), m_colorBackground.greenF(), m_colorBackground.blueF(), 1.0);
@@ -445,8 +442,7 @@ void GLWidget::paintGL()
     glDisable(GL_LINE_SMOOTH);
     glDisable(GL_BLEND);
 
-    painter.endNativePainting();
-
+    QPainter painter(this);
     QPen pen(m_colorText);
     painter.setPen(pen);
 
