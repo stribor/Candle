@@ -70,6 +70,7 @@
 				<string>ncc</string>
 				<string>ngc</string>
 				<string>tap</string>
+				<string>txt</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
 			<string>gcode.icns</string>
@@ -114,6 +115,7 @@
 					<string>ncc</string>
 					<string>ngc</string>
 					<string>tap</string>
+					<string>txt</string>
 				</array>
 			</dict>
 		</dict>
