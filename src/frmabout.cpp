@@ -2,7 +2,6 @@
 // Copyright 2015-2016 Hayrullin Denis Ravilevich
 
 #include <QDesktopServices>
-#include <QDir>
 #include "frmabout.h"
 #include "ui_frmabout.h"
 
@@ -14,13 +13,11 @@ frmAbout::frmAbout(QWidget *parent) :
 
     ui->lblAbout->setText(ui->lblAbout->text().arg(qApp->applicationVersion()));
 
-    auto appPath = qApp->applicationDirPath();
 #ifdef Q_OS_MAC
-    // on mac os applicationDirPath points to exe location inside app bundle (appname.app/Contents/MacOS)
-    // go one up and point to resources
-    QDir dir(appPath);
-    dir.cdUp();
-    appPath = dir.absolutePath() + "/Resources";
+    // on mac os applicationDirPath points to exe location inside app bundle (appname.app/Contents/MacOS) and we need Resources path
+    auto appPath = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation).last();;
+#else
+    auto appPath = qApp->applicationDirPath();
 #endif
     QFile file(appPath + "/LICENSE");
 
