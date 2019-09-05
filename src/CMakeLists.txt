@@ -100,7 +100,7 @@ set (SRC_FILES
         widgets/sliderbox.cpp
         drawers/selectiondrawer.cpp
         widgets/comboboxkey.cpp
-        )
+		utils/profile.cpp utils/profile.h)
 
 set(SRC_HEADERS
         frmmain.h
@@ -134,7 +134,7 @@ set(SRC_HEADERS
         widgets/sliderbox.h
         drawers/selectiondrawer.h
         widgets/comboboxkey.h
-        )
+		utils/profile.cpp utils/profile.h)
 
 qt5_add_resources(SHADER_RSC 
     ${PROJECT_SOURCE_DIR}/shaders.qrc
@@ -162,7 +162,7 @@ else()
 endif()
 
 
-add_executable(Candle ${SRC_FILES} ${SRC_HEADERS} ${SHADER_RSC})
+add_executable(Candle ${SRC_FILES} ${SRC_HEADERS} ${SHADER_RSC} utils/profile.cpp utils/profile.h)
 
 if(APPLE)
     set( MACOSX_BUNDLE_INFO_STRING "${CMAKE_PROJECT_NAME}")

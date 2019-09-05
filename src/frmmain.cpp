@@ -16,7 +16,7 @@
 #define DOOR 9
 #define JOG 10
 
-#define PROGRESSMINLINES 10000
+#define PROGRESSMINLINES 285755
 #define PROGRESSSTEP     1000
 
 #include <QFileDialog>
@@ -32,6 +32,7 @@
 #include <QAction>
 #include <QLayout>
 #include <QMimeData>
+#include "utils/profile.h"
 #include "frmmain.h"
 #include "ui_frmmain.h"
 
@@ -1670,9 +1671,11 @@ void frmMain::resetHeightmap()
 
 void frmMain::loadFile(QStringList data)
 {
-    QTime time;
+    QElapsedTimer time;
     time.start();
+    PROFILE_FUNCTION
 
+    PROFILE_SCOPE_START("Prepared to load")
     // Reset tables
     clearTable();
     m_probeModel.clear();
@@ -1704,10 +1707,10 @@ void frmMain::loadFile(QStringList data)
     gp.setTraverseSpeed(m_settings->rapidSpeed());
     if (m_codeDrawer->getIgnoreZ()) gp.reset(QVector3D(qQNaN(), qQNaN(), 0));
 
-    qDebug() << "Prepared to load:" << time.elapsed();
-    time.start();
 
-    // Block parser updates on table changes
+    PROFILE_SCOPE_RESTART("model filled")
+
+        // Block parser updates on table changes
     m_programLoading = true;
 
     QString command;
@@ -1764,11 +1767,12 @@ void frmMain::loadFile(QStringList data)
 
     m_programModel.insertRow(m_programModel.rowCount());
 
-    qDebug() << "model filled:" << time.elapsed();
-    time.start();
+    PROFILE_SCOPE_RESTART("view parser filled")
+
+    qDebug() << "model filled:" << time.restart();
 
     updateProgramEstimatedTime(m_viewParser.getLinesFromParser(&gp, m_settings->arcPrecision(), m_settings->arcDegreeMode()));
-    qDebug() << "view parser filled:" << time.elapsed();
+    qDebug() << "view parser filled:" << time.restart();
 
     m_programLoading = false;
 

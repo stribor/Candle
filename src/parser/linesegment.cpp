@@ -50,10 +50,7 @@ LineSegment::LineSegment(LineSegment* initial)
     m_vertexIndex = initial->vertexIndex();
 }
 
-LineSegment::~LineSegment()
-{
-
-}
+LineSegment::~LineSegment() = default;
 
 int LineSegment::getLineNumber() {
     return m_lineNumber;

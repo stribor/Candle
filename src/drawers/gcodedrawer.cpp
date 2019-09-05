@@ -81,8 +81,8 @@ bool GcodeDrawer::prepareVectors()
             vertex.start = QVector3D(sNan, sNan, m_pointSize);
             m_points.append(vertex);
 
-            drawFirstPoint = false;
-            continue;
+//            drawFirstPoint = false;
+//            continue;
         }
 
         // Prepare vertices
@@ -127,13 +127,13 @@ bool GcodeDrawer::prepareVectors()
         m_lines.append(vertex);
 
         // Draw last toolpath point
-        if (i == list->count() - 1) {
+//        if (i == list->count() - 1) {
             vertex.color = Util::colorToVector(m_colorEnd);
             vertex.position = list->at(i)->getEnd();
             if (m_ignoreZ) vertex.position.setZ(0);
             vertex.start = QVector3D(sNan, sNan, m_pointSize);
             m_points.append(vertex);
-        }
+//        }
     }
     m_geometryUpdated = true;
     m_indexes.clear();
