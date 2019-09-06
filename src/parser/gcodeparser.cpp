@@ -153,7 +153,7 @@ QList<PointSegment*> GcodeParser::expandArc()
     // Get precalculated stuff.
     QVector3D *start = startSegment->point();
     QVector3D *end = lastSegment->point();
-    QVector3D *center = lastSegment->center();
+    QVector3D &center = lastSegment->center();
     double radius = lastSegment->getRadius();
     bool clockwise = lastSegment->isClockwise();
     PointSegment::planes plane = startSegment->plane();
@@ -162,7 +162,7 @@ QList<PointSegment*> GcodeParser::expandArc()
     // Start expansion.
     //
 
-    QList<QVector3D> expandedPoints = GcodePreprocessorUtils::generatePointsAlongArcBDring(plane, *start, *end, *center, clockwise, radius, m_smallArcThreshold, m_smallArcSegmentLength, false);
+    QList<QVector3D> expandedPoints = GcodePreprocessorUtils::generatePointsAlongArcBDring(plane, *start, *end, center, clockwise, radius, m_smallArcThreshold, m_smallArcSegmentLength, false);
 
     // Validate output of expansion.
     if (expandedPoints.length() == 0) {
@@ -304,7 +304,7 @@ PointSegment *GcodeParser::addArcPointSegment(const QVector3D &nextPoint, bool c
     }
 
     ps->setIsMetric(this->m_isMetric);
-    ps->setArcCenter(&center);
+    ps->setArcCenter(center);
     ps->setIsArc(true);
     ps->setRadius(radius);
     ps->setIsClockwise(clockwise);

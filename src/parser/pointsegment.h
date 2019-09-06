@@ -44,9 +44,9 @@ public:
     bool isArc();
     void setIsFastTraverse(bool isF);
     bool isFastTraverse();
-    void setArcCenter(QVector3D *center);
+    void setArcCenter(const QVector3D &center);
     QVector<double> centerPoints();
-    QVector3D *center();
+    QVector3D &center();
     void setIsClockwise(bool clockwise);
     bool isClockwise();
     void setRadius(double rad);
@@ -66,12 +66,12 @@ public:
     void setDwell(double dwell);
 
 private:
-    ArcProperties *m_arcProperties;
+    ArcProperties *m_arcProperties{};
     int m_toolhead;
     double m_speed;
     double m_spindleSpeed;
     double m_dwell;
-    QVector3D *m_point;
+    QVector3D *m_point{};
     bool m_isMetric;
     bool m_isZMovement;
     bool m_isArc;
