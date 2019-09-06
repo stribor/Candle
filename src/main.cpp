@@ -148,6 +148,7 @@ int main(int argc, char *argv[])
     w.show();
 
 //    qDebug() << GcodePreprocessorUtils::overrideSpeed("G0 X0 Y10 Z200 F123", 50);
+//    qDebug() << GcodePreprocessorUtils::overrideSpeed("G0 X0 Y10 Z200 F123 G0 X0 Y10 Z200 F233", 50);
 //    qDebug() << GcodePreprocessorUtils::removeComment("G1 X10 ((test comment 1))");
 //    qDebug() << GcodePreprocessorUtils::removeComment("G1 X10 ;;test comment 2");
 //    qDebug() << GcodePreprocessorUtils::parseComment("G1 X10 ((test comment 1))");

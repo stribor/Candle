@@ -5,9 +5,9 @@
 
 // Copyright 2015-2016 Hayrullin Denis Ravilevich
 
-#include <QRegExp>
 #include <QDebug>
 #include <QVector3D>
+#include <QRegularExpression>
 #include "gcodepreprocessorutils.h"
 #include "limits"
 #include "../tables/gcodetablemodel.h"
@@ -20,13 +20,17 @@
 */
 QString GcodePreprocessorUtils::overrideSpeed(QString command, double speed, double *original)
 {
-    static QRegExp re("[Ff]([0-9.]+)");
+    static QRegularExpression re("[Ff]([0-9.]+)");
 
-    if (re.indexIn(command) != -1) {
-        command.replace(re, QString("F%1").arg(re.cap(1).toDouble() / 100 * speed));
+    auto match = re.match(command);
+    if (match.hasMatch()) {
+        Q_ASSERT(command.count(re) == 1); // otherwise all matches would get overridden with first match
+        auto const orig_val = match.captured(1).toDouble();
+        command.replace(re, QString("F%1").arg(orig_val / 100.0 * speed));
 
-        if (original) *original = re.cap(1).toDouble();
+        if (original) *original = orig_val;
     }
+
 
     return command;
 }
@@ -36,14 +40,19 @@ QString GcodePreprocessorUtils::overrideSpeed(QString command, double speed, dou
 */
 QString GcodePreprocessorUtils::removeComment(QString command)
 {
-    static QRegExp rx1("\\(+[^\\(]*\\)+");
-    static QRegExp rx2(";.*");
+    int pos;
 
-    // Remove any comments within ( parentheses ) using regex "\([^\(]*\)"
-    if (command.contains('(')) command.remove(rx1);
+    // Remove any comments within first ( and last )
+    pos = command.indexOf('(');
+    if (pos >= 0) {
+        int pos2 = command.lastIndexOf(')');
+        command.remove(pos, pos2-pos+1);
+    }
 
-    // Remove any comment beginning with ';' using regex ";.*"
-    if (command.contains(';')) command.remove(rx2);
+    // Remove any comment beginning with ';'
+    pos = command.indexOf(';');
+    if (pos >= 0 )
+        command.truncate(pos);
 
     return command.trimmed();
 }
@@ -57,24 +66,26 @@ QString GcodePreprocessorUtils::parseComment(QString command)
     // "(?<=\()[^\(\)]*|(?<=\;)[^;]*"
     // "(?<=\\()[^\\(\\)]*|(?<=\\;)[^;]*"
 
-    static QRegExp re("(\\([^\\(\\)]*\\)|;[^;].*)");
+    static QRegularExpression re(R"((\([^\(\)]*\)|;[^;].*))");
 
-    if (re.indexIn(command) != -1) {
-        return re.cap(1);
+    auto match = re.match(command);
+    if (match.isValid()) {
+        return match.captured(1);
     }
     return "";
 }
 
 QString GcodePreprocessorUtils::truncateDecimals(int length, QString command)
 {
-    static QRegExp re("(\\d*\\.\\d*)");
+    static QRegularExpression re(R"((\d*\.\d*))");
     int pos = 0;
 
-    while ((pos = re.indexIn(command, pos)) != -1)
-    {
-        QString newNum = QString::number(re.cap(1).toDouble(), 'f', length);
-        command = command.left(pos) + newNum + command.mid(pos + re.matchedLength());
+    QRegularExpressionMatch match = re.match(command, pos);
+    while ((pos = match.capturedStart(0)) != -1) {
+        QString newNum = QString::number(match.captured(1).toDouble(), 'f', length);
+        command = command.left(pos) + newNum + command.mid(match.capturedEnd(0));
         pos += newNum.length() + 1;
+        match = re.match(command, pos);
     }
 
     return command;
@@ -82,7 +93,7 @@ QString GcodePreprocessorUtils::truncateDecimals(int length, QString command)
 
 QString GcodePreprocessorUtils::removeAllWhitespace(QString command)
 {
-    static QRegExp rx("\\s");
+    static QRegularExpression rx("\\s");
 
     return command.remove(rx);
 }
@@ -100,14 +111,16 @@ QList<float> GcodePreprocessorUtils::parseCodes(const QStringList &args, char co
 
 QList<int> GcodePreprocessorUtils::parseGCodes(QString command)
 {
-    static QRegExp re("[Gg]0*(\\d+)");
+    static QRegularExpression re("[Gg]0*(\\d+)");
 
     QList<int> codes;
     int pos = 0;
 
-    while ((pos = re.indexIn(command, pos)) != -1) {
-        codes.append(re.cap(1).toInt());
-        pos += re.matchedLength();
+    QRegularExpressionMatch match = re.match(command, pos);
+    while ( match.hasMatch()) {
+        codes.append(match.captured(1).toInt());
+        pos = match.capturedEnd();
+        match = re.match(command, pos);
     }
 
     return codes;
@@ -115,14 +128,16 @@ QList<int> GcodePreprocessorUtils::parseGCodes(QString command)
 
 QList<int> GcodePreprocessorUtils::parseMCodes(QString command)
 {
-    static QRegExp re("[Mm]0*(\\d+)");
+    static QRegularExpression re("[Mm]0*(\\d+)");
 
     QList<int> codes;
     int pos = 0;
 
-    while ((pos = re.indexIn(command, pos)) != -1) {
-        codes.append(re.cap(1).toInt());
-        pos += re.matchedLength();
+    QRegularExpressionMatch match = re.match(command, pos);
+    while (match.hasMatch()) {
+        codes.append(match.captured(1).toInt());
+        pos = match.capturedEnd();
+        match = re.match(command, pos);
     }
 
     return codes;
@@ -249,15 +264,28 @@ QString GcodePreprocessorUtils::generateG1FromPoints(QVector3D start, QVector3D 
 QStringList GcodePreprocessorUtils::splitCommand(const QString &command) {
     QStringList l;
     bool readNumeric = false;
+
+#if 1
     QString sb;
+    for (const auto &c:  command) {
+        if (readNumeric && !c.isDigit() && c.unicode() != '.') {
+            readNumeric = false;
+            l.append(sb);
+            sb.clear();
+            if (c.isLetter()) sb.append(c);
+        } else if (c.isDigit() || c.unicode() == '.' || c.unicode() == '-') {
+            sb.append(c);
+            readNumeric = true;
+        } else if (c.isLetter()) sb.append(c);
+    }
+    if (sb.length() > 0) l.append(sb);
+
+#else
+    QByteArray sb;
 
     QByteArray ba(command.toLatin1());
-    const char *cmd = ba.constData(); // Direct access to string data
-    char c;
 
-    for (int i = 0; i < command.length(); i++) {
-        c = cmd[i];
-
+    for (const auto &c:  ba) {
         if (readNumeric && !isDigit(c) && c != '.') {
             readNumeric = false;
             l.append(sb);
@@ -270,7 +298,7 @@ QStringList GcodePreprocessorUtils::splitCommand(const QString &command) {
     }
 
     if (sb.length() > 0) l.append(sb);
-
+#endif
 //    QChar c;
 
 //    for (int i = 0; i < command.length(); i++) {
