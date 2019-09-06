@@ -1736,7 +1736,7 @@ void frmMain::loadFile(QStringList data)
     progress.setWindowModality(Qt::WindowModal);
     progress.setFixedSize(progress.sizeHint());
     if (data.count() > PROGRESSMINLINES) {
-        progress.show();
+//        progress.show();
         progress.setStyleSheet("QProgressBar {text-align: center; qproperty-format: \"\"}");
     }
 
@@ -1765,11 +1765,17 @@ void frmMain::loadFile(QStringList data)
 
             m_programModel.data().append(item);
         }
-
-        if (progress.isVisible() && (data.count() % PROGRESSSTEP == 0)) {
+        // show timer after 2 seconds
+        if (!progress.isVisible() && time.hasExpired(3000)) {
+            if (data.count())
+            progress.show();
+        }
+        // update progress every .5 seconds
+        if (progress.isVisible() && time.hasExpired(500)) {
             progress.setValue(progress.maximum() - data.count());
             qApp->processEvents();
             if (progress.wasCanceled()) break;
+            time.start();
         }
     }
     progress.close();
