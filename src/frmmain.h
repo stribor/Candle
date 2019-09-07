@@ -323,7 +323,7 @@ private:
     QStringList m_recentHeightmaps;
 
     void loadFile(const QString& fileName);
-    void loadFile(QStringList data);
+    void loadFile(QTextStream & data, qint64 bytesAvailable = 0);
     void clearTable();
     void preloadSettings();
     void loadSettings();

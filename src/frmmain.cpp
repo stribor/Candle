@@ -16,8 +16,8 @@
 #define DOOR 9
 #define JOG 10
 
-#define PROGRESSMINLINES 285755
-#define PROGRESSSTEP     1000
+#define PROGRESSAFTER 2000 // show progress if processing takes longer than 2 seconds
+#define PROGRESSSTEP     200 // update progress bar every 0.2 seconds
 
 #include <QFileDialog>
 #include <QTextStream>
@@ -1618,7 +1618,10 @@ void frmMain::dropEvent(QDropEvent *de)
         } else {
             m_programFileName.clear();
             m_fileChanged = true;
-            loadFile(de->mimeData()->text().split("\n"));
+            auto text = de->mimeData()->text();
+            QTextStream textStream(&text);
+            loadFile(textStream, text.size());
+//            loadFile(de->mimeData()->text().split("\n"));
         }
     } else {
         if (!saveChanges(true)) return;
@@ -1678,10 +1681,10 @@ void frmMain::resetHeightmap()
     m_heightMapChanged = false;
 }
 
-void frmMain::loadFile(QStringList data)
+void frmMain::loadFile(QTextStream &data, qint64 bytesAvailable)
 {
-    QElapsedTimer time;
-    time.start();
+    QElapsedTimer timer;
+    timer.start();
     PROFILE_FUNCTION
 
     PROFILE_SCOPE_START("Prepared to load")
@@ -1722,28 +1725,26 @@ void frmMain::loadFile(QStringList data)
         // Block parser updates on table changes
     m_programLoading = true;
 
-    QString command;
     QString stripped;
     QString trimmed;
     QStringList args;
     GCodeItem item;
 
     // Prepare model
-    m_programModel.data().clear();
-    m_programModel.data().reserve(data.count());
+    auto model_data = m_programModel.data();
+    model_data.clear();
 
-    QProgressDialog progress(tr("Opening file..."), tr("Abort"), 0, data.count(), this);
+    QProgressDialog progress(tr("Opening file..."), tr("Abort"), 0, 0, this);
+    if (bytesAvailable == 0 && data.device()) {
+        bytesAvailable = data.device()->bytesAvailable();
+        progress.setMaximum(bytesAvailable);
+    }
     progress.setWindowModality(Qt::WindowModal);
     progress.setFixedSize(progress.sizeHint());
-    if (data.count() > PROGRESSMINLINES) {
-//        progress.show();
-        progress.setStyleSheet("QProgressBar {text-align: center; qproperty-format: \"\"}");
-    }
+    progress.setStyleSheet("QProgressBar {text-align: center; qproperty-format: \"\"}");
 
-    while (!data.isEmpty())
-    {
-        command = data.takeFirst();
-
+    while (!data.atEnd()) {
+        auto command = data.readLine();
         // Trim command
         trimmed = command.trimmed();
 
@@ -1763,19 +1764,17 @@ void frmMain::loadFile(QStringList data)
             item.line = gp.getCommandNumber();
             item.args = args;
 
-            m_programModel.data().append(item);
+            model_data.push_back(item);
         }
-        // show timer after 2 seconds
-        if (!progress.isVisible() && time.hasExpired(3000)) {
-            if (data.count())
+
+        if (!progress.isVisible() && timer.hasExpired(PROGRESSAFTER)) {
             progress.show();
         }
         // update progress every .5 seconds
-        if (progress.isVisible() && time.hasExpired(500)) {
-            progress.setValue(progress.maximum() - data.count());
+        if (progress.isVisible() && (timer.elapsed() % PROGRESSSTEP == 0)) {
+            progress.setValue(data.pos());
             qApp->processEvents();
             if (progress.wasCanceled()) break;
-            time.start();
         }
     }
     progress.close();
@@ -1822,6 +1821,7 @@ void frmMain::onLoadFile(const QString& fileName)
 
 void frmMain::loadFile(const QString& fileName)
 {
+    PROFILE_FUNCTION
     QFile file(fileName);
 
     if (!file.open(QIODevice::ReadOnly)) {
@@ -1835,12 +1835,7 @@ void frmMain::loadFile(const QString& fileName)
     // Prepare text stream
     QTextStream textStream(&file);
 
-    // Read lines
-    QStringList data;
-    while (!textStream.atEnd()) data.append(textStream.readLine());
-
-    // Load lines
-    loadFile(data);
+    loadFile(textStream);
 }
 
 QTime frmMain::updateProgramEstimatedTime(QList<LineSegment*> lines)
@@ -1989,17 +1984,18 @@ void frmMain::onActSendFromLineTriggered()
     QList<LineSegment*> list = m_viewParser.getLineSegmentList();
 
     QList<int> indexes;
+    auto data = m_currentModel->data();
     for (int i = 0; i < list.count(); i++) {
-        list[i]->setDrawn(list.at(i)->getLineNumber() < m_currentModel->data().at(commandIndex).line);
+        list[i]->setDrawn(list.at(i)->getLineNumber() < data[commandIndex].line);
         indexes.append(i);
     }
     m_codeDrawer->update(indexes);
 
     ui->tblProgram->setUpdatesEnabled(false);
 
-    for (int i = 0; i < m_currentModel->data().count() - 1; i++) {
-        m_currentModel->data()[i].state = i < commandIndex ? GCodeItem::Skipped : GCodeItem::InQueue;
-        m_currentModel->data()[i].response = QString();
+    for (size_t i = 0; i < data.size() - 1; i++) {
+        data[i].state = i < commandIndex ? GCodeItem::Skipped : GCodeItem::InQueue;
+        data[i].response = QString();
     }
     ui->tblProgram->setUpdatesEnabled(true);
     ui->glwVisualizer->setSpendTime(QTime(0, 0, 0));
@@ -2335,10 +2331,9 @@ void frmMain::applySettings() {
 
 void frmMain::updateParser()
 {
-    QTime time;
-
+    PROFILE_FUNCTION
+    QElapsedTimer timer;
     qDebug() << "updating parser:" << m_currentModel << m_currentDrawer;
-    time.start();
 
     GcodeViewParse *parser = m_currentDrawer->viewParser();
 
@@ -2354,11 +2349,7 @@ void frmMain::updateParser()
     QProgressDialog progress(tr("Updating..."), tr("Abort"), 0, m_currentModel->rowCount() - 2, this);
     progress.setWindowModality(Qt::WindowModal);
     progress.setFixedSize(progress.sizeHint());
-
-    if (m_currentModel->rowCount() > PROGRESSMINLINES) {
-        progress.show();
-        progress.setStyleSheet("QProgressBar {text-align: center; qproperty-format: \"\"}");
-    }
+    progress.setStyleSheet("QProgressBar {text-align: center; qproperty-format: \"\"}");
 
     for (int i = 0; i < m_currentModel->rowCount() - 1; i++) {
         // Get stored args
@@ -2379,7 +2370,10 @@ void frmMain::updateParser()
         m_currentModel->data()[i].response = QString();
         m_currentModel->data()[i].line = gp.getCommandNumber();
 
-        if (progress.isVisible() && (i % PROGRESSSTEP == 0)) {
+        if (!progress.isVisible() && timer.hasExpired(PROGRESSAFTER)) {
+            progress.show();
+        }
+        if (progress.isVisible() &&  (timer.elapsed() % PROGRESSSTEP == 0)) {
             progress.setValue(i);
             qApp->processEvents();
             if (progress.wasCanceled()) break;
@@ -2397,8 +2391,6 @@ void frmMain::updateParser()
     updateControlsState();
 
     if (m_currentModel == &m_programModel) m_fileChanged = true;
-
-    qDebug() << "Update parser time: " << time.elapsed();
 }
 
 void frmMain::on_cmdCommandSend_clicked()
@@ -2556,7 +2548,7 @@ void frmMain::on_cmdFileReset_clicked()
 
         ui->tblProgram->setUpdatesEnabled(false);
 
-        for (int i = 0; i < m_currentModel->data().count() - 1; i++) {
+        for (int i = 0; i < m_currentModel->data().size() - 1; i++) {
             m_currentModel->data()[i].state = GCodeItem::InQueue;
             m_currentModel->data()[i].response = QString();
         }
@@ -3580,7 +3572,7 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
         progress.setStyleSheet("QProgressBar {text-align: center; qproperty-format: \"\"}");
 
         // Performance test
-        QTime time;
+        QElapsedTimer time;
 
         // Store fileChanged state
 //        fileChanged = m_fileChanged;
@@ -3613,7 +3605,7 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
                     }
                 }
 
-                if (progress.isVisible() && (i % PROGRESSSTEP == 0)) {
+                if (progress.isVisible() && (time.elapsed() % PROGRESSSTEP == 0)) {
                     progress.setMaximum(list->count() - 1);
                     progress.setValue(i);
                     qApp->processEvents();
@@ -3621,11 +3613,10 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
                 }
             }
 
-            qDebug() << "Subdivide time: " << time.elapsed();
+            qDebug() << "Subdivide time: " << time.restart();
 
             progress.setLabelText(tr("Updating Z-coordinates..."));
             progress.setMaximum(list->count() - 1);
-            time.start();
 
             for (int i = 0; i < list->count(); i++) {
                 if (i == 0) {
@@ -3640,18 +3631,17 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
                 z = list->at(i)->getEnd().z() + Interpolation::bicubicInterpolate(borderRect, &m_heightMapModel, x, y);
                 list->at(i)->setEnd(QVector3D(x, y, z));
 
-                if (progress.isVisible() && (i % PROGRESSSTEP == 0)) {
+                if (progress.isVisible() && (time.elapsed() % PROGRESSSTEP == 0)) {
                     progress.setValue(i);
                     qApp->processEvents();
                     if (progress.wasCanceled()) throw cancel;
                 }
             }
 
-            qDebug() << "Z update time (interpolation): " << time.elapsed();
+            qDebug() << "Z update time (interpolation): " << time.restart();
 
             progress.setLabelText(tr("Modifying G-code program..."));
             progress.setMaximum(m_programModel.rowCount() - 2);
-            time.start();
 
             // Modifying g-code program
             QString command;
@@ -3681,9 +3671,10 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
                 isLinearMove = false;
                 hasCommand = false;
 
+                auto modelData = m_programHeightmapModel.data();
                 if (line < 0 || line == lastCommandIndex || lastSegmentIndex == list->count() - 1) {
                     item.command = command;
-                    m_programHeightmapModel.data().append(item);
+                    modelData.push_back(item);
                 } else {
                     // Get commands args
                     args = m_programModel.data().at(i).args;
@@ -3732,7 +3723,7 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
 
                                     item.command = newCommand + QString("X%1Y%2Z%3")
                                             .arg(point.x(), 0, 'f', 3).arg(point.y(), 0, 'f', 3).arg(point.z(), 0, 'f', 3);
-                                    m_programHeightmapModel.data().append(item);
+                                    modelData.push_back(item);
 
                                     if (!newCommand.isEmpty()) newCommand.clear();
                                     j++;
@@ -3740,7 +3731,7 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
                             // Copy original command if not G0 or G1
                             } else {
                                 item.command = command;
-                                m_programHeightmapModel.data().append(item);
+                                modelData.push_back(item);
                             }
 
                             lastSegmentIndex = j;
@@ -3750,7 +3741,7 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
                 }
                 lastCommandIndex = line;
 
-                if (progress.isVisible() && (i % PROGRESSSTEP == 0)) {
+                if (progress.isVisible() && (time.elapsed() % PROGRESSSTEP == 0)) {
                     progress.setValue(i);
                     qApp->processEvents();
                     if (progress.wasCanceled()) throw cancel;

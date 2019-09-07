@@ -52,7 +52,7 @@ bool GCodeTableModel::setData(const QModelIndex &index, const QVariant &value, i
         {
         case 0: return false;
         case 1: m_data[index.row()].command = value.toString(); break;
-        case 2: m_data[index.row()].state = value.toInt(); break;
+        case 2: m_data[index.row()].state = static_cast<GCodeItem::States>(value.toInt()); break;
         case 3: m_data[index.row()].response = value.toString(); break;
         case 4: m_data[index.row()].line = value.toInt(); break;
         case 5: m_data[index.row()].args = value.toStringList(); break;
@@ -68,7 +68,7 @@ bool GCodeTableModel::insertRow(int row, const QModelIndex &parent)
     if (row > rowCount()) return false;
 
     beginInsertRows(parent, row, row);
-    m_data.insert(row, GCodeItem());
+    m_data.insert(m_data.begin() + row, GCodeItem());
     endInsertRows();
     return true;
 }
@@ -78,7 +78,7 @@ bool GCodeTableModel::removeRow(int row, const QModelIndex &parent)
     //if (!index(row, 0).isValid()) return false;
 
     beginRemoveRows(parent, row, row);
-    m_data.removeAt(row);
+    m_data.erase(m_data.begin()+row);
     endRemoveRows();
     return true;
 }
@@ -129,7 +129,7 @@ Qt::ItemFlags GCodeTableModel::flags(const QModelIndex &index) const
     else return QAbstractTableModel::flags(index);
 }
 
-QList<GCodeItem> &GCodeTableModel::data()
+GCodeTableModel::gcvec &GCodeTableModel::data()
 {
     return m_data;
 }

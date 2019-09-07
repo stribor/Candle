@@ -6,21 +6,27 @@
 
 #include <QAbstractTableModel>
 #include <QString>
+#include <vector>
 
 struct GCodeItem
 {
     enum States { InQueue, Sent, Processed, Skipped };
 
     QString command;
-    char state;
     QString response;
     int line;
     QStringList args;
+    States state;
 };
 
 class GCodeTableModel : public QAbstractTableModel
 {
     Q_OBJECT
+    // easy switch between containers to test which one is fastest, this can be platform/compiler/qt version dependant
+    // on my machine std::vector was fastest, than QVector and than QList (it was neglect-able but still)
+    using gcvec = std::vector<GCodeItem>;
+//    using gcvec = QVector<GCodeItem>;
+//    using gcvec = QList<GCodeItem>;
 public:
     explicit GCodeTableModel(QObject *parent = 0);
 
@@ -37,14 +43,14 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-    QList<GCodeItem> &data();
+    gcvec &data();
 
 signals:
 
 public slots:
 
 private:
-    QList<GCodeItem> m_data;
+    gcvec m_data;
     QStringList m_headers;
 };
 
