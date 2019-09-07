@@ -302,7 +302,7 @@ frmMain::~frmMain()
     delete ui;
 }
 
-bool frmMain::isGCodeFile(QString fileName)
+bool frmMain::isGCodeFile(QString const &fileName)
 {
     return fileName.endsWith(".txt", Qt::CaseInsensitive)
           || fileName.endsWith(".nc", Qt::CaseInsensitive)
@@ -312,7 +312,7 @@ bool frmMain::isGCodeFile(QString fileName)
           || fileName.endsWith(".gcode", Qt::CaseInsensitive);
 }
 
-bool frmMain::isHeightmapFile(QString fileName)
+bool frmMain::isHeightmapFile(QString const &fileName)
 {
     return fileName.endsWith(".map", Qt::CaseInsensitive);
 }
@@ -2649,7 +2649,7 @@ void frmMain::on_cmdClearConsole_clicked()
     ui->txtConsole->clear();
 }
 
-bool frmMain::saveProgramToFile(QString fileName, GCodeTableModel *model)
+bool frmMain::saveProgramToFile(QString const &fileName, GCodeTableModel *model)
 {
     QFile file(fileName);
     QDir dir;
@@ -2748,7 +2748,7 @@ void frmMain::on_actAbout_triggered()
     m_frmAbout.exec();
 }
 
-bool frmMain::dataIsEnd(QString data) {
+bool frmMain::dataIsEnd(QString const &data) {
     QStringList ends;
 
     ends << "ok";
@@ -2769,7 +2769,7 @@ bool frmMain::dataIsEnd(QString data) {
     return false;
 }
 
-bool frmMain::dataIsFloating(QString data) {
+bool frmMain::dataIsFloating(QString const &data) {
     QStringList ends;
 
     ends << "Reset to continue";
@@ -2785,11 +2785,11 @@ bool frmMain::dataIsFloating(QString data) {
     return false;
 }
 
-bool frmMain::dataIsReset(QString data) {
+bool frmMain::dataIsReset(QString const &data) {
     return QRegularExpression("^GRBL|GCARVIN\\s\\d\\.\\d.").match(data.toUpper()).hasMatch();
 }
 
-QString frmMain::feedOverride(QString command)
+QString frmMain::feedOverride(QString const &command)
 {
     // Feed override if not in heightmap probing mode
 //    if (!ui->cmdHeightMapMode->isChecked()) command = GcodePreprocessorUtils::overrideSpeed(command, ui->chkFeedOverride->isChecked() ?
@@ -3057,14 +3057,14 @@ void frmMain::updateLayouts()
 //    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 }
 
-void frmMain::addRecentFile(QString fileName)
+void frmMain::addRecentFile(QString const &fileName)
 {
     m_recentFiles.removeAll(fileName);
     m_recentFiles.append(fileName);
     if (m_recentFiles.count() > 5) m_recentFiles.takeFirst();
 }
 
-void frmMain::addRecentHeightmap(QString fileName)
+void frmMain::addRecentHeightmap(QString const &fileName)
 {
     m_recentHeightmaps.removeAll(fileName);
     m_recentHeightmaps.append(fileName);
@@ -3403,7 +3403,7 @@ void frmMain::on_cmdHeightMapMode_toggled(bool checked)
     updateControlsState();
 }
 
-bool frmMain::saveHeightMap(QString fileName)
+bool frmMain::saveHeightMap(QString const &fileName)
 {
     QFile file(fileName);
     QDir dir;
@@ -3438,7 +3438,7 @@ bool frmMain::saveHeightMap(QString fileName)
     return true;
 }
 
-void frmMain::loadHeightMap(QString fileName)
+void frmMain::loadHeightMap(QString const &fileName)
 {
     QFile file(fileName);
 

@@ -337,29 +337,29 @@ private:
     void sendNextFileCommands();
     void applySettings();
     void updateParser();
-    bool dataIsFloating(QString data);
-    bool dataIsEnd(QString data);
-    bool dataIsReset(QString data);
+    bool dataIsFloating(QString const &data);
+    bool dataIsEnd(QString const &data);
+    bool dataIsReset(QString const &data);
 
     QTime updateProgramEstimatedTime(QList<LineSegment *> lines);
-    bool saveProgramToFile(QString fileName, GCodeTableModel *model);
-    QString feedOverride(QString command);
+    bool saveProgramToFile(QString const &fileName, GCodeTableModel *model);
+    QString feedOverride(QString const &command);
 
     bool eventFilter(QObject *obj, QEvent *event);
     bool keyIsMovement(int key);
     void resizeCheckBoxes();
     void updateLayouts();
     void updateRecentFilesMenu();
-    void addRecentFile(QString fileName);
-    void addRecentHeightmap(QString fileName);
+    void addRecentFile(QString const &fileName);
+    void addRecentHeightmap(QString const &fileName);
     double toMetric(double value);
 
     QRectF borderRectFromTextboxes();
     QRectF borderRectFromExtremes();
     void updateHeightMapBorderDrawer();
     bool updateHeightMapGrid();
-    void loadHeightMap(QString fileName);
-    bool saveHeightMap(QString fileName);
+    void loadHeightMap(QString const &fileName);
+    bool saveHeightMap(QString const &fileName);
 
     GCodeTableModel *m_currentModel;
     QList<LineSegment *> subdivideSegment(LineSegment *segment);
@@ -370,8 +370,8 @@ private:
     void restoreParserState();
     void storeOffsets();
     void restoreOffsets();
-    bool isGCodeFile(QString fileName);
-    bool isHeightmapFile(QString fileName);
+    bool isGCodeFile(QString const &fileName);
+    bool isHeightmapFile(QString const &fileName);
     bool compareCoordinates(double x, double y, double z);
     int getConsoleMinHeight();
     void updateOverride(SliderBox *slider, int value, char command);
