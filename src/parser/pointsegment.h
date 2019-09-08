@@ -67,18 +67,18 @@ public:
 
 private:
     ArcProperties *m_arcProperties{};
+    QVector3D *m_point{};
     int m_toolhead;
+    int m_lineNumber;
     double m_speed;
     double m_spindleSpeed;
     double m_dwell;
-    QVector3D *m_point{};
+    planes m_plane;
     bool m_isMetric;
     bool m_isZMovement;
     bool m_isArc;
     bool m_isFastTraverse;
     bool m_isAbsolute;
-    int m_lineNumber;
-    planes m_plane;
 };
 
 #endif // POINTSEGMENT_H
