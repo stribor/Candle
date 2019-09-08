@@ -16,7 +16,7 @@ public:
     void setCurrentNext();
     void setCurrentPrevious();
 
-    void setItems(QStringList items);
+    void setItems(QStringList const &items);
     QStringList items();
 
 protected:

@@ -39,14 +39,14 @@ void ComboBoxKey::setCurrentPrevious()
     } while (currentText().isEmpty());
 }
 
-void ComboBoxKey::setItems(QStringList items)
+void ComboBoxKey::setItems(QStringList const &items)
 {
     if (items.isEmpty()) return;
 
     clear();
 
     bool userItem = false;
-    foreach (QString item, items) {
+    for (auto const &item : items) {
         if (item.isEmpty()) {
             insertSeparator(count());
             userItem = true;

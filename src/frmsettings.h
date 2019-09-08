@@ -19,13 +19,13 @@ class frmSettings : public QDialog
 
 public:
     explicit frmSettings(QWidget *parent = 0);
-    ~frmSettings();
+    ~frmSettings() override;
 
-    int exec();
+    int exec() override;
     void undo();
 
     QString port();
-    void setPort(QString port);
+    void setPort(QString const &port);
     int baud();
     void setBaud(int baud);
     double toolDiameter();
@@ -50,7 +50,7 @@ public:
     bool showUICommands();
     void setShowUICommands(bool showUICommands);
     QString safePositionCommand();
-    void setSafePositionCommand(QString command);
+    void setSafePositionCommand(QString const &command);
     bool moveOnRestore();
     void setMoveOnRestore(bool value);
     int restoreMode();
@@ -86,7 +86,7 @@ public:
     int units();
     void setUnits(int units);
     QString touchCommand();
-    void setTouchCommand(QString touchCommand);
+    void setTouchCommand(QString const &touchCommand);
     bool simplify();
     void setSimplify(bool simplify);
     double simplifyPrecision();
@@ -112,14 +112,14 @@ public:
     bool drawModeVectors();
     void setDrawModeVectors(bool value);
     QString userCommands(int index);
-    void setUserCommands(int index, QString commands);
+    void setUserCommands(int index, QString const &commands);
     bool ignoreErrors();
     void setIgnoreErrors(bool value);
     bool autoLine();
     void setAutoLine(bool value);
 
 protected:
-    void showEvent(QShowEvent *se);
+    void showEvent(QShowEvent *se) override;
 
 private slots:
     void onScrollBarValueChanged(int value);

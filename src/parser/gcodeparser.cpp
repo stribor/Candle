@@ -101,7 +101,7 @@ void GcodeParser::reset(const QVector3D &initialPoint)
 /**
 * Add a command to be processed.
 */
-PointSegment* GcodeParser::addCommand(QString command)
+PointSegment* GcodeParser::addCommand(QString const &command)
 {
     QString stripped = GcodePreprocessorUtils::removeComment(command);
     QStringList args = GcodePreprocessorUtils::splitCommand(stripped);
@@ -351,26 +351,25 @@ PointSegment * GcodeParser::handleGCode(float code, const QStringList &args)
     return ps;
 }
 
-QStringList GcodeParser::preprocessCommands(QStringList commands) {
+QStringList GcodeParser::preprocessCommands(QStringList const &commands) {
 
     QStringList result;
 
-    foreach (QString command, commands) {
+    for (auto const & command : commands) {
         result.append(preprocessCommand(command));
     }
 
     return result;
 }
 
-QStringList GcodeParser::preprocessCommand(QString command) {
+QStringList GcodeParser::preprocessCommand(QString const &command) {
 
     QStringList result;
-    bool hasComment = false;
 
     // Remove comments from command.
     QString newCommand = GcodePreprocessorUtils::removeComment(command);
     QString rawCommand = newCommand;
-    hasComment = (newCommand.length() != command.length());
+    bool hasComment = (newCommand.length() != command.length());
 
     if (m_removeAllWhitespace) {
         newCommand = GcodePreprocessorUtils::removeAllWhitespace(newCommand);
@@ -397,7 +396,8 @@ QStringList GcodeParser::preprocessCommand(QString command) {
             }
         } else if (hasComment) {
             // Maintain line level comment.
-            result.append(command.replace(rawCommand, newCommand));
+            QString origCmd = command; // to keep command const as comments should be rare case
+            result.append(origCmd.replace(rawCommand, newCommand));
         } else {
             result.append(newCommand);
         }
@@ -409,7 +409,7 @@ QStringList GcodeParser::preprocessCommand(QString command) {
     return result;
 }
 
-QStringList GcodeParser::convertArcsToLines(QString command) {
+QStringList GcodeParser::convertArcsToLines(QString const &command) {
 
     QStringList result;
 

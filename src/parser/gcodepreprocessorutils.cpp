@@ -93,23 +93,30 @@ QString GcodePreprocessorUtils::truncateDecimals(int length, QString command)
 
 QString GcodePreprocessorUtils::removeAllWhitespace(QString command)
 {
+#if 1
+    // guess should be faster than regex
+    return command.simplified().remove(' ');
+#else
     static QRegularExpression rx("\\s");
 
     return command.remove(rx);
+#endif
 }
 
-QList<float> GcodePreprocessorUtils::parseCodes(const QStringList &args, char code)
+QList<float> GcodePreprocessorUtils::parseCodes(const QStringList &args, QChar code)
 {
     QList<float> l;
 
-    foreach (QString s, args) {
-        if (s.length() > 0 && s[0].toUpper() == code) l.append(s.mid(1).toDouble());
+    auto small_c = code.toLower();
+
+    for (auto const &s : args) {
+        if (s.length() > 0 && (s[0] == code || s[0] == small_c)) l.append(s.midRef(1).toDouble());
     }
 
     return l;
 }
 
-QList<int> GcodePreprocessorUtils::parseGCodes(QString command)
+QList<int> GcodePreprocessorUtils::parseGCodes(QString const &command)
 {
     static QRegularExpression re("[Gg]0*(\\d+)");
 
@@ -126,7 +133,7 @@ QList<int> GcodePreprocessorUtils::parseGCodes(QString command)
     return codes;
 }
 
-QList<int> GcodePreprocessorUtils::parseMCodes(QString command)
+QList<int> GcodePreprocessorUtils::parseMCodes(QString const &command)
 {
     static QRegularExpression re("[Mm]0*(\\d+)");
 
@@ -161,20 +168,17 @@ QVector3D GcodePreprocessorUtils::updatePointWithCommand(const QStringList &comm
     double x = qQNaN();
     double y = qQNaN();
     double z = qQNaN();
-    char c;
-
-    for (int i = 0; i < commandArgs.length(); i++) {
-        if (commandArgs.at(i).length() > 0) {
-            c = commandArgs.at(i).at(0).toUpper().toLatin1();
-            switch (c) {
-            case 'X':
-                x = commandArgs.at(i).mid(1).toDouble();;
+    for (auto const & command: commandArgs) {
+        if (!command.isEmpty()) {
+            switch (command[0].unicode()) {
+            case 'X': case 'x':
+                x = command.midRef(1).toDouble();
                 break;
-            case 'Y':
-                y = commandArgs.at(i).mid(1).toDouble();;
+            case 'Y': case 'y':
+                y = command.midRef(1).toDouble();
                 break;
-            case 'Z':
-                z = commandArgs.at(i).mid(1).toDouble();;
+            case 'Z':case 'z':
+                z = command.midRef(1).toDouble();
                 break;
             }
         }
@@ -203,30 +207,28 @@ QVector3D GcodePreprocessorUtils::updatePointWithCommand(const QVector3D &initia
     return newPoint;
 }
 
-QVector3D GcodePreprocessorUtils::updateCenterWithCommand(QStringList commandArgs, QVector3D initial, QVector3D nextPoint, bool absoluteIJKMode, bool clockwise)
+QVector3D GcodePreprocessorUtils::updateCenterWithCommand(QStringList const &commandArgs, QVector3D initial, QVector3D nextPoint, bool absoluteIJKMode, bool clockwise)
 {
     double i = qQNaN();
     double j = qQNaN();
     double k = qQNaN();
     double r = qQNaN();
-    char c;
 
-    foreach (QString t, commandArgs)
-    {
+    for (auto &t : commandArgs) {
         if (t.length() > 0) {
-            c = t[0].toUpper().toLatin1();
-            switch (c) {
+            auto c = t[0].toUpper();
+            switch (c.unicode()) {
             case 'I':
-                i = t.mid(1).toDouble();
+                i = t.midRef(1).toDouble();
                 break;
             case 'J':
-                j = t.mid(1).toDouble();
+                j = t.midRef(1).toDouble();
                 break;
             case 'K':
-                k = t.mid(1).toDouble();
+                k = t.midRef(1).toDouble();
                 break;
             case 'R':
-                r = t.mid(1).toDouble();
+                r = t.midRef(1).toDouble();
                 break;
             }
         }
@@ -322,17 +324,16 @@ QStringList GcodePreprocessorUtils::splitCommand(const QString &command) {
 
 // TODO: Replace everything that uses this with a loop that loops through
 // the string and creates a hash with all the values.
-double GcodePreprocessorUtils::parseCoord(QStringList argList, char c)
+double GcodePreprocessorUtils::parseCoord(QStringList const &argList, QChar c)
 {
 //    int n = argList.length();
 
 //    for (int i = 0; i < n; i++) {
 //        if (argList[i].length() > 0 && argList[i][0].toUpper() == c) return argList[i].mid(1).toDouble();
 //    }
-
-    foreach (QString t, argList)
-    {
-        if (t.length() > 0 && t[0].toUpper() == c) return t.mid(1).toDouble();
+    auto small_c = c.toLower();
+    for (auto const &t : argList) {
+        if (t.length() > 0 && (t[0] == c || t[0] == small_c)) return t.midRef(1).toDouble();
     }
     return qQNaN();
 }

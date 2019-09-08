@@ -34,13 +34,13 @@ public:
     int getTruncateDecimalLength();
     void setTruncateDecimalLength(int truncateDecimalLength);
     void reset(const QVector3D &initialPoint = QVector3D(qQNaN(), qQNaN(), qQNaN()));
-    PointSegment *addCommand(QString command);
+    PointSegment *addCommand(QString const &command);
     PointSegment *addCommand(const QStringList &args);
     QVector3D* getCurrentPoint();
     QList<PointSegment *> expandArc();
-    QStringList preprocessCommands(QStringList commands);
-    QStringList preprocessCommand(QString command);
-    QStringList convertArcsToLines(QString command);
+    QStringList preprocessCommands(QStringList const &commands);
+    QStringList preprocessCommand(QString const &command);
+    QStringList convertArcsToLines(QString const &command);
     QList<PointSegment *> getPointSegmentList();
     double getTraverseSpeed() const;
     void setTraverseSpeed(double traverseSpeed);
@@ -75,7 +75,7 @@ private:
     double m_lastSpindleSpeed;
 
     // The gcode.
-    QList<PointSegment*> m_points;
+    QList<PointSegment*> m_points; //TODO convert to vector<PointSegment> and not reallocate
 
     PointSegment *processCommand(const QStringList &args);
     void handleMCode(float code, const QStringList &args);

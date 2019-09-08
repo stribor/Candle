@@ -59,11 +59,11 @@ void GcodeViewParse::testLength(const QVector3D &start, const QVector3D &end)
     if (!qIsNaN(length) && length != 0) m_minLength = qIsNaN(m_minLength) ? length : qMin<double>(m_minLength, length);
 }
 
-QList<LineSegment*> GcodeViewParse::toObjRedux(QStringList gcode, double arcPrecision, bool arcDegreeMode)
+QList<LineSegment*> GcodeViewParse::toObjRedux(QStringList const &gcode, double arcPrecision, bool arcDegreeMode)
 {
     GcodeParser gp;
 
-    foreach (QString s, gcode) {
+    for (auto &s : gcode) {
         gp.addCommand(s);
     }
 

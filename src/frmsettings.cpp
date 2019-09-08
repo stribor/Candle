@@ -120,7 +120,7 @@ QString frmSettings::port()
     return ui->cboPort->currentText();
 }
 
-void frmSettings::setPort(QString port)
+void frmSettings::setPort(QString const &port)
 {
     ui->cboPort->setCurrentText(port);
 }
@@ -245,7 +245,7 @@ QString frmSettings::safePositionCommand()
     return ui->txtSafeCommand->text();
 }
 
-void frmSettings::setSafePositionCommand(QString command)
+void frmSettings::setSafePositionCommand(QString const &command)
 {
     ui->txtSafeCommand->setText(command);
 }
@@ -425,7 +425,7 @@ QString frmSettings::touchCommand()
     return ui->txtTouchCommand->text();
 }
 
-void frmSettings::setTouchCommand(QString touchCommand)
+void frmSettings::setTouchCommand(QString const &touchCommand)
 {
     ui->txtTouchCommand->setText(touchCommand);
 }
@@ -558,7 +558,7 @@ QString frmSettings::userCommands(int index)
     return this->findChild<QLineEdit*>(QString("txtUserCommand%1").arg(index))->text();
 }
 
-void frmSettings::setUserCommands(int index, QString commands)
+void frmSettings::setUserCommands(int index, QString const &commands)
 {
     this->findChild<QLineEdit*>(QString("txtUserCommand%1").arg(index))->setText(commands);
 }

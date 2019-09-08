@@ -337,13 +337,13 @@ private:
     void sendNextFileCommands();
     void applySettings();
     void updateParser();
-    bool dataIsFloating(QString const &data);
+    static bool dataIsFloating(QByteArray const &data);
     bool dataIsEnd(QString const &data);
-    bool dataIsReset(QString const &data);
+    static bool dataIsReset(QString const &data);
 
     QTime updateProgramEstimatedTime(QList<LineSegment *> lines);
     bool saveProgramToFile(QString const &fileName, GCodeTableModel *model);
-    QString feedOverride(QString const &command);
+    static QString feedOverride(QString const &command);
 
     bool eventFilter(QObject *obj, QEvent *event);
     bool keyIsMovement(int key);
@@ -370,8 +370,8 @@ private:
     void restoreParserState();
     void storeOffsets();
     void restoreOffsets();
-    bool isGCodeFile(QString const &fileName);
-    bool isHeightmapFile(QString const &fileName);
+    static bool isGCodeFile(QString const &fileName);
+    static bool isHeightmapFile(QString const &fileName);
     bool compareCoordinates(double x, double y, double z);
     int getConsoleMinHeight();
     void updateOverride(SliderBox *slider, int value, char command);

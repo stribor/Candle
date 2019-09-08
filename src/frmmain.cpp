@@ -16,7 +16,7 @@
 #define DOOR 9
 #define JOG 10
 
-#define PROGRESSAFTER 2000 // show progress if processing takes longer than 2 seconds
+#define PROGRESSAFTER 3000 // show progress if processing takes longer than 3 seconds
 #define PROGRESSSTEP     200 // update progress bar every 0.2 seconds
 
 #include <QFileDialog>
@@ -32,6 +32,7 @@
 #include <QAction>
 #include <QLayout>
 #include <QMimeData>
+#include <array>
 #include "utils/profile.h"
 #include "frmmain.h"
 #include "ui_frmmain.h"
@@ -1842,8 +1843,7 @@ QTime frmMain::updateProgramEstimatedTime(QList<LineSegment*> lines)
 {
     double time = 0;
 
-    for (int i = 0; i < lines.count(); i++) {
-        LineSegment *ls = lines[i];
+    for (auto const &ls : lines) {
     //    foreach (LineSegment *ls, lines) {
         double length = (ls->getEnd() - ls->getStart()).length();
 
@@ -1863,12 +1863,10 @@ QTime frmMain::updateProgramEstimatedTime(QList<LineSegment*> lines)
 
     time *= 60;
 
-    QTime t;
+    QTime t(0,0,0);
 
-    t.setHMS(0, 0, 0);
+    ui->glwVisualizer->setSpendTime(t);
     t = t.addSecs(time);
-
-    ui->glwVisualizer->setSpendTime(QTime(0, 0, 0));
     ui->glwVisualizer->setEstimatedTime(t);
 
     return t;
@@ -1986,16 +1984,16 @@ void frmMain::onActSendFromLineTriggered()
     QList<int> indexes;
     auto &modelData = m_currentModel->data();
     for (int i = 0; i < list.count(); i++) {
-        list[i]->setDrawn(list.at(i)->getLineNumber() < data[commandIndex].line);
+        list[i]->setDrawn(list.at(i)->getLineNumber() < modelData[commandIndex].line);
         indexes.append(i);
     }
     m_codeDrawer->update(indexes);
 
     ui->tblProgram->setUpdatesEnabled(false);
 
-    for (size_t i = 0; i < data.size() - 1; i++) {
-        data[i].state = i < commandIndex ? GCodeItem::Skipped : GCodeItem::InQueue;
-        data[i].response = QString();
+    for (size_t i = 0; i < modelData.size() - 1; i++) {
+        modelData[i].state = i < commandIndex ? GCodeItem::Skipped : GCodeItem::InQueue;
+        modelData[i].response = QString();
     }
     ui->tblProgram->setUpdatesEnabled(true);
     ui->glwVisualizer->setSpendTime(QTime(0, 0, 0));
@@ -2761,16 +2759,16 @@ bool frmMain::dataIsEnd(QString const &data) {
     return false;
 }
 
-bool frmMain::dataIsFloating(QString const &data) {
-    QStringList ends;
+bool frmMain::dataIsFloating(QByteArray const &data) {
+    static std::array<const char *, 5> ends = {
+            "Reset to continue",
+            "'$H'|'$X' to unlock",
+            "ALARM: Soft limit",
+            "ALARM: Hard limit",
+            "Check Door"
+    };
 
-    ends << "Reset to continue";
-    ends << "'$H'|'$X' to unlock";
-    ends << "ALARM: Soft limit";
-    ends << "ALARM: Hard limit";
-    ends << "Check Door";
-
-    foreach (QString str, ends) {
+    for (auto &str: ends) {
         if (data.contains(str)) return true;
     }
 
@@ -3684,7 +3682,7 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
                     foreach (QString arg, args) {                   // arg examples: G1, G2, M3, X100...
                         codeChar = arg.at(0).toLatin1();            // codeChar: G, M, X...
                         if (!coords.contains(codeChar)) {           // Not parameter
-                            codeNum = arg.mid(1).toDouble();
+                            codeNum = arg.midRef(1).toDouble();
                             if (g.contains(codeChar)) {             // 'G'-command
                                 // Store 'G0' & 'G1'
                                 if (codeNum == 0.0f || codeNum == 1.0f) {
@@ -3725,7 +3723,7 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
                                             .arg(point.x(), 0, 'f', 3).arg(point.y(), 0, 'f', 3).arg(point.z(), 0, 'f', 3);
                                     modelData.push_back(item);
 
-                                    if (!newCommand.isEmpty()) newCommand.clear();
+                                    newCommand.clear();
                                     j++;
                                 }
                             // Copy original command if not G0 or G1
