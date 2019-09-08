@@ -1731,7 +1731,7 @@ void frmMain::loadFile(QTextStream &data, qint64 bytesAvailable)
     GCodeItem item;
 
     // Prepare model
-    auto model_data = m_programModel.data();
+    auto &model_data = m_programModel.data();
     model_data.clear();
 
     QProgressDialog progress(tr("Opening file..."), tr("Abort"), 0, 0, this);
@@ -1984,7 +1984,7 @@ void frmMain::onActSendFromLineTriggered()
     QList<LineSegment*> list = m_viewParser.getLineSegmentList();
 
     QList<int> indexes;
-    auto data = m_currentModel->data();
+    auto &modelData = m_currentModel->data();
     for (int i = 0; i < list.count(); i++) {
         list[i]->setDrawn(list.at(i)->getLineNumber() < data[commandIndex].line);
         indexes.append(i);
@@ -3671,7 +3671,7 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
                 isLinearMove = false;
                 hasCommand = false;
 
-                auto modelData = m_programHeightmapModel.data();
+                auto &modelData = m_programHeightmapModel.data();
                 if (line < 0 || line == lastCommandIndex || lastSegmentIndex == list->count() - 1) {
                     item.command = command;
                     modelData.push_back(item);
