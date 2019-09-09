@@ -241,7 +241,7 @@ QVector3D GcodePreprocessorUtils::updateCenterWithCommand(QStringList const &com
     return updatePointWithCommand(initial, i, j, k, absoluteIJKMode);
 }
 
-QString GcodePreprocessorUtils::generateG1FromPoints(QVector3D start, QVector3D end, bool absoluteMode, int precision)
+QString GcodePreprocessorUtils::generateG1FromPoints(QVector3D const &start, QVector3D const &end, bool absoluteMode, int precision)
 {
     QString sb("G1");
 

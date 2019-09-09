@@ -15,6 +15,10 @@
 class PointSegment
 {
 public:
+    using Container = std::vector<PointSegment*>;
+//    using Container = QVector<PointSegment*>;
+//    using Container = QList<PointSegment*>;
+
     enum planes {
         XY,
         ZX,
@@ -22,35 +26,35 @@ public:
     };
 
     PointSegment();
-    PointSegment(PointSegment *ps);
-    PointSegment(const QVector3D *b, int num);
-    PointSegment(QVector3D *point, int num, QVector3D *center, double radius, bool clockwise);
+    PointSegment(PointSegment const &ps);
+    PointSegment(QVector3D const &b, int num);
+    PointSegment(QVector3D const &point, int num, QVector3D const &center, double radius, bool clockwise);
     ~PointSegment();
-    void setPoint(QVector3D m_point);
-    QVector3D* point();
+    void setPoint(QVector3D const &point);
+    QVector3D const & point();
 
     QVector<double> points();
     void setToolHead(int head);
-    int getToolhead();
+    int getToolhead() const;
     void setLineNumber(int num);
-    int getLineNumber();
+    int getLineNumber() const;
     void setSpeed(double s);
-    double getSpeed();
+    double getSpeed() const;
     void setIsZMovement(bool isZ);
-    bool isZMovement();
+    bool isZMovement() const;
     void setIsMetric(bool m_isMetric);
-    bool isMetric();
+    bool isMetric() const;
     void setIsArc(bool isA);
-    bool isArc();
+    bool isArc() const;
     void setIsFastTraverse(bool isF);
-    bool isFastTraverse();
+    bool isFastTraverse() const;
     void setArcCenter(const QVector3D &center);
     QVector<double> centerPoints();
-    QVector3D &center();
+    QVector3D &center() const;
     void setIsClockwise(bool clockwise);
-    bool isClockwise();
+    bool isClockwise() const;
     void setRadius(double rad);
-    double getRadius();
+    double getRadius() const;
     void convertToMetric();
 
     bool isAbsolute() const;
@@ -67,7 +71,7 @@ public:
 
 private:
     ArcProperties *m_arcProperties{};
-    QVector3D *m_point{};
+    QVector3D m_point;
     int m_toolhead;
     int m_lineNumber;
     double m_speed;

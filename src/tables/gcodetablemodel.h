@@ -24,9 +24,9 @@ class GCodeTableModel : public QAbstractTableModel
     Q_OBJECT
     // easy switch between containers to test which one is fastest, this can be platform/compiler/qt version dependant
     // on my machine std::vector was fastest, than QVector and than QList (it was neglect-able but still)
-    using gcvec = std::vector<GCodeItem>;
-//    using gcvec = QVector<GCodeItem>;
-//    using gcvec = QList<GCodeItem>;
+    using Container = std::vector<GCodeItem>;
+//    using Container = QVector<GCodeItem>;
+//    using Container = QList<GCodeItem>;
 public:
     explicit GCodeTableModel(QObject *parent = 0);
 
@@ -43,14 +43,14 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-    gcvec &data();
+    Container &data();
 
 signals:
 
 public slots:
 
 private:
-    gcvec m_data;
+    Container m_data;
     QStringList m_headers;
 };
 

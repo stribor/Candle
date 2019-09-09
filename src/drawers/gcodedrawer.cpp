@@ -25,19 +25,27 @@ void GcodeDrawer::update()
     ShaderDrawable::update();
 }
 
-void GcodeDrawer::update(QList<int> indexes)
+void GcodeDrawer::update(int index)
+{
+    m_indexes.push_back(index);
+}
+void GcodeDrawer::update(indexContainer indexes)
 {
     // Store segments to update
+#if 1 // use for qt conainers
     m_indexes += indexes;
+#else // use for std::vector
+    m_indexes.insert(m_indexes.end(), indexes.begin(), indexes.end());
+#endif
 }
 
 bool GcodeDrawer::updateData()
 {
     switch (m_drawMode) {
     case GcodeDrawer::Vectors:
-        if (m_indexes.isEmpty()) return prepareVectors(); else return updateVectors();
+        if (m_indexes.empty()) return prepareVectors(); else return updateVectors();
     case GcodeDrawer::Raster:
-        if (m_indexes.isEmpty()) return prepareRaster(); else return updateRaster();
+        if (m_indexes.empty()) return prepareRaster(); else return updateRaster();
     }
 }
 
@@ -45,10 +53,10 @@ bool GcodeDrawer::prepareVectors()
 {
     qDebug() << "preparing vectors" << this;
 
-    QList<LineSegment*> *list = m_viewParser->getLines();
+    LineSegment::Container *list = m_viewParser->getLines();
     VertexData vertex;
 
-    qDebug() << "lines count" << list->count();
+    qDebug() << "lines count" << list->size();
 
     // Clear all vertex data
     m_lines.clear();
@@ -63,7 +71,7 @@ bool GcodeDrawer::prepareVectors()
     }
 
     bool drawFirstPoint = true;
-    for (int i = 0; i < list->count(); i++) {
+    for (int i = 0; i < static_cast<int>(list->size()); i++) {
 
         if (qIsNaN(list->at(i)->getEnd().z())) {
             continue;
@@ -91,7 +99,7 @@ bool GcodeDrawer::prepareVectors()
 
         // Simplify geometry
         int j = i;
-        if (m_simplify && i < list->count() - 1) {
+        if (m_simplify && i < static_cast<int>(list->size()) - 1) {
             QVector3D start = list->at(i)->getEnd() - list->at(i)->getStart();
             QVector3D next;
             double length = start.length();
@@ -100,13 +108,13 @@ bool GcodeDrawer::prepareVectors()
             do {
                 list->at(i)->setVertexIndex(m_lines.size()); // Store vertex index
                 i++;
-                if (i < list->count() - 1) {
+                if (i < static_cast<int>(list->size()) - 1) {
                     next = list->at(i)->getEnd() - list->at(i)->getStart();
                     length += next.length();
 //                    straight = start.crossProduct(start.normalized(), next.normalized()).length() < 0.025;
                 }
             // Split short & straight lines
-            } while ((length < m_simplifyPrecision || straight) && i < list->count()
+            } while ((length < m_simplifyPrecision || straight) && i < static_cast<int>(list->size())
                      && getSegmentType(list->at(i)) == getSegmentType(list->at(j)));
             i--;
         } else {
@@ -143,16 +151,16 @@ bool GcodeDrawer::prepareVectors()
 bool GcodeDrawer::updateVectors()
 {
     // Update vertices
-    QList<LineSegment*> *list = m_viewParser->getLines();
+    LineSegment::Container *list = m_viewParser->getLines();
 
     // Map buffer
-    VertexData *data = (VertexData*)m_vbo.map(QOpenGLBuffer::WriteOnly);
+    auto data = (VertexData*)m_vbo.map(QOpenGLBuffer::WriteOnly);
 
     // Update vertices for each line segment
     int vertexIndex;
     foreach (int i, m_indexes) {
         // Update vertex pair
-        if (i < 0 || i > list->count() - 1) continue;
+        if (i < 0 || i > static_cast<int>(list->size()) - 1) continue;
         vertexIndex = list->at(i)->vertexIndex();
         if (vertexIndex >= 0) {
             // Update vertex array            
@@ -186,13 +194,13 @@ bool GcodeDrawer::prepareRaster()
         image = QImage(m_viewParser->getResolution(), QImage::Format_RGB888);
         image.fill(Qt::white);
 
-        QList<LineSegment*> *list = m_viewParser->getLines();
-        qDebug() << "lines count" << list->count();
+        auto *list = m_viewParser->getLines();
+        qDebug() << "lines count" << list->size();
 
         double pixelSize = m_viewParser->getMinLength();
         QVector3D origin = m_viewParser->getMinimumExtremes();
 
-        for (int i = 0; i < list->count(); i++) {
+        for (int i = 0; i < static_cast<int>(list->size()); i++) {
             if (!qIsNaN(list->at(i)->getEnd().length())) {
                 setImagePixelColor(image, (list->at(i)->getEnd().x() - origin.x()) / pixelSize,
                                    (list->at(i)->getEnd().y() - origin.y()) / pixelSize, getSegmentColor(list->at(i)).rgb());
@@ -248,7 +256,7 @@ bool GcodeDrawer::prepareRaster()
         m_triangles += vertices;
         m_image = image;
     } else {
-        for (int i = 0; i < vertices.size(); i++) vertices[i].start = QVector3D(sNan, sNan, sNan);
+        for (auto & vertex : vertices) vertex.start = QVector3D(sNan, sNan, sNan);
         m_lines += vertices;
         m_image = QImage();
     }
@@ -262,7 +270,7 @@ bool GcodeDrawer::updateRaster()
 {
     if (!m_image.isNull()) {
 
-        QList<LineSegment*> *list = m_viewParser->getLines();
+        auto *list = m_viewParser->getLines();
 
         double pixelSize = m_viewParser->getMinLength();
         QVector3D origin = m_viewParser->getMinimumExtremes();
@@ -441,7 +449,7 @@ void GcodeDrawer::setIgnoreZ(bool ignoreZ)
 
 void GcodeDrawer::onTimerVertexUpdate()
 {
-    if (!m_indexes.isEmpty()) ShaderDrawable::update();
+    if (!m_indexes.empty()) ShaderDrawable::update();
 }
 
 GcodeDrawer::DrawMode GcodeDrawer::drawMode() const

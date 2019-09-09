@@ -21,27 +21,27 @@ public:
     explicit GcodeParser(QObject *parent = 0);
     ~GcodeParser();
 
-    bool getConvertArcsToLines();
+    bool getConvertArcsToLines() const;
     void setConvertArcsToLines(bool convertArcsToLines);
-    bool getRemoveAllWhitespace();
+    bool getRemoveAllWhitespace() const;
     void setRemoveAllWhitespace(bool removeAllWhitespace);
-    double getSmallArcSegmentLength();
+    double getSmallArcSegmentLength() const;
     void setSmallArcSegmentLength(double smallArcSegmentLength);
-    double getSmallArcThreshold();
+    double getSmallArcThreshold() const;
     void setSmallArcThreshold(double smallArcThreshold);
-    double getSpeedOverride();
+    double getSpeedOverride() const;
     void setSpeedOverride(double speedOverride);
-    int getTruncateDecimalLength();
+    int getTruncateDecimalLength() const;
     void setTruncateDecimalLength(int truncateDecimalLength);
     void reset(const QVector3D &initialPoint = QVector3D(qQNaN(), qQNaN(), qQNaN()));
     PointSegment *addCommand(QString const &command);
-    PointSegment *addCommand(const QStringList &args);
+    PointSegment *addCommand(QStringList const &args);
     QVector3D* getCurrentPoint();
-    QList<PointSegment *> expandArc();
+    PointSegment::Container expandArc();
     QStringList preprocessCommands(QStringList const &commands);
     QStringList preprocessCommand(QString const &command);
     QStringList convertArcsToLines(QString const &command);
-    QList<PointSegment *> &getPointSegmentList();
+    PointSegment::Container &getPointSegmentList();
     double getTraverseSpeed() const;
     void setTraverseSpeed(double traverseSpeed);
     int getCommandNumber() const;
@@ -75,7 +75,7 @@ private:
     double m_lastSpindleSpeed;
 
     // The gcode.
-    QList<PointSegment*> m_points; //TODO convert to vector<PointSegment> and not reallocate
+    PointSegment::Container m_points; //TODO convert to vector<PointSegment> and not reallocate
 
     PointSegment *processCommand(const QStringList &args);
     void handleMCode(float code, const QStringList &args);

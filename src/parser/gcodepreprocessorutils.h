@@ -32,7 +32,7 @@ public:
     static QVector3D updatePointWithCommand(const QString &command, const QVector3D &initial, bool absoluteMode);
     static QVector3D convertRToCenter(QVector3D start, QVector3D end, double radius, bool absoluteIJK, bool clockwise);
     static QVector3D updateCenterWithCommand(QStringList const &commandArgs, QVector3D initial, QVector3D nextPoint, bool absoluteIJKMode, bool clockwise);
-    static QString generateG1FromPoints(QVector3D start, QVector3D end, bool absoluteMode, int precision);
+    static QString generateG1FromPoints(QVector3D const &start, QVector3D const &end, bool absoluteMode, int precision);
     static double getAngle(QVector3D start, QVector3D end);
     static double calculateSweep(double startAngle, double endAngle, bool isCw);
     static QList<QVector3D> generatePointsAlongArcBDring(PointSegment::planes plane, QVector3D start, QVector3D end, QVector3D center, bool clockwise, double R, double minArcLength, double arcPrecision, bool arcDegreeMode);

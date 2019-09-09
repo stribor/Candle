@@ -24,46 +24,45 @@ PointSegment::PointSegment()
     m_plane = XY;
 }
 
-PointSegment::PointSegment(PointSegment *ps) : PointSegment(ps->point(), ps->getLineNumber())
+PointSegment::PointSegment(PointSegment const &ps) : PointSegment(ps.m_point, ps.getLineNumber())
 {
-    this->m_toolhead = ps->getToolhead();
-    this->m_speed = ps->getSpeed();
-    this->m_isMetric = ps->isMetric();
-    this->m_isZMovement = ps->isZMovement();
-    this->m_isFastTraverse = ps->isFastTraverse();
-    this->m_isAbsolute = ps->isAbsolute();
+    this->m_toolhead = ps.getToolhead();
+    this->m_speed = ps.getSpeed();
+    this->m_isMetric = ps.isMetric();
+    this->m_isZMovement = ps.isZMovement();
+    this->m_isFastTraverse = ps.isFastTraverse();
+    this->m_isAbsolute = ps.isAbsolute();
 
-    if (ps->isArc()) {
-        this->setArcCenter(ps->center());
-        this->setRadius(ps->getRadius());
-        this->setIsClockwise(ps->isClockwise());
-        this->m_plane = ps->plane();
+    if (ps.isArc()) {
+        this->setArcCenter(ps.center());
+        this->setRadius(ps.getRadius());
+        this->setIsClockwise(ps.isClockwise());
+        this->m_plane = ps.plane();
     }
 }
 
-PointSegment::PointSegment(const QVector3D *b, int num) : PointSegment()
+PointSegment::PointSegment(QVector3D const &b, int num) : PointSegment()
 {
-    this->m_point = new QVector3D(b->x(), b->y(), b->z());
+    this->m_point = b;
     this->m_lineNumber = num;
 }
 
-PointSegment::PointSegment(QVector3D *point, int num, QVector3D *center, double radius, bool clockwise) : PointSegment(point, num)
+PointSegment::PointSegment(QVector3D const &point, int num, QVector3D const &center, double radius, bool clockwise) : PointSegment(point, num)
 {
     this->m_isArc = true;
-    this->m_arcProperties = new ArcProperties(QVector3D(center->x(), center->y(), center->z()), radius,clockwise);
+    this->m_arcProperties = new ArcProperties(center, radius,clockwise);
 }
 
 PointSegment::~PointSegment()
 {
     delete m_arcProperties;
-    delete m_point;
 }
 
-void PointSegment::setPoint(QVector3D point) {
-    this->m_point = new QVector3D(point.x(), point.y(), point.z());
+void PointSegment::setPoint(QVector3D const &point) {
+    this->m_point = point;
 }
 
-QVector3D *PointSegment::point()
+QVector3D const & PointSegment::point()
 {
     return m_point;
 }
@@ -71,8 +70,8 @@ QVector3D *PointSegment::point()
 QVector<double> PointSegment::points()
 {
     QVector<double> points;
-    points.append(m_point->x());
-    points.append(m_point->y());
+    points.append(m_point.x());
+    points.append(m_point.y());
     return points;
 }
 
@@ -80,7 +79,7 @@ void PointSegment::setToolHead(int head) {
     this->m_toolhead = head;
 }
 
-int PointSegment::getToolhead()
+int PointSegment::getToolhead() const
 {
     return m_toolhead;
 }
@@ -89,7 +88,7 @@ void PointSegment::setLineNumber(int num) {
     this->m_lineNumber = num;
 }
 
-int PointSegment::getLineNumber() {
+int PointSegment::getLineNumber() const {
     return m_lineNumber;
 }
 
@@ -97,7 +96,7 @@ void PointSegment::setSpeed(double s) {
     this->m_speed = s;
 }
 
-double PointSegment::getSpeed()
+double PointSegment::getSpeed() const
 {
     return m_speed;
 }
@@ -106,7 +105,7 @@ void PointSegment::setIsZMovement(bool isZ) {
     this->m_isZMovement = isZ;
 }
 
-bool PointSegment::isZMovement() {
+bool PointSegment::isZMovement() const {
     return m_isZMovement;
 }
 
@@ -114,7 +113,7 @@ void PointSegment::setIsMetric(bool isMetric) {
     this->m_isMetric = isMetric;
 }
 
-bool PointSegment::isMetric() {
+bool PointSegment::isMetric() const {
     return m_isMetric;
 }
 
@@ -122,7 +121,7 @@ void PointSegment::setIsArc(bool isA) {
     this->m_isArc = isA;
 }
 
-bool PointSegment::isArc() {
+bool PointSegment::isArc() const {
     return m_isArc;
 }
 
@@ -130,7 +129,7 @@ void PointSegment::setIsFastTraverse(bool isF) {
     this->m_isFastTraverse = isF;
 }
 
-bool PointSegment::isFastTraverse() {
+bool PointSegment::isFastTraverse() const {
     return m_isFastTraverse;
 }
 
@@ -157,28 +156,32 @@ QVector<double> PointSegment::centerPoints()
     return points;
 }
 
-QVector3D &PointSegment::center()
+QVector3D &PointSegment::center() const
 {
     return m_arcProperties->center;
 }
 
 void PointSegment::setIsClockwise(bool clockwise) {
 //    if (this->m_arcProperties == NULL) this->m_arcProperties = new ArcProperties();
+    Q_ASSERT(isArc());
     this->m_arcProperties->isClockwise = clockwise;
 }
 
-bool PointSegment::isClockwise() {
+bool PointSegment::isClockwise() const {
 //    if (this->m_arcProperties != NULL && this->m_arcProperties->center != NULL)
+    Q_ASSERT(isArc());
         return this->m_arcProperties->isClockwise;
 //    return false;
 }
 
 void PointSegment::setRadius(double rad) {
 //    if (this->m_arcProperties == NULL) this->m_arcProperties = new ArcProperties();
+    Q_ASSERT(isArc());
     this->m_arcProperties->radius = rad;
 }
 
-double PointSegment::getRadius() {
+double PointSegment::getRadius() const{
+    Q_ASSERT(isArc());
 //    if (this->m_arcProperties != NULL && this->m_arcProperties->center != NULL)
         return this->m_arcProperties->radius;
 //    return 0;
@@ -190,9 +193,9 @@ void PointSegment::convertToMetric() {
     }
 
     this->m_isMetric = true;
-    this->m_point->setX(this->m_point->x() * 25.4f);
-    this->m_point->setY(this->m_point->y() * 25.4f);
-    this->m_point->setZ(this->m_point->z() * 25.4f);
+    this->m_point.setX(this->m_point.x() * 25.4f);
+    this->m_point.setY(this->m_point.y() * 25.4f);
+    this->m_point.setZ(this->m_point.z() * 25.4f);
 
     if (this->m_isArc && this->m_arcProperties != nullptr) {
         this->m_arcProperties->center.setX(this->m_arcProperties->center.x() * 25.4f);

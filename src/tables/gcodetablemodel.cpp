@@ -127,7 +127,7 @@ Qt::ItemFlags GCodeTableModel::flags(const QModelIndex &index) const
     else return QAbstractTableModel::flags(index);
 }
 
-GCodeTableModel::gcvec &GCodeTableModel::data()
+GCodeTableModel::Container &GCodeTableModel::data()
 {
     return m_data;
 }

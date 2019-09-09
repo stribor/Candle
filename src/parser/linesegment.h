@@ -10,10 +10,15 @@
 
 #include <QVector3D>
 #include "pointsegment.h"
+#include <vector>
 
 class LineSegment
 {
 public:
+    using Container = std::vector<LineSegment*>;
+//    using Container = QVector<LineSegment*>;
+//    using Container = QList<LineSegment*>;
+
     LineSegment();
     LineSegment(QVector3D a, QVector3D b, int num);
     LineSegment(LineSegment *initial);

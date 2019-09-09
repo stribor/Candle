@@ -9,6 +9,9 @@
 #include "parser/linesegment.h"
 #include "parser/gcodeviewparse.h"
 #include "shaderdrawable.h"
+#include <vector>
+
+using indexContainer = QVector<int>;
 
 class GcodeDrawer : public QObject, public ShaderDrawable
 {
@@ -20,7 +23,8 @@ public:
     explicit GcodeDrawer();
 
     void update();
-    void update(QList<int> indexes);
+    void update(int index);
+    void update(indexContainer indexes);
     bool updateData();
 
     QVector3D getSizes();
@@ -104,7 +108,7 @@ private:
     QTimer m_timerVertexUpdate;
 
     QImage m_image;
-    QList<int> m_indexes;
+    indexContainer m_indexes;
     bool m_geometryUpdated;
 
     bool prepareVectors();

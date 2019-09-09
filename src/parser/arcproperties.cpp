@@ -7,4 +7,4 @@
 
 #include "arcproperties.h"
 
-ArcProperties::ArcProperties(QVector3D center, double radius, bool isClockwise) : isClockwise(isClockwise), radius(radius), center(center) {}
+ArcProperties::ArcProperties(QVector3D const &center, double radius, bool isClockwise) : radius(radius), center(center), isClockwise(isClockwise) {}

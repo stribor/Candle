@@ -341,7 +341,7 @@ private:
     bool dataIsEnd(QString const &data);
     static bool dataIsReset(QString const &data);
 
-    QTime updateProgramEstimatedTime(QList<LineSegment *> const & lines);
+    QTime updateProgramEstimatedTime(LineSegment::Container const & lines);
     bool saveProgramToFile(QString const &fileName, GCodeTableModel *model);
     static QString feedOverride(QString const &command);
 
@@ -362,7 +362,7 @@ private:
     bool saveHeightMap(QString const &fileName);
 
     GCodeTableModel *m_currentModel;
-    QList<LineSegment *> subdivideSegment(LineSegment *segment);
+    LineSegment::Container subdivideSegment(LineSegment *segment);
     void resizeTableHeightMapSections();
     void updateHeightMapGrid(double arg1);
     void resetHeightmap();
