@@ -24,6 +24,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 option(UPDATE_TRANSLATIONS "Update ts files instead of just compiling them to .qm (only needed when before working on translations)" OFF)
 option(ENABLE_ADDRESS_SANITIZER "enable address sanitizer if available (only for Debug builds, mutual exclusive to ENABLE_UB_SANITIZER)" ON)
 option(ENABLE_UNDEFINED_SANITIZER "enable undefined behaviour sanitizer if available (only for Debug builds, mutual exclusive to ENABLE_ADDRESS_SANITIZER)" OFF)
+option(ENABLE_PEDANTIC_MODE "enable pedantic compiling mode that usually produces a lot of more warnings" ON)
 
 # Handle sanitizer options
 if (ENABLE_ADDRESS_SANITIZER OR ENABLE_UNDEFINED_SANITIZER)
@@ -244,3 +245,9 @@ if (ENABLE_SANITIZER AND (HAVE_FLAG_SANITIZE_ADDRESS OR HAVE_FLAG_SANITIZE_UNDEF
     endif()
 endif()
 
+if (ENABLE_PEDANTIC_MODE)
+    if(NOT MSVC)
+        target_compile_options(Candle PRIVATE -Wextra -pedantic)
+#        -Wpadded
+    endif()
+endif()

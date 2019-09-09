@@ -70,25 +70,25 @@ public:
     void setPlane(const PointSegment::planes &plane);
 
 private:
-    int m_toolhead;
     double m_speed;
     double m_spindleSpeed;
     double m_dwell;
     QVector3D m_first, m_second;
+    int m_toolhead;
 
     // Line properties
-    bool m_isZMovement;
-    bool m_isArc;
-    bool m_isClockwise;
-    bool m_isFastTraverse;
     int m_lineNumber;
-    bool m_drawn;
-    bool m_isMetric;
-    bool m_isAbsolute;
-    bool m_isHightlight;
     int m_vertexIndex;
-
     PointSegment::planes m_plane;
+    bool m_isZMovement:1;
+    bool m_isArc:1;
+    bool m_isClockwise:1;
+    bool m_isFastTraverse:1;
+    bool m_drawn:1;
+    bool m_isMetric:1;
+    bool m_isAbsolute:1;
+    bool m_isHightlight:1;
+
 };
 
 #endif // LINESEGMENT_H

@@ -40,8 +40,6 @@ signals:
 public slots:
 
 private:
-    bool absoluteMode;
-    bool absoluteIJK;
 
     // Parsed object
     QVector3D m_min, m_max;
@@ -52,6 +50,9 @@ private:
     // Parsing state.
     QVector3D lastPoint;
     int currentLine; // for assigning line numbers to segments.
+
+    bool absoluteMode;
+    bool absoluteIJK;
 
     // Debug
     bool debug;

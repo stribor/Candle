@@ -201,7 +201,7 @@ protected:
     void dropEvent(QDropEvent *de);
 
 private:
-    const int BUFFERLENGTH = 127;
+    static constexpr int BUFFERLENGTH = 127;
 
     Ui::frmMain *ui;
     GcodeViewParse m_viewParser;

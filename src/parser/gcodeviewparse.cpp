@@ -77,7 +77,7 @@ QList<LineSegment*> GcodeViewParse::getLineSegmentList()
 
 void GcodeViewParse::reset()
 {
-    foreach (LineSegment *ls, m_lines) delete ls;
+    for (auto &ls : m_lines) delete ls;
     m_lines.clear();
     m_lineIndexes.clear();
     currentLine = 0;
@@ -111,16 +111,15 @@ QList<LineSegment*> GcodeViewParse::getLinesFromParser(GcodeParser *gp, double a
     m_lineIndexes.resize(psl.count());
 
     int lineIndex = 0;
-    foreach (PointSegment *segment, psl) {
-        PointSegment *ps = segment;
+    for (auto &ps : psl) {
         bool isMetric = ps->isMetric();
         ps->convertToMetric();
 
         end = ps->point();
 
         // start is null for the first iteration.
-        if (start != NULL) {           
-            // Expand arc for graphics.            
+        if (start != NULL) {
+            // Expand arc for graphics.
             if (ps->isArc()) {
                 QList<QVector3D> points =
                     GcodePreprocessorUtils::generatePointsAlongArcBDring(ps->plane(),
@@ -128,7 +127,7 @@ QList<LineSegment*> GcodeViewParse::getLinesFromParser(GcodeParser *gp, double a
                 // Create line segments from points.
                 if (points.length() > 0) {
                     QVector3D startPoint = *start;
-                    foreach (QVector3D nextPoint, points) {
+                    for (auto const &nextPoint : points) {
                         if (nextPoint == startPoint) continue;
                         ls = new LineSegment(startPoint, nextPoint, lineIndex);
                         ls->setIsArc(ps->isArc());
