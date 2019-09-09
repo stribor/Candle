@@ -177,28 +177,25 @@ QList<PointSegment*> GcodeParser::expandArc()
     QList<PointSegment*> psl;
 
     // Create line segments from points.
-    PointSegment *temp;
-
     QListIterator<QVector3D> psi(expandedPoints);
     // skip first element.
     if (psi.hasNext()) psi.next();
 
     while (psi.hasNext()) {
-        temp = new PointSegment(&psi.next(), m_commandNumber++);
+        auto temp = new PointSegment(&psi.next(), m_commandNumber++);
         temp->setIsMetric(lastSegment->isMetric());
         this->m_points.append(temp);
         psl.append(temp);
     }
 
     // Update the new endpoint.
-    this->m_currentPoint.setX(this->m_points.last()->point()->x());
-    this->m_currentPoint.setY(this->m_points.last()->point()->y());
-    this->m_currentPoint.setZ(this->m_points.last()->point()->z());
+    this->m_currentPoint = *this->m_points.last()->point();
 
     return psl;
 }
 
-QList<PointSegment*> &GcodeParser::getPointSegmentList() {
+QList<PointSegment*> &GcodeParser::getPointSegmentList()
+{
     return this->m_points;
 }
 double GcodeParser::getTraverseSpeed() const
@@ -429,7 +426,7 @@ QStringList GcodeParser::convertArcsToLines(QString const &command) {
 
     // Create an array of new commands out of the of the segments in psl.
     // Don't add them to the gcode parser since it is who expanded them.
-    foreach (PointSegment* segment, psl) {
+    for (auto &segment : psl) {
         //Point3d end = segment.point();
         QVector3D end = *segment->point();
         result.append(GcodePreprocessorUtils::generateG1FromPoints(start, end, this->m_inAbsoluteMode, m_truncateDecimalLength));
