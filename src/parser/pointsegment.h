@@ -15,10 +15,12 @@
 class PointSegment
 {
 public:
+#ifdef USE_STD_CONTAINERS
     using Container = std::vector<PointSegment*>;
-//    using Container = QVector<PointSegment*>;
+#else
+    using Container = QVector<PointSegment*>;
 //    using Container = QList<PointSegment*>;
-
+#endif
     enum planes {
         XY,
         ZX,

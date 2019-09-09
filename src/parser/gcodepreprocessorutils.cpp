@@ -102,6 +102,58 @@ QString GcodePreprocessorUtils::removeAllWhitespace(QString command)
     return command.remove(rx);
 #endif
 }
+struct GM {QLatin1String v; GCodes m;};
+static std::array<GM,28> m = {{
+        {QLatin1String("G0"), G0},
+        {QLatin1String("G1"), G1},
+        {QLatin1String("G38.2"), G38_2},
+        {QLatin1String("G2"), G2},
+        {QLatin1String("G3"), G3},
+        {QLatin1String("G17"), G17},
+        {QLatin1String("G18"), G18},
+        {QLatin1String("G19"), G19},
+        {QLatin1String("G20"), G20},
+        {QLatin1String("G21"), G21},
+        {QLatin1String("G90"), G90},
+        {QLatin1String("G90.1"), G90_1},
+        {QLatin1String("G91"), G91},
+        {QLatin1String("G91.1"), G91_1},
+        {QLatin1String("g0"), G0},
+        {QLatin1String("g1"), G1},
+        {QLatin1String("g38.2"), G38_2},
+        {QLatin1String("g2"), G2},
+        {QLatin1String("g3"), G3},
+        {QLatin1String("g17"), G17},
+        {QLatin1String("g18"), G18},
+        {QLatin1String("g19"), G19},
+        {QLatin1String("g20"), G20},
+        {QLatin1String("g21"), G21},
+        {QLatin1String("g90"), G90},
+        {QLatin1String("g90.1"), G90_1},
+        {QLatin1String("g91"), G91},
+        {QLatin1String("g91.0"), G91_1}}
+};
+
+QList<GCodes> GcodePreprocessorUtils::parseCodesEnum(const QStringList &args, QChar /*code*/)
+{
+    QList<GCodes> l;
+
+    for (auto &arg : args) {
+#if 0
+        auto v = G.value(arg, unknown);
+        if (v != unknown)
+             l.push_back(v);
+#else
+        auto r = std::find_if(m.begin(), m.end(), [&arg](auto &e) {
+            return arg == e.v;
+        });
+        if (r!=m.end()) {
+            l.push_back(r->m);
+        }
+#endif
+    }
+    return l;
+}
 
 QList<float> GcodePreprocessorUtils::parseCodes(const QStringList &args, QChar code)
 {

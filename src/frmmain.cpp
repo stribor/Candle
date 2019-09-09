@@ -3589,30 +3589,34 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
         if (m_programHeightmapModel.rowCount() == 0) {
 
             // Modifying linesegments
-            LineSegment::Container *list = m_viewParser.getLines();
+            auto & list = m_viewParser.getLines();
             QRectF borderRect = borderRectFromTextboxes();
             double x, y, z;
             QVector3D point;
 
             progress.setLabelText(tr("Subdividing segments..."));
-            progress.setMaximum(static_cast<int>(list->size()) - 1);
+            progress.setMaximum(static_cast<int>(list.size()) - 1);
             time.start();
 
-            for (int i = 0; i < static_cast<int>(list->size()); i++) {
-                if (!list->at(i)->isZMovement()) {
-                    LineSegment::Container subSegments = subdivideSegment(list->at(i));
+            for (int i = 0; i < static_cast<int>(list.size()); i++) {
+                if (!list.at(i)->isZMovement()) {
+                    LineSegment::Container subSegments = subdivideSegment(list.at(i));
 
                     if (!subSegments.empty()) {
-                        delete list->at(i);
-                        list->erase(list->begin() + i); // list->removeAt(i);
-                        list->insert(list->begin() + i, subSegments.begin(), subSegments.end());
-//                        foreach (LineSegment* subSegment, subSegments) list->insert(i++, subSegment);
-                        i += subSegments.size();
+                        delete list.at(i);
+                        list.erase(list.begin() + i); // list.removeAt(i);
+#ifdef USE_STD_CONTAINERS
+                        list.insert(list.begin() + i, subSegments.begin(), subSegments.end());
+                        i += subSegments.size() - 1;
+#else
+                        foreach (LineSegment* subSegment, subSegments) list.insert(i++, subSegment);
+                        i--;
+#endif
                     }
                 }
 
                 if (progress.isVisible() && (time.elapsed() % PROGRESSSTEP == 0)) {
-                    progress.setMaximum(static_cast<int>(list->size()) - 1);
+                    progress.setMaximum(static_cast<int>(list.size()) - 1);
                     progress.setValue(i);
                     qApp->processEvents();
                     if (progress.wasCanceled()) throw cancel;
@@ -3622,20 +3626,20 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
             qDebug() << "Subdivide time: " << time.restart();
 
             progress.setLabelText(tr("Updating Z-coordinates..."));
-            progress.setMaximum(static_cast<int>(list->size()) - 1);
+            progress.setMaximum(static_cast<int>(list.size()) - 1);
 
-            for (int i = 0; i < static_cast<int>(list->size()); i++) {
+            for (int i = 0; i < static_cast<int>(list.size()); i++) {
                 if (i == 0) {
-                    x = list->at(i)->getStart().x();
-                    y = list->at(i)->getStart().y();
-                    z = list->at(i)->getStart().z() + Interpolation::bicubicInterpolate(borderRect, &m_heightMapModel, x, y);
-                    list->at(i)->setStart(QVector3D(x, y, z));
-                } else list->at(i)->setStart(list->at(i - 1)->getEnd());
+                    x = list.at(i)->getStart().x();
+                    y = list.at(i)->getStart().y();
+                    z = list.at(i)->getStart().z() + Interpolation::bicubicInterpolate(borderRect, &m_heightMapModel, x, y);
+                    list.at(i)->setStart(QVector3D(x, y, z));
+                } else list.at(i)->setStart(list.at(i - 1)->getEnd());
 
-                x = list->at(i)->getEnd().x();
-                y = list->at(i)->getEnd().y();
-                z = list->at(i)->getEnd().z() + Interpolation::bicubicInterpolate(borderRect, &m_heightMapModel, x, y);
-                list->at(i)->setEnd(QVector3D(x, y, z));
+                x = list.at(i)->getEnd().x();
+                y = list.at(i)->getEnd().y();
+                z = list.at(i)->getEnd().z() + Interpolation::bicubicInterpolate(borderRect, &m_heightMapModel, x, y);
+                list.at(i)->setEnd(QVector3D(x, y, z));
 
                 if (progress.isVisible() && (time.elapsed() % PROGRESSSTEP == 0)) {
                     progress.setValue(i);
@@ -3678,7 +3682,7 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
                 hasCommand = false;
 
                 auto &modelData = m_programHeightmapModel.data();
-                if (line < 0 || line == lastCommandIndex || lastSegmentIndex == static_cast<int>(list->size()) - 1) {
+                if (line < 0 || line == lastCommandIndex || lastSegmentIndex == static_cast<int>(list.size()) - 1) {
                     item.command = command;
                     modelData.push_back(item);
                 } else {
@@ -3717,15 +3721,15 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
                     }
 
                     // Find first linesegment by command index
-                    for (int j = lastSegmentIndex; j < static_cast<int>(list->size()); j++) {
-                        if (list->at(j)->getLineNumber() == line) {
-                            if (!qIsNaN(list->at(j)->getEnd().length()) && (isLinearMove || (!hasCommand && !lastCode.isEmpty()))) {
+                    for (int j = lastSegmentIndex; j < static_cast<int>(list.size()); j++) {
+                        if (list.at(j)->getLineNumber() == line) {
+                            if (!qIsNaN(list.at(j)->getEnd().length()) && (isLinearMove || (!hasCommand && !lastCode.isEmpty()))) {
                                 // Create new commands for each linesegment with given command index
-                                while ((j < static_cast<int>(list->size())) && (list->at(j)->getLineNumber() == line)) {
+                                while ((j < static_cast<int>(list.size())) && (list.at(j)->getLineNumber() == line)) {
 
-                                    point = list->at(j)->getEnd();
-                                    if (!list->at(j)->isAbsolute()) point -= list->at(j)->getStart();
-                                    if (!list->at(j)->isMetric()) point /= 25.4;
+                                    point = list.at(j)->getEnd();
+                                    if (!list.at(j)->isAbsolute()) point -= list.at(j)->getStart();
+                                    if (!list.at(j)->isMetric()) point /= 25.4;
 
                                     item.command = newCommand + QString("X%1Y%2Z%3")
                                             .arg(point.x(), 0, 'f', 3).arg(point.y(), 0, 'f', 3).arg(point.z(), 0, 'f', 3);

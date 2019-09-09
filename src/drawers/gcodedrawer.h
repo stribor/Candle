@@ -11,8 +11,13 @@
 #include "shaderdrawable.h"
 #include <vector>
 
-using indexContainer = QVector<int>;
 
+#ifdef USE_STD_CONTAINERS
+using indexContainer = std::vector<int>;
+#else
+using indexContainer = QVector<int>;
+//using indexContainer = QList<int>;
+#endif
 class GcodeDrawer : public QObject, public ShaderDrawable
 {
     Q_OBJECT
@@ -24,7 +29,7 @@ public:
 
     void update();
     void update(int index);
-    void update(indexContainer indexes);
+    void update(const indexContainer& indexes);
     bool updateData();
 
     QVector3D getSizes();

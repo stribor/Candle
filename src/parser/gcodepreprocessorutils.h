@@ -13,6 +13,24 @@
 #include <cmath>
 #include "pointsegment.h"
 
+enum GCodes{
+    unknown,
+    G0,
+    G1,
+    G38_2,
+    G2,
+    G3,
+    G17,
+    G18,
+    G19,
+    G20,
+    G21,
+    G90,
+    G90_1,
+    G91,
+    G91_1
+};
+
 class GcodePreprocessorUtils : public QObject
 {
     Q_OBJECT
@@ -22,6 +40,7 @@ public:
     static QString parseComment(QString command);
     static QString truncateDecimals(int length, QString command);
     static QString removeAllWhitespace(QString command);
+    static QList<GCodes > parseCodesEnum(const QStringList &args, QChar code);
     static QList<float> parseCodes(const QStringList &args, QChar code);
     static QList<int> parseGCodes(QString const &command);
     static QList<int> parseMCodes(QString const &command);

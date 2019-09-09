@@ -9,7 +9,7 @@ if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
     return()
 endif()
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 # instruct CMake to run moc automatically when needed
 set(CMAKE_AUTOMOC ON)
@@ -25,6 +25,7 @@ option(UPDATE_TRANSLATIONS "Update ts files instead of just compiling them to .q
 option(ENABLE_ADDRESS_SANITIZER "enable address sanitizer if available (only for Debug builds, mutual exclusive to ENABLE_UB_SANITIZER)" ON)
 option(ENABLE_UNDEFINED_SANITIZER "enable undefined behaviour sanitizer if available (only for Debug builds, mutual exclusive to ENABLE_ADDRESS_SANITIZER)" OFF)
 option(ENABLE_PEDANTIC_MODE "enable pedantic compiling mode that usually produces a lot of more warnings" ON)
+option(USE_STD_CONTAINERS "use std:vector instead of QList and QVector" ON)
 
 # Handle sanitizer options
 if (ENABLE_ADDRESS_SANITIZER OR ENABLE_UNDEFINED_SANITIZER)
@@ -243,6 +244,9 @@ if (ENABLE_SANITIZER AND (HAVE_FLAG_SANITIZE_ADDRESS OR HAVE_FLAG_SANITIZE_UNDEF
         # Xcode adds this when sanitizer is enabled
         target_compile_definitions(Candle PRIVATE $<$<CONFIG:Debug>:_LIBCPP_HAS_NO_ASAN>)
     endif()
+endif()
+if (USE_STD_CONTAINERS)
+    target_compile_definitions(Candle PRIVATE USE_STD_CONTAINERS)
 endif()
 
 if (ENABLE_PEDANTIC_MODE)

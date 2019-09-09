@@ -170,9 +170,9 @@ LineSegment::Container GcodeViewParse::getLinesFromParser(GcodeParser *gp, doubl
     return m_lines;
 }
 
-LineSegment::Container *GcodeViewParse::getLines()
+LineSegment::Container & GcodeViewParse::getLines()
 {
-    return &m_lines;
+    return m_lines;
 }
 
 QVector<QList<int> > &GcodeViewParse::getLinesIndexes()

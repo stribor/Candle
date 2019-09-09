@@ -60,6 +60,7 @@ private:
     QVector3D m_currentPoint;
     int m_commandNumber;
     PointSegment::planes m_currentPlane;
+    GCodes m_lastGcodeCommandE{unknown};
 
     // Settings
     double m_speedOverride;
@@ -79,6 +80,7 @@ private:
 
     PointSegment *processCommand(const QStringList &args);
     void handleMCode(float code, const QStringList &args);
+    PointSegment *handleGCode(GCodes code, const QStringList &args);
     PointSegment *handleGCode(float code, const QStringList &args);
     PointSegment *addLinearPointSegment(const QVector3D &nextPoint, bool fastTraverse);
     PointSegment *addArcPointSegment(const QVector3D &nextPoint, bool clockwise, const QStringList &args);

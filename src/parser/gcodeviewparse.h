@@ -30,7 +30,7 @@ public:
     LineSegment::Container &getLineSegmentList();
     LineSegment::Container getLinesFromParser(GcodeParser *gp, double arcPrecision, bool arcDegreeMode);
 
-    LineSegment::Container *getLines();
+    LineSegment::Container & getLines();
     QVector<QList<int>> &getLinesIndexes();
 
     void reset();

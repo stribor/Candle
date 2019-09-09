@@ -15,10 +15,12 @@
 class LineSegment
 {
 public:
+#ifdef USE_STD_CONTAINERS
     using Container = std::vector<LineSegment*>;
-//    using Container = QVector<LineSegment*>;
+#else
+    using Container = QVector<LineSegment*>;
 //    using Container = QList<LineSegment*>;
-
+#endif
     LineSegment();
     LineSegment(QVector3D a, QVector3D b, int num);
     LineSegment(LineSegment *initial);

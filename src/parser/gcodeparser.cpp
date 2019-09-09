@@ -233,14 +233,14 @@ PointSegment *GcodeParser::processCommand(const QStringList &args)
     if (!qIsNaN(dwell)) this->m_points.back()->setDwell(dwell);
 
     // handle G codes.
-    auto gCodes = GcodePreprocessorUtils::parseCodes(args, 'G');
+    auto gCodes = GcodePreprocessorUtils::parseCodesEnum(args, 'G');
 
     // If there was no command, add the implicit one to the party.
-    if (gCodes.isEmpty() && m_lastGcodeCommand != -1) {
-        gCodes.append(m_lastGcodeCommand);
+    if (gCodes.isEmpty() && m_lastGcodeCommand != unknown) {
+        gCodes.append(m_lastGcodeCommandE);
     }
 
-    for (float code : gCodes) {
+    for (auto code : gCodes) {
         ps = handleGCode(code, args);
     }
 
@@ -323,14 +323,44 @@ void GcodeParser::handleMCode(float /*code*/, const QStringList &args)
     if (!qIsNaN(spindleSpeed)) this->m_lastSpindleSpeed = spindleSpeed;
 }
 
+PointSegment * GcodeParser::handleGCode(GCodes code, const QStringList &args)
+{
+    PointSegment *ps = NULL;
+
+    QVector3D nextPoint = GcodePreprocessorUtils::updatePointWithCommand(args, this->m_currentPoint, this->m_inAbsoluteMode);
+    // should this use qFuzzyCompare()?
+    switch (code) {
+    case G0:  ps = addLinearPointSegment(nextPoint, true);break;
+    case G1:  ps = addLinearPointSegment(nextPoint, false); break;
+    case G38_2:  ps = addLinearPointSegment(nextPoint, false); break;
+    case G2: ps = addArcPointSegment(nextPoint, true, args); break;
+    case G3: ps = addArcPointSegment(nextPoint, false, args); break;
+    case G17: this->m_currentPlane = PointSegment::XY; break;
+    case G18: this->m_currentPlane = PointSegment::ZX; break;
+    case G19: this->m_currentPlane = PointSegment::YZ; break;
+    case G20: this->m_isMetric = false; break;
+    case G21: this->m_isMetric = true; break;
+    case G90: this->m_inAbsoluteMode = true; break;
+    case G90_1:  this->m_inAbsoluteIJKMode = true; break;
+    case G91: this->m_inAbsoluteMode = false; break;
+    case G91_1:  this->m_inAbsoluteIJKMode = false; break;
+    default: break;
+    }
+    if (code == G0 || code == G1 || code == G2 || code == G3 || code == G38_2) {
+        m_lastGcodeCommandE = code;
+    }
+
+    return ps;
+}
+
 PointSegment * GcodeParser::handleGCode(float code, const QStringList &args)
 {
     PointSegment *ps = NULL;
 
     QVector3D nextPoint = GcodePreprocessorUtils::updatePointWithCommand(args, this->m_currentPoint, this->m_inAbsoluteMode);
-
-    if (code == 0.0f) ps = addLinearPointSegment(nextPoint, true);
-    else if (code == 1.0f) ps = addLinearPointSegment(nextPoint, false);
+    // should this use qFuzzyCompare()?
+    if (code == 1.0f) ps = addLinearPointSegment(nextPoint, false);
+    else if (code == 0.0f) ps = addLinearPointSegment(nextPoint, true);
     else if (code == 38.2f) ps = addLinearPointSegment(nextPoint, false);
     else if (code == 2.0f) ps = addArcPointSegment(nextPoint, true, args);
     else if (code == 3.0f) ps = addArcPointSegment(nextPoint, false, args);

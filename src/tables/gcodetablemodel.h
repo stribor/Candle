@@ -24,9 +24,12 @@ class GCodeTableModel : public QAbstractTableModel
     Q_OBJECT
     // easy switch between containers to test which one is fastest, this can be platform/compiler/qt version dependant
     // on my machine std::vector was fastest, than QVector and than QList (it was neglect-able but still)
+#ifdef USE_STD_CONTAINERS
     using Container = std::vector<GCodeItem>;
-//    using Container = QVector<GCodeItem>;
+#else
+    using Container = QVector<GCodeItem>;
 //    using Container = QList<GCodeItem>;
+#endif
 public:
     explicit GCodeTableModel(QObject *parent = 0);
 
