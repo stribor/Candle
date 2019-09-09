@@ -84,7 +84,7 @@ QString GcodePreprocessorUtils::truncateDecimals(int length, QString command)
     while ((pos = match.capturedStart(0)) != -1) {
         QString newNum = QString::number(match.captured(1).toDouble(), 'f', length);
         command = command.left(pos) + newNum + command.mid(match.capturedEnd(0));
-        pos += newNum.length() + 1;
+        pos += newNum.size() + 1;
         match = re.match(command, pos);
     }
 
@@ -110,7 +110,7 @@ QList<float> GcodePreprocessorUtils::parseCodes(const QStringList &args, QChar c
     auto small_c = code.toLower();
 
     for (auto const &s : args) {
-        if (s.length() > 0 && (s[0] == code || s[0] == small_c)) l.append(s.midRef(1).toDouble());
+        if (s.size() > 0 && (s[0] == code || s[0] == small_c)) l.append(s.midRef(1).toDouble());
     }
 
     return l;
@@ -215,7 +215,7 @@ QVector3D GcodePreprocessorUtils::updateCenterWithCommand(QStringList const &com
     double r = qQNaN();
 
     for (auto &t : commandArgs) {
-        if (t.length() > 0) {
+        if (t.size() > 0) {
             auto c = t[0].toUpper();
             switch (c.unicode()) {
             case 'I':
@@ -280,7 +280,7 @@ QStringList GcodePreprocessorUtils::splitCommand(const QString &command) {
             readNumeric = true;
         } else if (c.isLetter()) sb.append(c);
     }
-    if (sb.length() > 0) l.append(sb);
+    if (sb.size() > 0) l.append(sb);
 
 #else
     QByteArray sb;
@@ -299,7 +299,7 @@ QStringList GcodePreprocessorUtils::splitCommand(const QString &command) {
         } else if (isLetter(c)) sb.append(c);
     }
 
-    if (sb.length() > 0) l.append(sb);
+    if (sb.size() > 0) l.append(sb);
 #endif
 //    QChar c;
 
@@ -333,7 +333,7 @@ double GcodePreprocessorUtils::parseCoord(QStringList const &argList, QChar c)
 //    }
     auto small_c = c.toLower();
     for (auto const &t : argList) {
-        if (t.length() > 0 && (t[0] == c || t[0] == small_c)) return t.midRef(1).toDouble();
+        if (t.size() > 0 && (t[0] == c || t[0] == small_c)) return t.midRef(1).toDouble();
     }
     return qQNaN();
 }

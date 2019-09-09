@@ -375,7 +375,7 @@ QStringList GcodeParser::preprocessCommand(QString const &command) {
         newCommand = GcodePreprocessorUtils::removeAllWhitespace(newCommand);
     }
 
-    if (newCommand.length() > 0) {
+    if (newCommand.size() > 0) {
 
         // Override feed speed
         if (m_speedOverride > 0) {
@@ -389,7 +389,7 @@ QStringList GcodeParser::preprocessCommand(QString const &command) {
         // If this is enabled we need to parse the gcode as we go along.
         if (m_convertArcsToLines) { // || this.expandCannedCycles) {
             QStringList arcLines = convertArcsToLines(newCommand);
-            if (arcLines.length() > 0) {
+            if (arcLines.size() > 0) {
                 result.append(arcLines);
             } else {
                 result.append(newCommand);
@@ -423,7 +423,7 @@ QStringList GcodeParser::convertArcsToLines(QString const &command) {
 
     QList<PointSegment*> psl = expandArc();
 
-    if (psl.length() == 0) {
+    if (psl.size() == 0) {
         return result;
     }
 

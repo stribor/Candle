@@ -13,7 +13,7 @@ QVariant GCodeTableModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid()) return QVariant();
 
-    if (index.row() >= m_data.size()) return QVariant();
+    if (index.row() >= static_cast<int>(m_data.size())) return QVariant();
 
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         switch (index.column())
