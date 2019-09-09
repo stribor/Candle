@@ -2546,7 +2546,7 @@ void frmMain::on_cmdFileReset_clicked()
 
         ui->tblProgram->setUpdatesEnabled(false);
 
-        for (int i = 0; i < m_currentModel->data().size() - 1; i++) {
+        for (int i = 0; i < static_cast<int>(m_currentModel->data().size()) - 1; i++) {
             m_currentModel->data()[i].state = GCodeItem::InQueue;
             m_currentModel->data()[i].response = QString();
         }
