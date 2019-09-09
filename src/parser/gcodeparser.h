@@ -41,7 +41,7 @@ public:
     QStringList preprocessCommands(QStringList const &commands);
     QStringList preprocessCommand(QString const &command);
     QStringList convertArcsToLines(QString const &command);
-    QList<PointSegment *> getPointSegmentList();
+    QList<PointSegment *> &getPointSegmentList();
     double getTraverseSpeed() const;
     void setTraverseSpeed(double traverseSpeed);
     int getCommandNumber() const;

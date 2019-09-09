@@ -51,7 +51,7 @@ void ShaderDrawable::updateGeometry(QOpenGLShaderProgram *shaderProgram)
         QVector<VertexData> vertexData(m_triangles);
         vertexData += m_lines;
         vertexData += m_points;
-        m_vbo.allocate(vertexData.constData(), vertexData.count() * sizeof(VertexData));
+        m_vbo.allocate(vertexData.constData(), vertexData.size() * sizeof(VertexData));
     } else {
         m_vbo.release();        
         if (m_vao.isCreated()) m_vao.release();
@@ -153,16 +153,16 @@ void ShaderDrawable::draw(QOpenGLShaderProgram *shaderProgram)
             m_texture->bind();
             shaderProgram->setUniformValue("texture", 0);
         }
-        glDrawArrays(GL_TRIANGLES, 0, m_triangles.count());
+        glDrawArrays(GL_TRIANGLES, 0, m_triangles.size());
     }
 
     if (!m_lines.isEmpty()) {
         glLineWidth(m_lineWidth);
-        glDrawArrays(GL_LINES, m_triangles.count(), m_lines.count());
+        glDrawArrays(GL_LINES, m_triangles.size(), m_lines.size());
     }
 
     if (!m_points.isEmpty()) {
-        glDrawArrays(GL_POINTS, m_triangles.count() + m_lines.count(), m_points.count());
+        glDrawArrays(GL_POINTS, m_triangles.size() + m_lines.size(), m_points.size());
     }
 
     if (m_vao.isCreated()) m_vao.release(); else m_vbo.release();
@@ -185,7 +185,7 @@ QVector3D ShaderDrawable::getMaximumExtremes()
 
 int ShaderDrawable::getVertexCount()
 {
-    return m_lines.count() + m_points.count() + m_triangles.count();
+    return m_lines.size() + m_points.size() + m_triangles.size();
 }
 
 double ShaderDrawable::lineWidth() const

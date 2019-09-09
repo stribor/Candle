@@ -27,7 +27,7 @@ public:
     double getMinLength() const;
     QSize getResolution() const;
     QList<LineSegment*> toObjRedux(QStringList const &gcode, double arcPrecision, bool arcDegreeMode);
-    QList<LineSegment*> getLineSegmentList();
+    QList<LineSegment*> &getLineSegmentList();
     QList<LineSegment*> getLinesFromParser(GcodeParser *gp, double arcPrecision, bool arcDegreeMode);
 
     QList<LineSegment*> *getLines();

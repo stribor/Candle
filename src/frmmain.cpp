@@ -290,7 +290,7 @@ frmMain::frmMain(QWidget *parent) :
     m_timerStateQuery.start();
 
     // Handle file drop
-    if (qApp->arguments().count() > 1 && isGCodeFile(qApp->arguments().last())) {
+    if (qApp->arguments().size() > 1 && isGCodeFile(qApp->arguments().last())) {
         loadFile(qApp->arguments().last());
     }
 }
@@ -673,8 +673,8 @@ void frmMain::updateControlsState() {
     ui->cmdFilePause->setEnabled(m_processingFile && !ui->chkTestMode->isChecked());
     ui->cmdFileAbort->setEnabled(m_processingFile);
     ui->actFileOpen->setEnabled(!m_processingFile);
-    ui->mnuRecent->setEnabled(!m_processingFile && ((m_recentFiles.count() > 0 && !m_heightMapMode)
-                                                      || (m_recentHeightmaps.count() > 0 && m_heightMapMode)));
+    ui->mnuRecent->setEnabled(!m_processingFile && ((m_recentFiles.size() > 0 && !m_heightMapMode)
+                                                      || (m_recentHeightmaps.size() > 0 && m_heightMapMode)));
     ui->actFileSave->setEnabled(m_programModel.rowCount() > 1);
     ui->actFileSaveAs->setEnabled(m_programModel.rowCount() > 1);
 
@@ -933,7 +933,7 @@ void frmMain::onSerialPortReadyRead()
                     // Shadow last segment
                     GcodeViewParse *parser = m_currentDrawer->viewParser();
                     QList<LineSegment*> list = parser->getLineSegmentList();
-                    if (m_lastDrawnLineIndex < list.count()) {
+                    if (m_lastDrawnLineIndex < list.size()) {
                         list[m_lastDrawnLineIndex]->setDrawn(true);
                         m_currentDrawer->update(QList<int>() << m_lastDrawnLineIndex);
                     }
@@ -1029,7 +1029,7 @@ void frmMain::onSerialPortReadyRead()
                 QList<int> drawnLines;
                 QList<LineSegment*> list = parser->getLineSegmentList();
 
-                for (int i = m_lastDrawnLineIndex; i < list.count()
+                for (int i = m_lastDrawnLineIndex; i < list.size()
                      && list.at(i)->getLineNumber()
                      <= (m_currentModel->data(m_currentModel->index(m_fileProcessedCommandIndex, 4)).toInt() + 1); i++) {
                     if (list.at(i)->contains(toolPosition)) {
@@ -1045,7 +1045,7 @@ void frmMain::onSerialPortReadyRead()
                         list.at(i)->setDrawn(true);
                     }
                     if (!drawnLines.isEmpty()) m_currentDrawer->update(drawnLines);
-                } else if (m_lastDrawnLineIndex < list.count()) {
+                } else if (m_lastDrawnLineIndex < list.size()) {
                     qDebug() << "tool missed:" << list.at(m_lastDrawnLineIndex)->getLineNumber()
                              << m_currentModel->data(m_currentModel->index(m_fileProcessedCommandIndex, 4)).toInt()
                              << m_fileProcessedCommandIndex;
@@ -1243,7 +1243,7 @@ void frmMain::onSerialPortReadyRead()
                         // Update text block numbers
                         int blocksAdded = response.count("; ");
 
-                        if (blocksAdded > 0) for (int i = 0; i < m_commands.count(); i++) {
+                        if (blocksAdded > 0) for (int i = 0; i < m_commands.size(); i++) {
                             if (m_commands[i].consoleIndex != -1) m_commands[i].consoleIndex += blocksAdded;
                         }
 
@@ -1332,13 +1332,13 @@ void frmMain::onSerialPortReadyRead()
                             int i;
                             QList<int> drawnLines;
 
-                            for (i = m_lastDrawnLineIndex; i < list.count()
+                            for (i = m_lastDrawnLineIndex; i < list.size()
                                  && list.at(i)->getLineNumber()
                                  <= (m_currentModel->data(m_currentModel->index(m_fileProcessedCommandIndex, 4)).toInt()); i++) {
                                 drawnLines << i;
                             }
 
-                            if (!drawnLines.isEmpty() && (i < list.count())) {
+                            if (!drawnLines.isEmpty() && (i < list.size())) {
                                 m_lastDrawnLineIndex = i;
                                 QVector3D vec = list.at(i)->getEnd();
                                 m_toolDrawer.setToolPosition(vec);
@@ -1591,7 +1591,7 @@ void frmMain::dragEnterEvent(QDragEnterEvent *dee)
     if (m_processingFile) return;
 
     if (dee->mimeData()->hasFormat("text/plain") && !m_heightMapMode) dee->acceptProposedAction();
-    else if (dee->mimeData()->hasFormat("text/uri-list") && dee->mimeData()->urls().count() == 1) {
+    else if (dee->mimeData()->hasFormat("text/uri-list") && dee->mimeData()->urls().size() == 1) {
         QString fileName = dee->mimeData()->urls().at(0).toLocalFile();
 
         if ((!m_heightMapMode && isGCodeFile(fileName))
@@ -1839,7 +1839,7 @@ void frmMain::loadFile(const QString& fileName)
     loadFile(textStream);
 }
 
-QTime frmMain::updateProgramEstimatedTime(QList<LineSegment*> lines)
+QTime frmMain::updateProgramEstimatedTime(QList<LineSegment*> const &lines)
 {
     double time = 0;
 
@@ -1968,7 +1968,7 @@ void frmMain::onActSendFromLineTriggered()
         int res = box.exec();
         if (res == QMessageBox::Cancel) return;
         else if (res == QMessageBox::Ok) {
-            foreach (QString command, commands) {
+            for (auto const & command : commands) {
                 sendCommand(command, -1, m_settings->showUICommands());
             }
         }
@@ -1983,7 +1983,7 @@ void frmMain::onActSendFromLineTriggered()
 
     QList<int> indexes;
     auto &modelData = m_currentModel->data();
-    for (int i = 0; i < list.count(); i++) {
+    for (int i = 0; i < list.size(); i++) {
         list[i]->setDrawn(list.at(i)->getLineNumber() < modelData[commandIndex].line);
         indexes.append(i);
     }
@@ -1991,7 +1991,7 @@ void frmMain::onActSendFromLineTriggered()
 
     ui->tblProgram->setUpdatesEnabled(false);
 
-    for (size_t i = 0; i < modelData.size() - 1; i++) {
+    for (auto i = 0; i < modelData.size() - 1; i++) {
         modelData[i].state = i < commandIndex ? GCodeItem::Skipped : GCodeItem::InQueue;
         modelData[i].response = QString();
     }
@@ -2110,7 +2110,7 @@ void frmMain::onTableCellChanged(QModelIndex i1, QModelIndex i2)
 
         // Hightlight w/o current cell changed event (double hightlight on current cell changed)
         QList<LineSegment*> list = m_viewParser.getLineSegmentList();
-        for (int i = 0; i < list.count() && list[i]->getLineNumber() <= m_currentModel->data(m_currentModel->index(i1.row(), 4)).toInt(); i++) {
+        for (int i = 0; i < list.size() && list[i]->getLineNumber() <= m_currentModel->data(m_currentModel->index(i1.row(), 4)).toInt(); i++) {
             list[i]->setIsHightlight(true);
         }
     }
@@ -2128,7 +2128,7 @@ void frmMain::onTableCurrentChanged(QModelIndex idx1, QModelIndex idx2)
 
     // Update linesegments on cell changed
     if (!m_currentDrawer->geometryUpdated()) {
-        for (int i = 0; i < list.count(); i++) {
+        for (int i = 0; i < list.size(); i++) {
             list.at(i)->setIsHightlight(list.at(i)->getLineNumber() <= m_currentModel->data(m_currentModel->index(idx1.row(), 4)).toInt());
         }
     // Update vertices on current cell changed
@@ -2168,7 +2168,7 @@ void frmMain::onTableCurrentChanged(QModelIndex idx1, QModelIndex idx2)
 
 void frmMain::onTableInsertLine()
 {
-    if (ui->tblProgram->selectionModel()->selectedRows().count() == 0 || m_processingFile) return;
+    if (ui->tblProgram->selectionModel()->selectedRows().size() == 0 || m_processingFile) return;
 
     int row = ui->tblProgram->selectionModel()->selectedRows()[0].row();
 
@@ -2182,11 +2182,11 @@ void frmMain::onTableInsertLine()
 
 void frmMain::onTableDeleteLines()
 {
-    if (ui->tblProgram->selectionModel()->selectedRows().count() == 0 || m_processingFile ||
+    if (ui->tblProgram->selectionModel()->selectedRows().size() == 0 || m_processingFile ||
             QMessageBox::warning(this, this->windowTitle(), tr("Delete lines?"), QMessageBox::Yes | QMessageBox::No) == QMessageBox::No) return;
 
     QModelIndex firstRow = ui->tblProgram->selectionModel()->selectedRows()[0];
-    int rowsCount = ui->tblProgram->selectionModel()->selectedRows().count();
+    int rowsCount = ui->tblProgram->selectionModel()->selectedRows().size();
     if (ui->tblProgram->selectionModel()->selectedRows().last().row() == m_currentModel->rowCount() - 1) rowsCount--;
 
     qDebug() << "deleting lines" << firstRow.row() << rowsCount;
@@ -2534,7 +2534,7 @@ void frmMain::on_cmdFileReset_clicked()
         QList<LineSegment*> list = m_viewParser.getLineSegmentList();
 
         QList<int> indexes;
-        for (int i = 0; i < list.count(); i++) {
+        for (int i = 0; i < list.size(); i++) {
             list[i]->setDrawn(false);
             indexes.append(i);
         }
@@ -3009,7 +3009,7 @@ void frmMain::on_tblProgram_customContextMenuRequested(const QPoint &pos)
 {
     if (m_processingFile) return;
 
-    if (ui->tblProgram->selectionModel()->selectedRows().count() > 0) {
+    if (ui->tblProgram->selectionModel()->selectedRows().size() > 0) {
         m_tableMenu->actions().at(0)->setEnabled(true);
         m_tableMenu->actions().at(1)->setEnabled(ui->tblProgram->selectionModel()->selectedRows()[0].row() != m_currentModel->rowCount() - 1);
     } else {
@@ -3051,14 +3051,14 @@ void frmMain::addRecentFile(QString const &fileName)
 {
     m_recentFiles.removeAll(fileName);
     m_recentFiles.append(fileName);
-    if (m_recentFiles.count() > 5) m_recentFiles.takeFirst();
+    if (m_recentFiles.size() > 5) m_recentFiles.takeFirst();
 }
 
 void frmMain::addRecentHeightmap(QString const &fileName)
 {
     m_recentHeightmaps.removeAll(fileName);
     m_recentHeightmaps.append(fileName);
-    if (m_recentHeightmaps.count() > 5) m_recentHeightmaps.takeFirst();
+    if (m_recentHeightmaps.size() > 5) m_recentHeightmaps.takeFirst();
 }
 
 void frmMain::onActRecentFileTriggered()
@@ -3380,7 +3380,7 @@ void frmMain::on_cmdHeightMapMode_toggled(bool checked)
     // Shadow toolpath
     QList<LineSegment*> list = m_viewParser.getLineSegmentList();
     QList<int> indexes;
-    for (int i = m_lastDrawnLineIndex; i < list.count(); i++) {
+    for (int i = m_lastDrawnLineIndex; i < list.size(); i++) {
         list[i]->setDrawn(checked);
         list[i]->setIsHightlight(false);
         indexes.append(i);
@@ -3595,7 +3595,7 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
                 if (!list->at(i)->isZMovement()) {
                     QList<LineSegment*> subSegments = subdivideSegment(list->at(i));
 
-                    if (subSegments.count() > 0) {
+                    if (subSegments.size() > 0) {
                         delete list->at(i);
                         list->removeAt(i);
                         foreach (LineSegment* subSegment, subSegments) list->insert(i++, subSegment);
@@ -3845,7 +3845,7 @@ QList<LineSegment*> frmMain::subdivideSegment(LineSegment* segment)
         list.append(line);
     }
 
-    if (list.count() > 0 && list.last()->getEnd() != segment->getEnd()) {
+    if (list.size() > 0 && list.last()->getEnd() != segment->getEnd()) {
         LineSegment* line = new LineSegment(segment);
         line->setStart(list.last()->getEnd());
         line->setEnd(segment->getEnd());

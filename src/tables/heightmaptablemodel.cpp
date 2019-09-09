@@ -27,10 +27,10 @@ QVariant HeightMapTableModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid()) return QVariant();
 
-    if (index.row() >= m_data.count() || index.column() >= m_data[0].count()) return QVariant();
+    if (index.row() >= m_data.size() || index.column() >= m_data[0].size()) return QVariant();
 
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        return QString::number(m_data[(m_data.count() - 1) - index.row()][index.column()], 'f', 3);
+        return QString::number(m_data[(m_data.size() - 1) - index.row()][index.column()], 'f', 3);
     }
 
     if (role == Qt::UserRole) {
@@ -46,7 +46,7 @@ QVariant HeightMapTableModel::data(const QModelIndex &index, int role) const
 
 bool HeightMapTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    m_data[role == Qt::EditRole ? (m_data.count() - 1) - index.row() : index.row()][index.column()] = value.toDouble();
+    m_data[role == Qt::EditRole ? (m_data.size() - 1) - index.row() : index.row()][index.column()] = value.toDouble();
 
     if (role == Qt::EditRole) emit dataChangedByUserInput();
 
@@ -78,14 +78,14 @@ int HeightMapTableModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent)
 
-    return m_data.count();
+    return m_data.size();
 }
 
 int HeightMapTableModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent)
 
-    return m_data[0].count();
+    return m_data[0].size();
 }
 
 QVariant HeightMapTableModel::headerData(int section, Qt::Orientation orientation, int role) const

@@ -98,7 +98,7 @@ bool GcodeDrawer::prepareVectors()
             bool straight = false;
 
             do {
-                list->at(i)->setVertexIndex(m_lines.count()); // Store vertex index
+                list->at(i)->setVertexIndex(m_lines.size()); // Store vertex index
                 i++;
                 if (i < list->count() - 1) {
                     next = list->at(i)->getEnd() - list->at(i)->getStart();
@@ -110,7 +110,7 @@ bool GcodeDrawer::prepareVectors()
                      && getSegmentType(list->at(i)) == getSegmentType(list->at(j)));
             i--;
         } else {
-            list->at(i)->setVertexIndex(m_lines.count()); // Store vertex index
+            list->at(i)->setVertexIndex(m_lines.size()); // Store vertex index
         }
 
         // Set color
@@ -248,7 +248,7 @@ bool GcodeDrawer::prepareRaster()
         m_triangles += vertices;
         m_image = image;
     } else {
-        for (int i = 0; i < vertices.count(); i++) vertices[i].start = QVector3D(sNan, sNan, sNan);
+        for (int i = 0; i < vertices.size(); i++) vertices[i].start = QVector3D(sNan, sNan, sNan);
         m_lines += vertices;
         m_image = QImage();
     }

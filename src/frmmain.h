@@ -341,7 +341,7 @@ private:
     bool dataIsEnd(QString const &data);
     static bool dataIsReset(QString const &data);
 
-    QTime updateProgramEstimatedTime(QList<LineSegment *> lines);
+    QTime updateProgramEstimatedTime(QList<LineSegment *> const & lines);
     bool saveProgramToFile(QString const &fileName, GCodeTableModel *model);
     static QString feedOverride(QString const &command);
 

@@ -26,7 +26,7 @@ bool HeightMapInterpolationDrawer::updateData()
     vertex.start = QVector3D(sNan, sNan, sNan);
 
     // Calculate grid parameters
-    int interpolationPointsX = m_data->at(0).count();
+    int interpolationPointsX = m_data->at(0).size();
     int interpolationPointsY = m_data->count();
 
     double interpolationStepX = interpolationPointsX > 1 ? m_borderRect.width() / (interpolationPointsX - 1) : 0;
