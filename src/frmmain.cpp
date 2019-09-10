@@ -16,7 +16,7 @@
 #define DOOR 9
 #define JOG 10
 
-#define PROGRESSAFTER 3000 // show progress if processing takes longer than 3 seconds
+#define PROGRESSAFTER 10000 // show progress if processing takes longer than 3 seconds
 #define PROGRESSSTEP     200 // update progress bar every 0.2 seconds
 
 #include <QFileDialog>
@@ -1726,11 +1726,6 @@ void frmMain::loadFile(QTextStream &data, qint64 bytesAvailable)
         // Block parser updates on table changes
     m_programLoading = true;
 
-    QString stripped;
-    QString trimmed;
-    QStringList args;
-    GCodeItem item;
-
     // Prepare model
     auto &model_data = m_programModel.data();
     model_data.clear();
@@ -1747,25 +1742,28 @@ void frmMain::loadFile(QTextStream &data, qint64 bytesAvailable)
     while (!data.atEnd()) {
         auto command = data.readLine();
         // Trim command
-        trimmed = command.trimmed();
+        QString const trimmed = command.trimmed();
 
         if (!trimmed.isEmpty()) {
+#ifdef USE_STD_CONTAINERS
+            auto &item = model_data.emplace_back();
+#else
+            model_data.push_back({});
+            auto &item = model_data.back();
+#endif
             // Split command
-            stripped = GcodePreprocessorUtils::removeComment(command);
+            QString const stripped = GcodePreprocessorUtils::removeComment(command);
+            auto &args = item.args;
             args = GcodePreprocessorUtils::splitCommand(stripped);
-
 //            PointSegment *ps = gp.addCommand(args);
             gp.addCommand(args);
 
     //        if (ps && (qIsNaN(ps->point()->x()) || qIsNaN(ps->point()->y()) || qIsNaN(ps->point()->z())))
     //                   qDebug() << "nan point segment added:" << *ps->point();
 
-            item.command = trimmed;
             item.state = GCodeItem::InQueue;
             item.line = gp.getCommandNumber();
-            item.args = args;
-
-            model_data.push_back(item);
+            item.command = trimmed;
         }
 
         if (!progress.isVisible() && timer.hasExpired(PROGRESSAFTER)) {
