@@ -16,38 +16,38 @@ class LineSegment
 {
 public:
 #ifdef USE_STD_CONTAINERS
-    using Container = std::vector<LineSegment*>;
+    using Container = std::vector<LineSegment>;
 #else
-    using Container = QVector<LineSegment*>;
-//    using Container = QList<LineSegment*>;
+    using Container = QVector<LineSegment>;
+//    using Container = QList<LineSegment>;
 #endif
     LineSegment();
     LineSegment(QVector3D a, QVector3D b, int num);
-    LineSegment(LineSegment *initial);
+    LineSegment(LineSegment const &initial);
     ~LineSegment();
 
-    int getLineNumber();
+    int getLineNumber() const;
     QList<QVector3D> getPointArray();
     QList<double> getPoints();
 
-    QVector3D &getStart();
+    QVector3D const &getStart() const;
     void setStart(QVector3D vector);
 
-    QVector3D &getEnd();
+    QVector3D const &getEnd() const;
     void setEnd(QVector3D vector);
 
     void setToolHead(int head);
-    int getToolhead();
+    int getToolhead() const;
     void setSpeed(double s);
-    double getSpeed();
+    double getSpeed() const;
     void setIsZMovement(bool isZ);
-    bool isZMovement();
+    bool isZMovement() const;
     void setIsArc(bool isA);
-    bool isArc();
+    bool isArc() const;
     void setIsFastTraverse(bool isF);
-    bool isFastTraverse();
+    bool isFastTraverse() const;
 
-    bool contains(const QVector3D &point);
+    bool contains(const QVector3D &point) const;
 
     bool drawn() const;
     void setDrawn(bool drawn);

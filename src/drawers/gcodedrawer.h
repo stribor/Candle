@@ -121,9 +121,9 @@ private:
     bool prepareRaster();
     bool updateRaster();
 
-    int getSegmentType(LineSegment *segment);
-    QVector3D getSegmentColorVector(LineSegment *segment);
-    QColor getSegmentColor(LineSegment *segment);
+    static int getSegmentType(LineSegment const &segment);
+    QVector3D getSegmentColorVector(LineSegment const &segment);
+    QColor getSegmentColor(LineSegment const &segment);
     void setImagePixelColor(QImage &image, double x, double y, QRgb color) const;
 };
 

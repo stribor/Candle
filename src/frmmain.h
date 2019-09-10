@@ -362,7 +362,7 @@ private:
     bool saveHeightMap(QString const &fileName);
 
     GCodeTableModel *m_currentModel;
-    LineSegment::Container subdivideSegment(LineSegment *segment);
+    LineSegment::Container subdivideSegment(LineSegment const &segment);
     void resizeTableHeightMapSections();
     void updateHeightMapGrid(double arg1);
     void resetHeightmap();

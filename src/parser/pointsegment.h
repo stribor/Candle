@@ -16,10 +16,11 @@ class PointSegment
 {
 public:
 #ifdef USE_STD_CONTAINERS
-    using Container = std::vector<PointSegment*>;
+    using Container = std::vector<PointSegment>;
+    using ContainerPtr = std::vector<PointSegment*>;
 #else
-    using Container = QVector<PointSegment*>;
-//    using Container = QList<PointSegment*>;
+    using Container = QVector<PointSegment>;
+//    using Container = QList<PointSegment>;
 #endif
     enum planes {
         XY,

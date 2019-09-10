@@ -22,10 +22,10 @@ GcodeViewParse::GcodeViewParse(QObject *parent) :
     m_minLength = qQNaN();
 }
 
-GcodeViewParse::~GcodeViewParse()
-{
-    foreach (LineSegment *ls, m_lines) delete ls;
-}
+GcodeViewParse::~GcodeViewParse() = default;
+//{
+//foreach (LineSegment *ls, m_lines) delete ls;
+//}
 
 QVector3D &GcodeViewParse::getMinimumExtremes()
 {
@@ -77,7 +77,6 @@ LineSegment::Container &GcodeViewParse::getLineSegmentList()
 
 void GcodeViewParse::reset()
 {
-    for (auto &ls : m_lines) delete ls;
     m_lines.clear();
     m_lineIndexes.clear();
     currentLine = 0;
@@ -105,63 +104,61 @@ LineSegment::Container GcodeViewParse::getLinesFromParser(GcodeParser *gp, doubl
     QVector3D const * start = nullptr;
     QVector3D const * end;
 
-    LineSegment *ls;
-
     // Prepare segments indexes
     m_lineIndexes.resize(psl.size());
 
     int lineIndex = 0;
     for (auto &ps : psl) {
-        bool isMetric = ps->isMetric();
-        ps->convertToMetric();
+        bool isMetric = ps.isMetric();
+        ps.convertToMetric();
 
-        end = &ps->point();
+        end = &ps.point();
 
         // start is null for the first iteration.
         if (start != NULL) {
             // Expand arc for graphics.
-            if (ps->isArc()) {
+            if (ps.isArc()) {
                 QList<QVector3D> points =
-                    GcodePreprocessorUtils::generatePointsAlongArcBDring(ps->plane(),
-                    *start, *end, ps->center(), ps->isClockwise(), ps->getRadius(), minArcLength, arcPrecision, arcDegreeMode);
+                    GcodePreprocessorUtils::generatePointsAlongArcBDring(ps.plane(),
+                    *start, *end, ps.center(), ps.isClockwise(), ps.getRadius(), minArcLength, arcPrecision, arcDegreeMode);
                 // Create line segments from points.
                 if (!points.empty()) {
                     QVector3D startPoint = *start;
                     for (auto const &nextPoint : points) {
                         if (nextPoint == startPoint) continue;
-                        ls = new LineSegment(startPoint, nextPoint, lineIndex);
-                        ls->setIsArc(ps->isArc());
-                        ls->setIsClockwise(ps->isClockwise());
-                        ls->setPlane(ps->plane());
-                        ls->setIsFastTraverse(ps->isFastTraverse());
-                        ls->setIsZMovement(ps->isZMovement());
-                        ls->setIsMetric(isMetric);
-                        ls->setIsAbsolute(ps->isAbsolute());
-                        ls->setSpeed(ps->getSpeed());
-                        ls->setSpindleSpeed(ps->getSpindleSpeed());
-                        ls->setDwell(ps->getDwell());
+                        LineSegment ls(startPoint, nextPoint, lineIndex);
+                        ls.setIsArc(ps.isArc());
+                        ls.setIsClockwise(ps.isClockwise());
+                        ls.setPlane(ps.plane());
+                        ls.setIsFastTraverse(ps.isFastTraverse());
+                        ls.setIsZMovement(ps.isZMovement());
+                        ls.setIsMetric(isMetric);
+                        ls.setIsAbsolute(ps.isAbsolute());
+                        ls.setSpeed(ps.getSpeed());
+                        ls.setSpindleSpeed(ps.getSpindleSpeed());
+                        ls.setDwell(ps.getDwell());
                         this->testExtremes(nextPoint);
                         m_lines.push_back(ls);
-                        m_lineIndexes[ps->getLineNumber()].append(m_lines.size() - 1);
+                        m_lineIndexes[ps.getLineNumber()].append(m_lines.size() - 1);
                         startPoint = nextPoint;
                     }
                     lineIndex++;
                 }
             // Line
             } else {
-                ls = new LineSegment(*start, *end, lineIndex++);
-                ls->setIsArc(ps->isArc());
-                ls->setIsFastTraverse(ps->isFastTraverse());
-                ls->setIsZMovement(ps->isZMovement());
-                ls->setIsMetric(isMetric);
-                ls->setIsAbsolute(ps->isAbsolute());
-                ls->setSpeed(ps->getSpeed());
-                ls->setSpindleSpeed(ps->getSpindleSpeed());
-                ls->setDwell(ps->getDwell());
+                LineSegment ls(*start, *end, lineIndex++);
+                ls.setIsArc(ps.isArc());
+                ls.setIsFastTraverse(ps.isFastTraverse());
+                ls.setIsZMovement(ps.isZMovement());
+                ls.setIsMetric(isMetric);
+                ls.setIsAbsolute(ps.isAbsolute());
+                ls.setSpeed(ps.getSpeed());
+                ls.setSpindleSpeed(ps.getSpindleSpeed());
+                ls.setDwell(ps.getDwell());
                 this->testExtremes(*end);
                 this->testLength(*start, *end);
                 m_lines.push_back(ls);
-                m_lineIndexes[ps->getLineNumber()].append(m_lines.size() - 1);
+                m_lineIndexes[ps.getLineNumber()].append(m_lines.size() - 1);
             }
         }
         start = end;

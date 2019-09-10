@@ -37,7 +37,7 @@ public:
     PointSegment *addCommand(QString const &command);
     PointSegment *addCommand(QStringList const &args);
     QVector3D* getCurrentPoint();
-    PointSegment::Container expandArc();
+    PointSegment::ContainerPtr expandArc();
     QStringList preprocessCommands(QStringList const &commands);
     QStringList preprocessCommand(QString const &command);
     QStringList convertArcsToLines(QString const &command);
