@@ -15,16 +15,23 @@
 
 enum GCodes{
     unknown,
-    G0,
-    G1,
+    G00,
+    G01,
     G38_2,
-    G2,
-    G3,
+    G38_3, // not yet used
+    G38_4, // not yet used
+    G38_5, // not yet used
+    G02,
+    G03,
+    G07, // not yet used
+    G08, // not yet used
     G17,
     G18,
     G19,
     G20,
     G21,
+    G05_1, // not yet used
+    G05_2, // not yet used
     G90,
     G90_1,
     G91,
@@ -35,12 +42,15 @@ class GcodePreprocessorUtils : public QObject
 {
     Q_OBJECT
 public:
+    using gcodesContainer = std::vector<GCodes>;
+    using vectoContainer = std::vector<QVector3D>;
+
     static QString overrideSpeed(QString command, double speed, double *original = NULL);
     static QString removeComment(QString command);
     static QString parseComment(QString command);
     static QString truncateDecimals(int length, QString command);
     static QString removeAllWhitespace(QString command);
-    static QList<GCodes > parseCodesEnum(const QStringList &args, QChar code);
+    static gcodesContainer parseCodesEnum(const QStringList &args, QChar);
     static QList<float> parseCodes(const QStringList &args, QChar code);
     static QList<int> parseGCodes(QString const &command);
     static QList<int> parseMCodes(QString const &command);
@@ -54,8 +64,8 @@ public:
     static QString generateG1FromPoints(QVector3D const &start, QVector3D const &end, bool absoluteMode, int precision);
     static double getAngle(QVector3D start, QVector3D end);
     static double calculateSweep(double startAngle, double endAngle, bool isCw);
-    static QList<QVector3D> generatePointsAlongArcBDring(PointSegment::planes plane, QVector3D start, QVector3D end, QVector3D center, bool clockwise, double R, double minArcLength, double arcPrecision, bool arcDegreeMode);
-    static QList<QVector3D> generatePointsAlongArcBDring(PointSegment::planes plane, QVector3D p1, QVector3D p2, QVector3D center, bool isCw, double radius, double startAngle, double sweep, int numPoints);
+    static vectoContainer generatePointsAlongArcBDring(PointSegment::planes plane, QVector3D start, QVector3D end, QVector3D center, bool clockwise, double R, double minArcLength, double arcPrecision, bool arcDegreeMode);
+    static vectoContainer generatePointsAlongArcBDring(PointSegment::planes plane, QVector3D p1, QVector3D p2, QVector3D center, bool isCw, double radius, double startAngle, double sweep, int numPoints);
     static inline bool isDigit(char c);
     static inline bool isLetter(char c);
     static inline char toUpper(char c);

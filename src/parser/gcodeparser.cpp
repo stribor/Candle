@@ -159,10 +159,10 @@ PointSegment::ContainerPtr GcodeParser::expandArc()
     // Start expansion.
     //
 
-    QList<QVector3D> expandedPoints = GcodePreprocessorUtils::generatePointsAlongArcBDring(plane, start, end, center, clockwise, radius, m_smallArcThreshold, m_smallArcSegmentLength, false);
+    auto expandedPoints = GcodePreprocessorUtils::generatePointsAlongArcBDring(plane, start, end, center, clockwise, radius, m_smallArcThreshold, m_smallArcSegmentLength, false);
 
     // Validate output of expansion.
-    if (expandedPoints.length() == 0) {
+    if (expandedPoints.empty()) {
         return {};
     }
 
@@ -174,17 +174,18 @@ PointSegment::ContainerPtr GcodeParser::expandArc()
     PointSegment::ContainerPtr psl;
 
     // Create line segments from points.
-    QListIterator<QVector3D> psi(expandedPoints);
+    auto psi =expandedPoints.cbegin();
     // skip first element.
-    if (psi.hasNext()) psi.next();
+    if (psi!=expandedPoints.end()) ++psi;
 
     // !reserve space so returned pointers aren't shifted
     m_points.reserve(m_points.size() + expandedPoints.size());
-    while (psi.hasNext()) {
-        auto temp = PointSegment(psi.next(), m_commandNumber++);
+    while (psi != expandedPoints.end()) {
+        auto temp = PointSegment(*psi, m_commandNumber++);
         temp.setIsMetric(lastIsMetric);
         this->m_points.push_back(temp);
         psl.push_back(&this->m_points.back());
+        std::advance(psi, 1);
     }
 
     // Update the new endpoint.
@@ -233,8 +234,8 @@ PointSegment *GcodeParser::processCommand(const QStringList &args)
     auto gCodes = GcodePreprocessorUtils::parseCodesEnum(args, 'G');
 
     // If there was no command, add the implicit one to the party.
-    if (gCodes.isEmpty() && m_lastGcodeCommand != unknown) {
-        gCodes.append(m_lastGcodeCommandE);
+    if (gCodes.empty() && m_lastGcodeCommand != unknown) {
+        gCodes.push_back(m_lastGcodeCommandE);
     }
 
     for (auto code : gCodes) {
@@ -338,11 +339,11 @@ PointSegment * GcodeParser::handleGCode(GCodes code, const QStringList &args)
     QVector3D nextPoint = GcodePreprocessorUtils::updatePointWithCommand(args, this->m_currentPoint, this->m_inAbsoluteMode);
     // should this use qFuzzyCompare()?
     switch (code) {
-    case G0:  ps = addLinearPointSegment(nextPoint, true);break;
-    case G1:  ps = addLinearPointSegment(nextPoint, false); break;
+    case G00: ps = addLinearPointSegment(nextPoint, true);break;
+    case G01: ps = addLinearPointSegment(nextPoint, false); break;
     case G38_2:  ps = addLinearPointSegment(nextPoint, false); break;
-    case G2: ps = addArcPointSegment(nextPoint, true, args); break;
-    case G3: ps = addArcPointSegment(nextPoint, false, args); break;
+    case G02: ps = addArcPointSegment(nextPoint, true, args); break;
+    case G03: ps = addArcPointSegment(nextPoint, false, args); break;
     case G17: this->m_currentPlane = PointSegment::XY; break;
     case G18: this->m_currentPlane = PointSegment::ZX; break;
     case G19: this->m_currentPlane = PointSegment::YZ; break;
@@ -354,7 +355,7 @@ PointSegment * GcodeParser::handleGCode(GCodes code, const QStringList &args)
     case G91_1:  this->m_inAbsoluteIJKMode = false; break;
     default: break;
     }
-    if (code == G0 || code == G1 || code == G2 || code == G3 || code == G38_2) {
+    if (code == G00 || code == G01 || code == G02 || code == G03 || code == G38_2) {
         m_lastGcodeCommandE = code;
     }
 

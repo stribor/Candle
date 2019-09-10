@@ -102,13 +102,13 @@ QString GcodePreprocessorUtils::removeAllWhitespace(QString command)
     return command.remove(rx);
 #endif
 }
-struct GM {QLatin1String v; GCodes m;};
-static std::array<GM,28> m = {{
-        {QLatin1String("G0"), G0},
-        {QLatin1String("G1"), G1},
+//struct GM {QLatin1String v; GCodes m;};
+static QHash<QString, GCodes> gm = {{
+        {QLatin1String("G0"), G00},
+        {QLatin1String("G1"), G01},
         {QLatin1String("G38.2"), G38_2},
-        {QLatin1String("G2"), G2},
-        {QLatin1String("G3"), G3},
+        {QLatin1String("G2"), G02},
+        {QLatin1String("G3"), G03},
         {QLatin1String("G17"), G17},
         {QLatin1String("G18"), G18},
         {QLatin1String("G19"), G19},
@@ -118,11 +118,11 @@ static std::array<GM,28> m = {{
         {QLatin1String("G90.1"), G90_1},
         {QLatin1String("G91"), G91},
         {QLatin1String("G91.1"), G91_1},
-        {QLatin1String("g0"), G0},
-        {QLatin1String("g1"), G1},
+        {QLatin1String("g0"), G00},
+        {QLatin1String("g1"), G01},
         {QLatin1String("g38.2"), G38_2},
-        {QLatin1String("g2"), G2},
-        {QLatin1String("g3"), G3},
+        {QLatin1String("g2"), G02},
+        {QLatin1String("g3"), G03},
         {QLatin1String("g17"), G17},
         {QLatin1String("g18"), G18},
         {QLatin1String("g19"), G19},
@@ -131,26 +131,143 @@ static std::array<GM,28> m = {{
         {QLatin1String("g90"), G90},
         {QLatin1String("g90.1"), G90_1},
         {QLatin1String("g91"), G91},
-        {QLatin1String("g91.0"), G91_1}}
-};
+        {QLatin1String("g91.0"), G91_1}
+}};
 
-QList<GCodes> GcodePreprocessorUtils::parseCodesEnum(const QStringList &args, QChar /*code*/)
+GcodePreprocessorUtils::gcodesContainer GcodePreprocessorUtils::parseCodesEnum(const QStringList &args, QChar /*code*/)
 {
-    QList<GCodes> l;
+    gcodesContainer l;
 
     for (auto &arg : args) {
-#if 0
-        auto v = G.value(arg, unknown);
-        if (v != unknown)
-             l.push_back(v);
-#else
-        auto r = std::find_if(m.begin(), m.end(), [&arg](auto &e) {
-            return arg == e.v;
-        });
-        if (r!=m.end()) {
-            l.push_back(r->m);
+#if 1
+        GCodes v = unknown;
+        auto c = arg.data();
+        if (c[0].unicode() != 'G') // code must be G code
+            continue;
+
+        ++c;
+
+        switch (arg.size()) {
+        case 2: // 0, 1, 2, 3
+            switch (c[0].unicode()) {
+            case '0':v = G00;
+                break;
+            case '1':v = G01;
+                break;
+            case '2':v = G02;
+                break;
+            case '3':v = G03;
+                break;
+            case '7':v = G07;
+                break;
+            case '8':v = G08;
+                break;
+            }
+            break;
+        case 3:
+            switch (c[0].unicode()) {
+            case '0':
+                switch (c[1].unicode()) {
+                case '0':v = G00;
+                    break;
+                case '1':v = G01;
+                    break;
+                case '2':v = G02;
+                    break;
+                case '3':v = G03;
+                    break;
+                case '7':v = G07;
+                    break;
+                case '8':v = G08;
+                    break;
+                }
+                break;
+            case '1':
+                switch (c[1].unicode()) {
+                case '7': v = G17;
+                    break;
+                case '8': v = G18;
+                    break;
+                case '9': v = G19;
+                    break;
+                }
+                break;
+            case '2':
+                switch (c[1].unicode()) {
+                case '0': v = G20;
+                    break;
+                case '1': v = G21;
+                    break;
+                }
+                break;
+            case '9':
+                switch (c[1].unicode()) {
+                case '0': v = G90;
+                    break;
+                case '1': v = G91;
+                    break;
+                }
+                break;
+            }
+            break;
+        case 4: // G5.1, G5.2
+            if (c[1].unicode() == '.') {
+                switch (c[0].unicode()) {
+                case '5':
+                    switch (c[2].unicode()) {
+                    case '1': v = G05_1;
+                        break;
+                    case '2': v = G05_2;
+                        break;
+                    }
+                    break;
+                }
+            }
+            break;
+        case 5:
+            if (c[2].unicode() != '.') // code must be xx.y
+                break;
+            switch (c[0].unicode()) {
+            case '0':
+                if (c[1].unicode() == '5') {
+                    switch (c[3].unicode()) {
+                    case '1':v = G05_1;
+                        break;
+                    case '2':v = G05_2;
+                        break;
+                    }
+                }
+                break;
+            case '3':
+                if (c[1].unicode() == '8') {
+                    switch (c[3].unicode()) {
+                    case '2':v = G38_2;
+                        break;
+                    case '3':v = G38_3;
+                        break;
+                    case '4':v = G38_4;
+                        break;
+                    case '5':v = G38_5;
+                        break;
+                    }
+                }
+                break;
+            case '9': // 9xxx
+                switch (c[1].unicode()) {
+                case '0': if (c[3] == '1') v = G90_1;
+                    break;
+                case '1': if (c[3] == '1') v = G91_1;
+                    break;
+                }
+                break;
+            }
         }
+//        auto v = G.value(arg, unknown);
+#else
+        v = gm.value(arg, unknown);
 #endif
+        if (v != unknown)
+            l.push_back(v);
     }
     return l;
 }
@@ -495,7 +612,8 @@ double GcodePreprocessorUtils::calculateSweep(double startAngle, double endAngle
 /**
 * Generates the points along an arc including the start and end points.
 */
-QList<QVector3D> GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegment::planes plane, QVector3D start, QVector3D end, QVector3D center, bool clockwise, double R, double minArcLength, double arcPrecision, bool arcDegreeMode)
+GcodePreprocessorUtils::vectoContainer
+GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegment::planes plane, QVector3D start, QVector3D end, QVector3D center, bool clockwise, double R, double minArcLength, double arcPrecision, bool arcDegreeMode)
 {
     double radius = R;
 
@@ -517,7 +635,7 @@ QList<QVector3D> GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegme
     center = m * center;
 
     // Check center
-    if (qIsNaN(center.length())) return QList<QVector3D>();
+    if (qIsNaN(center.length())) return {};
 
     // Calculate radius if necessary.
     if (radius == 0) {
@@ -554,7 +672,8 @@ QList<QVector3D> GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegme
 /**
 * Generates the points along an arc including the start and end points.
 */
-QList<QVector3D> GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegment::planes plane, QVector3D p1, QVector3D p2,
+GcodePreprocessorUtils::vectoContainer
+GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegment::planes plane, QVector3D p1, QVector3D p2,
                                                                       QVector3D center, bool isCw,
                                                                       double radius, double startAngle,
                                                                       double sweep, int numPoints)
@@ -574,7 +693,7 @@ QList<QVector3D> GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegme
     }
 
     QVector3D lineEnd(p2.x(), p2.y(), p1.z());
-    QList<QVector3D> segments;
+    vectoContainer segments;
     double angle;
 
     // Calculate radius if necessary.
@@ -599,10 +718,10 @@ QList<QVector3D> GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegme
         lineEnd.setY(sin(angle) * radius + center.y());
         lineEnd.setZ(lineEnd.z() + zIncrement);
 
-        segments.append(m * lineEnd);
+        segments.push_back(m * lineEnd);
     }
 
-    segments.append(m * p2);
+    segments.push_back(m * p2);
 
     return segments;
 }

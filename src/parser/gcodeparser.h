@@ -76,7 +76,7 @@ private:
     double m_lastSpindleSpeed;
 
     // The gcode.
-    PointSegment::Container m_points; //TODO convert to vector<PointSegment> and not reallocate
+    PointSegment::Container m_points;
 
     PointSegment *processCommand(const QStringList &args);
     void handleMCode(float code, const QStringList &args);

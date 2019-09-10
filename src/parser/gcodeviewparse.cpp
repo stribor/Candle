@@ -118,7 +118,7 @@ LineSegment::Container GcodeViewParse::getLinesFromParser(GcodeParser *gp, doubl
         if (start != NULL) {
             // Expand arc for graphics.
             if (ps.isArc()) {
-                QList<QVector3D> points =
+                auto const points =
                     GcodePreprocessorUtils::generatePointsAlongArcBDring(ps.plane(),
                     *start, *end, ps.center(), ps.isClockwise(), ps.getRadius(), minArcLength, arcPrecision, arcDegreeMode);
                 // Create line segments from points.
