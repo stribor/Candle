@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 #else
     QApplication a(argc, argv);
 #endif
-
+    qRegisterMetaType<QByteArrayList>();
 //    QFontDatabase::addApplicationFont(":/fonts/segoeui.ttf");
 //    QFontDatabase::addApplicationFont(":/fonts/tahoma.ttf");
 

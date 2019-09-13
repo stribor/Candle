@@ -98,17 +98,17 @@ void GcodeParser::reset(const QVector3D &initialPoint)
 /**
 * Add a command to be processed.
 */
-PointSegment* GcodeParser::addCommand(QString const &command)
+PointSegment* GcodeParser::addCommand(QByteArray const &command)
 {
-    QString stripped = GcodePreprocessorUtils::removeComment(command);
-    QStringList args = GcodePreprocessorUtils::splitCommand(stripped);
+    auto stripped = GcodePreprocessorUtils::removeComment(command);
+    auto args = GcodePreprocessorUtils::splitCommand(stripped);
     return this->addCommand(args);
 }
 
 /**
 * Add a command which has already been broken up into its arguments.
 */
-PointSegment* GcodeParser::addCommand(QStringList const &args)
+PointSegment* GcodeParser::addCommand(QByteArrayList const &args)
 {
     if (args.isEmpty()) {
         return NULL;
@@ -214,7 +214,7 @@ int GcodeParser::getCommandNumber() const
 }
 
 
-PointSegment *GcodeParser::processCommand(const QStringList &args)
+PointSegment *GcodeParser::processCommand(QByteArrayList const &args)
 {
     PointSegment *ps = NULL;
 
@@ -270,7 +270,6 @@ PointSegment *GcodeParser::addLinearPointSegment(const QVector3D &nextPoint, boo
     ps.setIsAbsolute(this->m_inAbsoluteMode);
     ps.setSpeed(fastTraverse ? this->m_traverseSpeed : this->m_lastSpeed);
     ps.setSpindleSpeed(this->m_lastSpindleSpeed);
-    this->m_points.push_back(ps);
 
     // Save off the endpoint.
     this->m_currentPoint = nextPoint;
@@ -278,7 +277,7 @@ PointSegment *GcodeParser::addLinearPointSegment(const QVector3D &nextPoint, boo
     return &ps;
 }
 
-PointSegment *GcodeParser::addArcPointSegment(const QVector3D &nextPoint, bool clockwise, const QStringList &args)
+PointSegment *GcodeParser::addArcPointSegment(const QVector3D &nextPoint, bool clockwise, QByteArrayList const &args)
 {
 //    PointSegment ps(nextPoint, m_commandNumber++);
 #ifndef USE_STD_CONTAINERS
@@ -326,13 +325,13 @@ PointSegment *GcodeParser::addArcPointSegment(const QVector3D &nextPoint, bool c
     return &ps;
 }
 
-void GcodeParser::handleMCode(float /*code*/, const QStringList &args)
+void GcodeParser::handleMCode(float /*code*/, QByteArrayList const &args)
 {
     double spindleSpeed = GcodePreprocessorUtils::parseCoord(args, 'S');
     if (!qIsNaN(spindleSpeed)) this->m_lastSpindleSpeed = spindleSpeed;
 }
 
-PointSegment * GcodeParser::handleGCode(GCodes code, const QStringList &args)
+PointSegment * GcodeParser::handleGCode(GCodes code, QByteArrayList const &args)
 {
     PointSegment *ps = NULL;
 
@@ -362,7 +361,7 @@ PointSegment * GcodeParser::handleGCode(GCodes code, const QStringList &args)
     return ps;
 }
 
-PointSegment * GcodeParser::handleGCode(float code, const QStringList &args)
+PointSegment * GcodeParser::handleGCode(float code, QByteArrayList const &args)
 {
     PointSegment *ps = NULL;
 
@@ -388,7 +387,7 @@ PointSegment * GcodeParser::handleGCode(float code, const QStringList &args)
     return ps;
 }
 
-QStringList GcodeParser::preprocessCommands(QStringList const &commands) {
+QStringList GcodeParser::preprocessCommands(QByteArrayList const &commands) {
 
     QStringList result;
 
@@ -399,13 +398,13 @@ QStringList GcodeParser::preprocessCommands(QStringList const &commands) {
     return result;
 }
 
-QStringList GcodeParser::preprocessCommand(QString const &command) {
+QStringList GcodeParser::preprocessCommand(QByteArray const &command) {
 
     QStringList result;
 
     // Remove comments from command.
-    QString newCommand = GcodePreprocessorUtils::removeComment(command);
-    QString rawCommand = newCommand;
+    auto newCommand = GcodePreprocessorUtils::removeComment(command);
+    auto rawCommand = newCommand;
     bool hasComment = (newCommand.length() != command.length());
 
     if (m_removeAllWhitespace) {
@@ -446,7 +445,7 @@ QStringList GcodeParser::preprocessCommand(QString const &command) {
     return result;
 }
 
-QStringList GcodeParser::convertArcsToLines(QString const &command)
+QStringList GcodeParser::convertArcsToLines(QByteArray const &command)
 {
     QVector3D start = this->m_currentPoint;
 

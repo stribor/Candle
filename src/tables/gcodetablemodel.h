@@ -7,15 +7,16 @@
 #include <QAbstractTableModel>
 #include <QString>
 #include <vector>
+Q_DECLARE_METATYPE(QByteArrayList)
 
 struct GCodeItem
 {
     enum States { InQueue, Sent, Processed, Skipped };
 
-    QString command;
-    QString response;
+    QByteArray command;
+    QByteArray response;
+    QByteArrayList args;
     int line;
-    QStringList args;
     States state;
 };
 

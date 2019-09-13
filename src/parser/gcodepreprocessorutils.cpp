@@ -18,7 +18,7 @@
 * In that way all speed values become a ratio of the provided speed
 * and don't get overridden with just a fixed speed.
 */
-QString GcodePreprocessorUtils::overrideSpeed(QString command, double speed, double *original)
+QByteArray GcodePreprocessorUtils::overrideSpeed(QString command, double speed, double *original)
 {
     static QRegularExpression re("[Ff]([0-9.]+)");
 
@@ -32,13 +32,13 @@ QString GcodePreprocessorUtils::overrideSpeed(QString command, double speed, dou
     }
 
 
-    return command;
+    return command.toUtf8();
 }
 
 /**
 * Removes any comments within parentheses or beginning with a semi-colon.
 */
-QString GcodePreprocessorUtils::removeComment(QString command)
+QByteArray GcodePreprocessorUtils::removeComment(QByteArray command)
 {
     int pos;
 
@@ -75,7 +75,7 @@ QString GcodePreprocessorUtils::parseComment(QString command)
     return "";
 }
 
-QString GcodePreprocessorUtils::truncateDecimals(int length, QString command)
+QByteArray GcodePreprocessorUtils::truncateDecimals(int length, QString command)
 {
     static QRegularExpression re(R"((\d*\.\d*))");
     int pos = 0;
@@ -88,14 +88,14 @@ QString GcodePreprocessorUtils::truncateDecimals(int length, QString command)
         match = re.match(command, pos);
     }
 
-    return command;
+    return command.toUtf8();
 }
 
-QString GcodePreprocessorUtils::removeAllWhitespace(QString command)
+QByteArray GcodePreprocessorUtils::removeAllWhitespace(QByteArray command)
 {
 #if 1
     // guess should be faster than regex
-    return command.simplified().remove(' ');
+    return command.simplified().replace(' ', QByteArray());
 #else
     static QRegularExpression rx("\\s");
 
@@ -134,7 +134,7 @@ static QHash<QString, GCodes> gm = {{
         {QLatin1String("g91.0"), G91_1}
 }};
 
-GcodePreprocessorUtils::gcodesContainer GcodePreprocessorUtils::parseCodesEnum(const QStringList &args, QChar /*code*/)
+GcodePreprocessorUtils::gcodesContainer GcodePreprocessorUtils::parseCodesEnum(QByteArrayList const &args, QChar /*code*/)
 {
     gcodesContainer l;
 
@@ -142,14 +142,14 @@ GcodePreprocessorUtils::gcodesContainer GcodePreprocessorUtils::parseCodesEnum(c
 #if 1
         GCodes v = unknown;
         auto c = arg.data();
-        if (c[0].unicode() != 'G') // code must be G code
+        if (c[0] != 'G') // code must be G code
             continue;
 
         ++c;
 
         switch (arg.size()) {
         case 2: // 0, 1, 2, 3
-            switch (c[0].unicode()) {
+            switch (c[0]) {
             case '0':v = G00;
                 break;
             case '1':v = G01;
@@ -165,9 +165,9 @@ GcodePreprocessorUtils::gcodesContainer GcodePreprocessorUtils::parseCodesEnum(c
             }
             break;
         case 3:
-            switch (c[0].unicode()) {
+            switch (c[0]) {
             case '0':
-                switch (c[1].unicode()) {
+                switch (c[1]) {
                 case '0':v = G00;
                     break;
                 case '1':v = G01;
@@ -183,7 +183,7 @@ GcodePreprocessorUtils::gcodesContainer GcodePreprocessorUtils::parseCodesEnum(c
                 }
                 break;
             case '1':
-                switch (c[1].unicode()) {
+                switch (c[1]) {
                 case '7': v = G17;
                     break;
                 case '8': v = G18;
@@ -193,7 +193,7 @@ GcodePreprocessorUtils::gcodesContainer GcodePreprocessorUtils::parseCodesEnum(c
                 }
                 break;
             case '2':
-                switch (c[1].unicode()) {
+                switch (c[1]) {
                 case '0': v = G20;
                     break;
                 case '1': v = G21;
@@ -201,7 +201,7 @@ GcodePreprocessorUtils::gcodesContainer GcodePreprocessorUtils::parseCodesEnum(c
                 }
                 break;
             case '9':
-                switch (c[1].unicode()) {
+                switch (c[1]) {
                 case '0': v = G90;
                     break;
                 case '1': v = G91;
@@ -211,10 +211,10 @@ GcodePreprocessorUtils::gcodesContainer GcodePreprocessorUtils::parseCodesEnum(c
             }
             break;
         case 4: // G5.1, G5.2
-            if (c[1].unicode() == '.') {
-                switch (c[0].unicode()) {
+            if (c[1] == '.') {
+                switch (c[0]) {
                 case '5':
-                    switch (c[2].unicode()) {
+                    switch (c[2]) {
                     case '1': v = G05_1;
                         break;
                     case '2': v = G05_2;
@@ -225,12 +225,12 @@ GcodePreprocessorUtils::gcodesContainer GcodePreprocessorUtils::parseCodesEnum(c
             }
             break;
         case 5:
-            if (c[2].unicode() != '.') // code must be xx.y
+            if (c[2] != '.') // code must be xx.y
                 break;
-            switch (c[0].unicode()) {
+            switch (c[0]) {
             case '0':
-                if (c[1].unicode() == '5') {
-                    switch (c[3].unicode()) {
+                if (c[1] == '5') {
+                    switch (c[3]) {
                     case '1':v = G05_1;
                         break;
                     case '2':v = G05_2;
@@ -239,8 +239,8 @@ GcodePreprocessorUtils::gcodesContainer GcodePreprocessorUtils::parseCodesEnum(c
                 }
                 break;
             case '3':
-                if (c[1].unicode() == '8') {
-                    switch (c[3].unicode()) {
+                if (c[1] == '8') {
+                    switch (c[3]) {
                     case '2':v = G38_2;
                         break;
                     case '3':v = G38_3;
@@ -253,7 +253,7 @@ GcodePreprocessorUtils::gcodesContainer GcodePreprocessorUtils::parseCodesEnum(c
                 }
                 break;
             case '9': // 9xxx
-                switch (c[1].unicode()) {
+                switch (c[1]) {
                 case '0': if (c[3] == '1') v = G90_1;
                     break;
                 case '1': if (c[3] == '1') v = G91_1;
@@ -322,32 +322,33 @@ QList<int> GcodePreprocessorUtils::parseMCodes(QString const &command)
 /**
 * Update a point given the arguments of a command.
 */
-QVector3D GcodePreprocessorUtils::updatePointWithCommand(const QString &command, const QVector3D &initial, bool absoluteMode)
+QVector3D GcodePreprocessorUtils::updatePointWithCommand(QByteArray const &command, const QVector3D &initial, bool absoluteMode)
 {
-    QStringList l = splitCommand(command);
+    auto l = splitCommand(command);
     return updatePointWithCommand(l, initial, absoluteMode);
 }
 
 /**
 * Update a point given the arguments of a command, using a pre-parsed list.
 */
-QVector3D GcodePreprocessorUtils::updatePointWithCommand(const QStringList &commandArgs, const QVector3D &initial,
-                                                         bool absoluteMode)
+QVector3D GcodePreprocessorUtils::updatePointWithCommand(
+        QByteArrayList const &commandArgs, const QVector3D &initial,
+        bool absoluteMode)
 {
     double x = qQNaN();
     double y = qQNaN();
     double z = qQNaN();
     for (auto const & command: commandArgs) {
         if (!command.isEmpty()) {
-            switch (command[0].unicode()) {
+            switch (command[0]) {
             case 'X': case 'x':
-                x = command.midRef(1).toDouble();
+                x = atof(command.data() +1);// command.mid(1).toDouble();
                 break;
             case 'Y': case 'y':
-                y = command.midRef(1).toDouble();
+                y = atof(command.data() +1);// command.mid(1).toDouble();
                 break;
             case 'Z':case 'z':
-                z = command.midRef(1).toDouble();
+                z = atof(command.data() +1);// command.mid(1).toDouble();
                 break;
             }
         }
@@ -376,7 +377,7 @@ QVector3D GcodePreprocessorUtils::updatePointWithCommand(const QVector3D &initia
     return newPoint;
 }
 
-QVector3D GcodePreprocessorUtils::updateCenterWithCommand(QStringList const &commandArgs, QVector3D initial, QVector3D nextPoint, bool absoluteIJKMode, bool clockwise)
+QVector3D GcodePreprocessorUtils::updateCenterWithCommand(QByteArrayList const &commandArgs, QVector3D initial, QVector3D nextPoint, bool absoluteIJKMode, bool clockwise)
 {
     double i = qQNaN();
     double j = qQNaN();
@@ -385,19 +386,19 @@ QVector3D GcodePreprocessorUtils::updateCenterWithCommand(QStringList const &com
 
     for (auto &t : commandArgs) {
         if (t.size() > 0) {
-            auto c = t[0].toUpper();
-            switch (c.unicode()) {
+            auto c = toUpper(t[0]);
+            switch (c) {
             case 'I':
-                i = t.midRef(1).toDouble();
+                i = t.mid(1).toDouble();
                 break;
             case 'J':
-                j = t.midRef(1).toDouble();
+                j = t.mid(1).toDouble();
                 break;
             case 'K':
-                k = t.midRef(1).toDouble();
+                k = t.mid(1).toDouble();
                 break;
             case 'R':
-                r = t.midRef(1).toDouble();
+                r = t.mid(1).toDouble();
                 break;
             }
         }
@@ -432,31 +433,12 @@ QString GcodePreprocessorUtils::generateG1FromPoints(QVector3D const &start, QVe
 //* This command is about the same speed as the string.split(" ") command,
 //* but might be a little faster using precompiled regex.
 //*/
-QStringList GcodePreprocessorUtils::splitCommand(const QString &command) {
-    QStringList l;
+QByteArrayList GcodePreprocessorUtils::splitCommand(QByteArray const &command) {
+    QByteArrayList l;
     bool readNumeric = false;
 
-#if 1
-    QString sb;
-    for (const auto &c:  command) {
-        if (readNumeric && !c.isDigit() && c.unicode() != '.') {
-            readNumeric = false;
-            l.append(sb);
-            sb.clear();
-            if (c.isLetter()) sb.append(c);
-        } else if (c.isDigit() || c.unicode() == '.' || c.unicode() == '-') {
-            sb.append(c);
-            readNumeric = true;
-        } else if (c.isLetter()) sb.append(c);
-    }
-    if (sb.size() > 0) l.append(sb);
-
-#else
     QByteArray sb;
-
-    QByteArray ba(command.toLatin1());
-
-    for (const auto &c:  ba) {
+    for (const auto &c:  command) {
         if (readNumeric && !isDigit(c) && c != '.') {
             readNumeric = false;
             l.append(sb);
@@ -467,42 +449,17 @@ QStringList GcodePreprocessorUtils::splitCommand(const QString &command) {
             readNumeric = true;
         } else if (isLetter(c)) sb.append(c);
     }
-
     if (sb.size() > 0) l.append(sb);
-#endif
-//    QChar c;
-
-//    for (int i = 0; i < command.length(); i++) {
-//        c = command[i];
-
-//        if (readNumeric && !c.isDigit() && c != '.') {
-//            readNumeric = false;
-//            l.append(sb);
-//            sb = "";
-//            if (c.isLetter()) sb.append(c);
-//        } else if (c.isDigit() || c == '.' || c == '-') {
-//            sb.append(c);
-//            readNumeric = true;
-//        } else if (c.isLetter()) sb.append(c);
-//    }
-
-//    if (sb.length() > 0) l.append(sb);
-
     return l;
 }
 
 // TODO: Replace everything that uses this with a loop that loops through
 // the string and creates a hash with all the values.
-double GcodePreprocessorUtils::parseCoord(QStringList const &argList, QChar c)
+double GcodePreprocessorUtils::parseCoord(QByteArrayList const &argList, char c)
 {
-//    int n = argList.length();
-
-//    for (int i = 0; i < n; i++) {
-//        if (argList[i].length() > 0 && argList[i][0].toUpper() == c) return argList[i].mid(1).toDouble();
-//    }
-    auto small_c = c.toLower();
+    auto small_c = tolower(c);
     for (auto const &t : argList) {
-        if (t.size() > 0 && (t[0] == c || t[0] == small_c)) return t.midRef(1).toDouble();
+        if (t.size() > 0 && (t[0] == c || t[0] == small_c)) return atof(t.data() + 1);
     }
     return qQNaN();
 }

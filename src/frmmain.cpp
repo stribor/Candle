@@ -33,6 +33,7 @@
 #include <QLayout>
 #include <QMimeData>
 #include <array>
+#include <QBuffer>
 #include "utils/profile.h"
 #include "frmmain.h"
 #include "ui_frmmain.h"
@@ -1271,7 +1272,7 @@ void frmMain::onSerialPortReadyRead()
                         // Only if command from table
                         if (ca.tableIndex > -1) {
                             m_currentModel->setData(m_currentModel->index(ca.tableIndex, 2), GCodeItem::Processed);
-                            m_currentModel->setData(m_currentModel->index(ca.tableIndex, 3), response);
+                            m_currentModel->setData(m_currentModel->index(ca.tableIndex, 3), response.toUtf8());
 
                             m_fileProcessedCommandIndex = ca.tableIndex;
 
@@ -1619,10 +1620,9 @@ void frmMain::dropEvent(QDropEvent *de)
         } else {
             m_programFileName.clear();
             m_fileChanged = true;
-            auto text = de->mimeData()->text();
-            QTextStream textStream(&text);
+            auto text = de->mimeData()->text().toUtf8();
+            QBuffer textStream(&text);
             loadFile(textStream, text.size());
-//            loadFile(de->mimeData()->text().split("\n"));
         }
     } else {
         if (!saveChanges(true)) return;
@@ -1682,7 +1682,7 @@ void frmMain::resetHeightmap()
     m_heightMapChanged = false;
 }
 
-void frmMain::loadFile(QTextStream &data, qint64 bytesAvailable)
+void frmMain::loadFile(QIODevice &data, qint64 bytesAvailable)
 {
     QElapsedTimer timer;
     timer.start();
@@ -1731,8 +1731,8 @@ void frmMain::loadFile(QTextStream &data, qint64 bytesAvailable)
     model_data.clear();
 
     QProgressDialog progress(tr("Opening file..."), tr("Abort"), 0, 0, this);
-    if (bytesAvailable == 0 && data.device()) {
-        bytesAvailable = data.device()->bytesAvailable();
+    if (bytesAvailable == 0) {
+        bytesAvailable = data.bytesAvailable();
         progress.setMaximum(bytesAvailable);
     }
     progress.setWindowModality(Qt::WindowModal);
@@ -1742,7 +1742,7 @@ void frmMain::loadFile(QTextStream &data, qint64 bytesAvailable)
     while (!data.atEnd()) {
         auto command = data.readLine();
         // Trim command
-        QString const trimmed = command.trimmed();
+        auto const trimmed = command.trimmed();
 
         if (!trimmed.isEmpty()) {
 #ifdef USE_STD_CONTAINERS
@@ -1752,7 +1752,7 @@ void frmMain::loadFile(QTextStream &data, qint64 bytesAvailable)
             auto &item = model_data.back();
 #endif
             // Split command
-            QString const stripped = GcodePreprocessorUtils::removeComment(command);
+            auto const stripped = GcodePreprocessorUtils::removeComment(command);
             auto &args = item.args;
             args = GcodePreprocessorUtils::splitCommand(stripped);
 //            PointSegment *ps = gp.addCommand(args);
@@ -1832,9 +1832,9 @@ void frmMain::loadFile(const QString& fileName)
     m_programFileName = fileName;
 
     // Prepare text stream
-    QTextStream textStream(&file);
+//    QTextStream textStream(&file);
 
-    loadFile(textStream);
+    loadFile(file);
 }
 
 QTime frmMain::updateProgramEstimatedTime(LineSegment::Container const &lines)
@@ -1999,7 +1999,7 @@ void frmMain::onActSendFromLineTriggered()
 
     for (auto i = 0; i < static_cast<int>(modelData.size()) - 1; i++) {
         modelData[i].state = i < commandIndex ? GCodeItem::Skipped : GCodeItem::InQueue;
-        modelData[i].response = QString();
+        modelData[i].response.clear();
     }
     ui->tblProgram->setUpdatesEnabled(true);
     ui->glwVisualizer->setSpendTime(QTime(0, 0, 0));
@@ -2347,8 +2347,7 @@ void frmMain::updateParser()
 
     ui->tblProgram->setUpdatesEnabled(false);
 
-    QString stripped;
-    QStringList args;
+    QByteArrayList args;
 
     QProgressDialog progress(tr("Updating..."), tr("Abort"), 0, m_currentModel->rowCount() - 2, this);
     progress.setWindowModality(Qt::WindowModal);
@@ -2361,7 +2360,7 @@ void frmMain::updateParser()
 
         // Store args if none
         if (args.isEmpty()) {
-            stripped = GcodePreprocessorUtils::removeComment(m_currentModel->data().at(i).command);
+            auto stripped = GcodePreprocessorUtils::removeComment(m_currentModel->data().at(i).command);
             args = GcodePreprocessorUtils::splitCommand(stripped);
             m_currentModel->data()[i].args = args;
         }
@@ -2371,7 +2370,7 @@ void frmMain::updateParser()
 
         // Update table model
         m_currentModel->data()[i].state = GCodeItem::InQueue;
-        m_currentModel->data()[i].response = QString();
+        m_currentModel->data()[i].response.clear();
         m_currentModel->data()[i].line = gp.getCommandNumber();
 
         if (!progress.isVisible() && timer.hasExpired(PROGRESSAFTER)) {
@@ -2554,7 +2553,7 @@ void frmMain::on_cmdFileReset_clicked()
 
         for (int i = 0; i < static_cast<int>(m_currentModel->data().size()) - 1; i++) {
             m_currentModel->data()[i].state = GCodeItem::InQueue;
-            m_currentModel->data()[i].response = QString();
+            m_currentModel->data()[i].response.clear();
         }
         ui->tblProgram->setUpdatesEnabled(true);
 
@@ -3653,9 +3652,8 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
             progress.setMaximum(m_programModel.rowCount() - 2);
 
             // Modifying g-code program
-            QString command;
-            QStringList args;
-            QString newCommand;
+//            QString command;
+//            QStringList args;
             GCodeItem item;
             int lastSegmentIndex = 0;
             int lastCommandIndex = -1;
@@ -3674,7 +3672,7 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
 
             m_programLoading = true;
             for (int i = 0; i < m_programModel.rowCount() - 1; i++) {
-                command = m_programModel.data().at(i).command;
+                auto command = m_programModel.data().at(i).command;
                 int line = m_programModel.data().at(i).line;
                 isLinearMove = false;
                 hasCommand = false;
@@ -3685,14 +3683,14 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
                     modelData.push_back(item);
                 } else {
                     // Get commands args
-                    args = m_programModel.data().at(i).args;
-                    newCommand.clear();
+                    auto args = m_programModel.data().at(i).args;
+                    QByteArray newCommand;
 
                     // Parse command args
                     for (auto &arg : args) {                   // arg examples: G1, G2, M3, X100...
-                        codeChar = arg.at(0).toLatin1();            // codeChar: G, M, X...
+                        codeChar = arg.at(0);                  // codeChar: G, M, X...
                         if (!coords.contains(codeChar)) {           // Not parameter
-                            codeNum = arg.midRef(1).toFloat();
+                            codeNum = arg.mid(1).toFloat();
                             if (g.contains(codeChar)) {             // 'G'-command
                                 // Store 'G0' & 'G1'
                                 if (codeNum == 0.0f || codeNum == 1.0f) {
@@ -3728,9 +3726,9 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
                                     point = list.at(j).getEnd();
                                     if (!list.at(j).isAbsolute()) point -= list.at(j).getStart();
                                     if (!list.at(j).isMetric()) point /= 25.4;
-
-                                    item.command = newCommand + QString("X%1Y%2Z%3")
+                                    auto coords = QString("X%1Y%2Z%3")
                                             .arg(point.x(), 0, 'f', 3).arg(point.y(), 0, 'f', 3).arg(point.z(), 0, 'f', 3);
+                                    item.command = newCommand + coords.toUtf8();
                                     modelData.push_back(item);
 
                                     newCommand.clear();
