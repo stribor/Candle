@@ -37,6 +37,8 @@
 #include "utils/profile.h"
 #include "frmmain.h"
 #include "ui_frmmain.h"
+#include <QCompleter>
+#include <QThread>
 
 frmMain::frmMain(QWidget *parent) :
     QMainWindow(parent),
@@ -95,7 +97,6 @@ frmMain::frmMain(QWidget *parent) :
 
     m_settings = new frmSettings(this);
     ui->setupUi(this);
-
 #ifdef WINDOWS
     if (QSysInfo::windowsVersion() >= QSysInfo::WV_WINDOWS7) {
         m_taskBarButton = NULL;
@@ -810,7 +811,7 @@ void frmMain::sendCommand(QString command, int tableIndex, bool showInConsole)
         m_fileEndSent = true;
     }
 
-    m_serialPort.write((command + "\r").toLatin1());
+    writeSerial((command + "\n").toLatin1());
 }
 
 void frmMain::grblReset()
@@ -858,20 +859,29 @@ int frmMain::bufferLength()
     return length;
 }
 
+// single point serial output so proper streaming can be done
+qint64 frmMain::writeSerial(QByteArray const &data)
+{
+//    qDebug() << sr << "s:" << data;
+    return m_serialPort.write(data);
+}
+
 void frmMain::onSerialPortReadyRead()
 {
     while (m_serialPort.canReadLine()) {
         QByteArray data = m_serialPort.readLine().trimmed();
-
         // Filter prereset responses
         if (m_reseting) {
-            qDebug() << "reseting filter:" << data;
+            qDebug() << "resetting filter:" << data;
             if (!dataIsReset(data)) continue;
             else {
                 m_reseting = false;
                 m_timerStateQuery.setInterval(m_settings->queryStateTime());
             }
         }
+
+        if (data.isEmpty())
+            continue; // blank response
 
         // Status response
         if (data[0] == '<') {
@@ -880,7 +890,7 @@ void frmMain::onSerialPortReadyRead()
             m_statusReceived = true;
 
             // Update machine coordinates
-            static QRegularExpression mpx("MPos:([^,]*),([^,]*),([^,^>^|]*)");
+            static QRegularExpression mpx("MPos:([^,]*),([^,]*),([^,^>|]*)");
             auto match = mpx.match(data);
             if (match.hasMatch()) {
                 ui->txtMPosX->setText(match.captured(1));
@@ -998,7 +1008,7 @@ void frmMain::onSerialPortReadyRead()
 
             // Store work offset
             static QVector3D workOffset;
-            static QRegularExpression wpx("WCO:([^,]*),([^,]*),([^,^>^|]*)");
+            static QRegularExpression wpx("WCO:([^,]*),([^,]*),([^,^>|]*)");
             match = wpx.match(data);
             if (match.hasMatch())
             {
@@ -1054,7 +1064,7 @@ void frmMain::onSerialPortReadyRead()
             }
 
             // Get overridings
-            static QRegularExpression ov("Ov:([^,]*),([^,]*),([^,^>^|]*)");
+            static QRegularExpression ov("Ov:([^,]*),([^,]*),([^,^>|]*)");
             match = ov.match(data);
             if (match.hasMatch())
             {
@@ -1068,13 +1078,13 @@ void frmMain::onSerialPortReadyRead()
 
                 if (rapid != target) switch (target) {
                 case 25:
-                    m_serialPort.write(QByteArray(1, char(0x97)));
+                    writeSerial(QByteArray(1, char(0x97)));
                     break;
                 case 50:
-                    m_serialPort.write(QByteArray(1, char(0x96)));
+                    writeSerial(QByteArray(1, char(0x96)));
                     break;
                 case 100:
-                    m_serialPort.write(QByteArray(1, char(0x95)));
+                    writeSerial(QByteArray(1, char(0x95)));
                     break;
                 }
 
@@ -1116,7 +1126,7 @@ void frmMain::onSerialPortReadyRead()
                 ui->glwVisualizer->setSpeedState((QString(tr("F/S: %1 / %2")).arg(match.captured(1)).arg(match.captured(2))));
             }
 
-        } else if (data.length() > 0) {
+        } else {
 
             // Processed commands
             if (m_commands.size() > 0 && !dataIsFloating(data)
@@ -1154,7 +1164,7 @@ void frmMain::onSerialPortReadyRead()
                         if (m_processingFile) storeParserState();
 
                         // Spindle speed
-                        QRegularExpression rx(".*S([\\d\\.]+)");
+                        QRegularExpression rx("S([\\d\\.]+)");
                         auto match = rx.match(response);
                         if (match.hasMatch()) {
                             double speed = toMetric(match.captured(1).toDouble()); //RPM in imperial?
@@ -1167,7 +1177,7 @@ void frmMain::onSerialPortReadyRead()
                     // Store origin
                     if (ca.command == "$#" && ca.tableIndex == -2) {
                         qDebug() << "Received offsets:" << response;
-                        QRegularExpression rx(".*G92:([^,]*),([^,]*),([^\\]]*)");
+                        QRegularExpression rx("G92:([^,]*),([^,]*),([^\\]]*)");
                         auto match = rx.match(response);
                         if (match.hasMatch()) {
                             if (m_settingZeroXY) {
@@ -1201,7 +1211,7 @@ void frmMain::onSerialPortReadyRead()
                     if (ca.command.contains("G38.2") && m_heightMapMode && ca.tableIndex > -1) {
                         // Get probe Z coordinate
                         // "[PRB:0.000,0.000,0.000:0];ok"
-                        QRegularExpression rx(".*PRB:([^,]*),([^,]*),([^]^:]*)");
+                        QRegularExpression rx("\\[PRB:([^,]*),([^,]*),([^]^:]*)");
                         double z = qQNaN();
                         auto match = rx.match(response);
                         if (match.hasMatch()) {
@@ -1244,21 +1254,21 @@ void frmMain::onSerialPortReadyRead()
                         // Update text block numbers
                         int blocksAdded = response.count("; ");
 
-                        if (blocksAdded > 0) for (int i = 0; i < m_commands.size(); i++) {
-                            if (m_commands[i].consoleIndex != -1) m_commands[i].consoleIndex += blocksAdded;
+                        if (blocksAdded > 0) for (auto & command : m_commands) {
+                            if (command.consoleIndex != -1) command.consoleIndex += blocksAdded;
                         }
 
                         tc.beginEditBlock();
                         tc.movePosition(QTextCursor::EndOfBlock);
 
-                        tc.insertText(" < " + QString(response).replace("; ", "\r\n"));
+                        tc.insertText(" < " + QString(response).replace("; ", "\n"));
                         tc.endEditBlock();
 
                         if (scrolledDown) ui->txtConsole->verticalScrollBar()->setValue(ui->txtConsole->verticalScrollBar()->maximum());
                     }
 
                     // Check queue
-                    if (m_queue.size() > 0) {
+                    if (!m_queue.empty()) {
                         CommandQueue cq = m_queue.takeFirst();
                         while ((bufferLength() + cq.command.size() + 1) <= BUFFERLENGTH) {
                             sendCommand(cq.command, cq.tableIndex, cq.showInConsole);
@@ -1287,7 +1297,7 @@ void frmMain::onSerialPortReadyRead()
                         if (QSysInfo::windowsVersion() >= QSysInfo::WV_WINDOWS7) {
                             if (m_taskBarProgress) m_taskBarProgress->setValue(m_fileProcessedCommandIndex);
                         }
-#endif                                               
+#endif
                         // Process error messages
                         static bool holding = false;
                         static QString errors;
@@ -1302,7 +1312,7 @@ void frmMain::onSerialPortReadyRead()
                                 holding = true;         // Hold transmit while messagebox is visible
                                 response.clear();
 
-                                m_serialPort.write("!");
+                                writeSerial("!");
                                 m_senderErrorBox->checkBox()->setChecked(false);
                                 qApp->beep();
                                 int result = m_senderErrorBox->exec();
@@ -1310,7 +1320,7 @@ void frmMain::onSerialPortReadyRead()
                                 holding = false;
                                 errors.clear();
                                 if (m_senderErrorBox->checkBox()->isChecked()) m_settings->setIgnoreErrors(true);
-                                if (result == QMessageBox::Ignore) m_serialPort.write("~"); else on_cmdFileAbort_clicked();
+                                if (result == QMessageBox::Ignore) writeSerial("~"); else on_cmdFileAbort_clicked();
                             }
                         }
 
@@ -1390,9 +1400,6 @@ void frmMain::onSerialPortReadyRead()
                 }
                 ui->txtConsole->appendPlainText(data);
             }
-        } else {
-            // Blank response
-//            ui->txtConsole->appendPlainText(data);
         }
     }
 }
@@ -1739,11 +1746,11 @@ void frmMain::loadFile(QIODevice &data, qint64 bytesAvailable)
     progress.setFixedSize(progress.sizeHint());
     progress.setStyleSheet("QProgressBar {text-align: center; qproperty-format: \"\"}");
 
+    QByteArray lineBuf(1024,0);
     while (!data.atEnd()) {
-        auto command = data.readLine();
+        // auto command = data.readLine(100);
         // Trim command
-        auto const trimmed = command.trimmed();
-
+        auto const trimmed = data.readLine().trimmed();
         if (!trimmed.isEmpty()) {
 #ifdef USE_STD_CONTAINERS
             auto &item = model_data.emplace_back();
@@ -1752,9 +1759,9 @@ void frmMain::loadFile(QIODevice &data, qint64 bytesAvailable)
             auto &item = model_data.back();
 #endif
             // Split command
-            auto const stripped = GcodePreprocessorUtils::removeComment(command);
+//            auto const stripped = GcodePreprocessorUtils::removeComment(trimmed);
             auto &args = item.args;
-            args = GcodePreprocessorUtils::splitCommand(stripped);
+            args = GcodePreprocessorUtils::splitCommand(trimmed);
 //            PointSegment *ps = gp.addCommand(args);
             gp.addCommand(args);
 
@@ -1928,8 +1935,8 @@ void frmMain::onActSendFromLineTriggered()
         auto const & lineIndexes = parser->getLinesIndexes();
 
         int lineNumber = m_currentModel->data(m_currentModel->index(commandIndex, 4)).toInt();
-        LineSegment const * firstSegment = &list.at(lineIndexes.at(lineNumber).first());
-        int segmentIndex = lineIndexes.at(lineNumber).last();
+        LineSegment const * firstSegment = &list.at(lineIndexes.at(lineNumber).front());
+        int segmentIndex = lineIndexes.at(lineNumber).back();
         LineSegment const * lastSegment = &list.at(segmentIndex);
         LineSegment const * feedSegment = lastSegment;
 //#if 1
@@ -2012,7 +2019,7 @@ void frmMain::onActSendFromLineTriggered()
     m_storedKeyboardControl = ui->chkKeyboardControl->isChecked();
     ui->chkKeyboardControl->setChecked(false);
 
-    if (!ui->chkTestMode->isChecked()) storeOffsets(); // Allready stored on check
+    if (!ui->chkTestMode->isChecked()) storeOffsets(); // Already stored on check
     storeParserState();
 
 #ifdef WINDOWS
@@ -2037,7 +2044,7 @@ void frmMain::on_cmdFileAbort_clicked()
 {
     m_aborting = true;
     if (!ui->chkTestMode->isChecked()) {
-        m_serialPort.write("!");
+        writeSerial("!");
     } else {
         grblReset();
     }
@@ -2046,7 +2053,7 @@ void frmMain::on_cmdFileAbort_clicked()
 void frmMain::storeParserState()
 {    
     m_storedParserStatus = ui->glwVisualizer->parserStatus().remove(
-                QRegularExpression("GC:|\\[|\\]|G[01234]\\s|M[0345]+\\s|\\sF[\\d\\.]+|\\sS[\\d\\.]+"));
+                QRegularExpression(R"(GC:|\[|\]|G[01234]\s|M[0345]+\s|\sF[\d\.]+|\sS[\d\.]+)"));
 }
 
 void frmMain::restoreParserState()
@@ -2163,8 +2170,8 @@ void frmMain::onTableCurrentChanged(QModelIndex idx1, QModelIndex idx2)
 
     // Update selection marker
     int line = m_currentModel->data(m_currentModel->index(idx1.row(), 4)).toInt();
-    if (line > 0 && !lineIndexes.at(line).isEmpty()) {
-        QVector3D pos = list.at(lineIndexes.at(line).last()).getEnd();
+    if (line > 0 && !lineIndexes.at(line).empty()) {
+        QVector3D pos = list.at(lineIndexes.at(line).back()).getEnd();
         m_selectionDrawer.setEndPosition(m_codeDrawer->getIgnoreZ() ? QVector3D(pos.x(), pos.y(), 0) : pos);
     } else {
         m_selectionDrawer.setEndPosition(QVector3D(sNan, sNan, sNan));
@@ -2361,7 +2368,8 @@ void frmMain::updateParser()
 
         // Store args if none
         if (args.isEmpty()) {
-            auto stripped = GcodePreprocessorUtils::removeComment(m_currentModel->data().at(i).command);
+//            auto stripped = GcodePreprocessorUtils::removeComment(m_currentModel->data().at(i).command);
+            auto &stripped = m_currentModel->data().at(i).command;
             args = GcodePreprocessorUtils::splitCommand(stripped);
             m_currentModel->data()[i].args = args;
         }
@@ -2502,7 +2510,7 @@ void frmMain::on_cmdSpindle_toggled(bool checked)
 void frmMain::on_cmdSpindle_clicked(bool checked)
 {
     if (ui->cmdFilePause->isChecked()) {
-        m_serialPort.write(QByteArray(1, char(0x9e)));
+        writeSerial(QByteArray(1, char(0x9e)));
     } else {
         sendCommand(checked ? QString("M3 S%1").arg(ui->slbSpindle->value()) : "M5", -1, m_settings->showUICommands());
     }
@@ -2522,7 +2530,7 @@ void frmMain::on_chkTestMode_clicked(bool checked)
 
 void frmMain::on_cmdFilePause_clicked(bool checked)
 {
-    m_serialPort.write(checked ? "!" : "~");
+    writeSerial(checked ? "!" : "~");
 }
 
 void frmMain::on_cmdFileReset_clicked()
@@ -2658,7 +2666,7 @@ bool frmMain::saveProgramToFile(QString const &fileName, GCodeTableModel *model)
     QTextStream textStream(&file);
 
     for (int i = 0; i < model->rowCount() - 1; i++) {
-        textStream << model->data(model->index(i, 1)).toString() << "\r\n";
+        textStream << model->data(model->index(i, 1)).toString() << endl;
     }
 
     file.close();
@@ -2745,20 +2753,21 @@ void frmMain::on_actAbout_triggered()
 }
 
 bool frmMain::dataIsEnd(QString const &data) {
-    QStringList ends;
+//    QStringList ends;
+    static std::array<const char *, 2> ends = {
+        "ok",
+        "error"
+//        "Reset to continue",
+//        "'$' for help",
+//        "'$H'|'$X' to unlock",
+//        "Caution: Unlocked",
+//        "Enabled",
+//        "Disabled",
+//        "Check Door",
+//        "Pgm End",
+    };
 
-    ends << "ok";
-    ends << "error";
-//    ends << "Reset to continue";
-//    ends << "'$' for help";
-//    ends << "'$H'|'$X' to unlock";
-//    ends << "Caution: Unlocked";
-//    ends << "Enabled";
-//    ends << "Disabled";
-//    ends << "Check Door";
-//    ends << "Pgm End";
-
-    foreach (QString str, ends) {
+    for (auto &str: ends) {
         if (data.contains(str)) return true;
     }
 
@@ -3411,20 +3420,20 @@ bool frmMain::saveHeightMap(QString const &fileName)
     textStream << ui->txtHeightMapBorderX->text() << ";"
                << ui->txtHeightMapBorderY->text() << ";"
                << ui->txtHeightMapBorderWidth->text() << ";"
-               << ui->txtHeightMapBorderHeight->text() << "\r\n";
+               << ui->txtHeightMapBorderHeight->text() << endl;
     textStream << ui->txtHeightMapGridX->text() << ";"
                << ui->txtHeightMapGridY->text() << ";"
                << ui->txtHeightMapGridZBottom->text() << ";"
-               << ui->txtHeightMapGridZTop->text() << "\r\n";
+               << ui->txtHeightMapGridZTop->text() << endl;
     textStream << ui->cboHeightMapInterpolationType->currentIndex() << ";"
                << ui->txtHeightMapInterpolationStepX->text() << ";"
-                << ui->txtHeightMapInterpolationStepY->text() << "\r\n";
+                << ui->txtHeightMapInterpolationStepY->text() << endl;
 
     for (int i = 0; i < m_heightMapModel.rowCount(); i++) {
         for (int j = 0; j < m_heightMapModel.columnCount(); j++) {
             textStream << m_heightMapModel.data(m_heightMapModel.index(i, j), Qt::UserRole).toString() << ((j == m_heightMapModel.columnCount() - 1) ? "" : ";");
         }
-        textStream << "\r\n";
+        textStream << endl;
     }
 
     file.close();
@@ -3660,9 +3669,9 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
             int lastCommandIndex = -1;
 
             // Search strings
-            QString coords("XxYyZzIiJjKkRr");
-            QString g("Gg");
-            QString m("Mm");
+            QByteArray coords("XxYyZzIiJjKkRr");
+            QByteArray g("Gg");
+            QByteArray m("Mm");
 
             char codeChar;          // Single code char G1 -> G
             float codeNum;          // Code number      G1 -> 1
@@ -3684,15 +3693,15 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
                     modelData.push_back(item);
                 } else {
                     // Get commands args
-                    auto args = m_programModel.data().at(i).args;
+                    auto const &args = m_programModel.data().at(i).args;
                     QByteArray newCommand;
 
                     // Parse command args
                     for (auto &arg : args) {                   // arg examples: G1, G2, M3, X100...
                         codeChar = arg.at(0);                  // codeChar: G, M, X...
                         if (!coords.contains(codeChar)) {           // Not parameter
-                            codeNum = arg.mid(1).toFloat();
                             if (g.contains(codeChar)) {             // 'G'-command
+                                codeNum = GcodePreprocessorUtils::AtoF(arg.data()+1);
                                 // Store 'G0' & 'G1'
                                 if (codeNum == 0.0f || codeNum == 1.0f) {
                                     lastCode = arg;
@@ -3914,9 +3923,9 @@ void frmMain::updateOverride(SliderBox *slider, int value, char command)
     bool smallStep = abs(target - slider->currentValue()) < 10 || m_settings->queryStateTime() < 100;
 
     if (slider->currentValue() < target) {
-        m_serialPort.write(QByteArray(1, char(smallStep ? command + 2 : command)));
+        writeSerial(QByteArray(1, char(smallStep ? command + 2 : command)));
     } else if (slider->currentValue() > target) {
-        m_serialPort.write(QByteArray(1, char(smallStep ? command + 3 : command + 1)));
+        writeSerial(QByteArray(1, char(smallStep ? command + 3 : command + 1)));
     }
 }
 
@@ -4028,5 +4037,5 @@ void frmMain::on_cmdZMinus_released()
 void frmMain::on_cmdStop_clicked()
 {
     m_queue.clear();
-    m_serialPort.write(QByteArray(1, char(0x85)));
+    writeSerial(QByteArray(1, char(0x85)));
 }

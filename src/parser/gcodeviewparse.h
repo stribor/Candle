@@ -15,12 +15,21 @@
 #include "gcodeparser.h"
 #include "utils/util.h"
 
+#ifdef USE_STD_CONTAINERS
+using indexContainer = std::vector<int>;
+using indexVector = std::vector<indexContainer>;
+#else
+using indexContainer = QVector<int>;
+//using indexContainer = QList<int>;
+#endif
+
 class GcodeViewParse : public QObject
 {
     Q_OBJECT
 public:
+
     explicit GcodeViewParse(QObject *parent = 0);
-    ~GcodeViewParse();
+    ~GcodeViewParse() override;
 
     QVector3D &getMinimumExtremes();
     QVector3D &getMaximumExtremes();
@@ -31,7 +40,7 @@ public:
     LineSegment::Container getLinesFromParser(GcodeParser *gp, double arcPrecision, bool arcDegreeMode);
 
     LineSegment::Container & getLines();
-    QVector<QList<int>> &getLinesIndexes();
+    indexVector &getLinesIndexes();
 
     void reset();
 
@@ -45,7 +54,7 @@ private:
     QVector3D m_min, m_max;
     double m_minLength;
     LineSegment::Container m_lines;
-    QVector<QList<int>> m_lineIndexes;    
+    indexVector m_lineIndexes;
 
     // Parsing state.
     QVector3D lastPoint;

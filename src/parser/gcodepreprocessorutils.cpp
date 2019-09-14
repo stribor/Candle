@@ -45,7 +45,7 @@ QByteArray GcodePreprocessorUtils::removeComment(QByteArray command)
     // Remove any comments within first ( and last )
     pos = command.indexOf('(');
     if (pos >= 0) {
-        int pos2 = command.lastIndexOf(')');
+        int pos2 = command.lastIndexOf(')', pos + 1);
         command.remove(pos, pos2-pos+1);
     }
 
@@ -102,54 +102,39 @@ QByteArray GcodePreprocessorUtils::removeAllWhitespace(QByteArray command)
     return command.remove(rx);
 #endif
 }
-//struct GM {QLatin1String v; GCodes m;};
-static QHash<QString, GCodes> gm = {{
-        {QLatin1String("G0"), G00},
-        {QLatin1String("G1"), G01},
-        {QLatin1String("G38.2"), G38_2},
-        {QLatin1String("G2"), G02},
-        {QLatin1String("G3"), G03},
-        {QLatin1String("G17"), G17},
-        {QLatin1String("G18"), G18},
-        {QLatin1String("G19"), G19},
-        {QLatin1String("G20"), G20},
-        {QLatin1String("G21"), G21},
-        {QLatin1String("G90"), G90},
-        {QLatin1String("G90.1"), G90_1},
-        {QLatin1String("G91"), G91},
-        {QLatin1String("G91.1"), G91_1},
-        {QLatin1String("g0"), G00},
-        {QLatin1String("g1"), G01},
-        {QLatin1String("g38.2"), G38_2},
-        {QLatin1String("g2"), G02},
-        {QLatin1String("g3"), G03},
-        {QLatin1String("g17"), G17},
-        {QLatin1String("g18"), G18},
-        {QLatin1String("g19"), G19},
-        {QLatin1String("g20"), G20},
-        {QLatin1String("g21"), G21},
-        {QLatin1String("g90"), G90},
-        {QLatin1String("g90.1"), G90_1},
-        {QLatin1String("g91"), G91},
-        {QLatin1String("g91.0"), G91_1}
-}};
 
-GcodePreprocessorUtils::gcodesContainer GcodePreprocessorUtils::parseCodesEnum(QByteArrayList const &args, QChar /*code*/)
+GCodes GcodePreprocessorUtils::parseGCodeEnum(QByteArray const &arg)
 {
-    gcodesContainer l;
+    GCodes v = unknown;
 
-    for (auto &arg : args) {
-#if 1
-        GCodes v = unknown;
-        auto c = arg.data();
-        if (c[0] != 'G') // code must be G code
-            continue;
+    auto c = arg.data();
+    if (c[0] != 'G' && c[0] != 'g') // code must be G code
+        return v;
 
-        ++c;
+    ++c;
 
-        switch (arg.size()) {
-        case 2: // 0, 1, 2, 3
-            switch (c[0]) {
+
+    switch (arg.size()) {
+    case 2: // 0, 1, 2, 3
+        switch (c[0]) {
+        case '0':v = G00;
+            break;
+        case '1':v = G01;
+            break;
+        case '2':v = G02;
+            break;
+        case '3':v = G03;
+            break;
+        case '7':v = G07;
+            break;
+        case '8':v = G08;
+            break;
+        }
+        break;
+    case 3:
+        switch (c[0]) {
+        case '0':
+            switch (c[1]) {
             case '0':v = G00;
                 break;
             case '1':v = G01;
@@ -164,108 +149,99 @@ GcodePreprocessorUtils::gcodesContainer GcodePreprocessorUtils::parseCodesEnum(Q
                 break;
             }
             break;
-        case 3:
-            switch (c[0]) {
-            case '0':
-                switch (c[1]) {
-                case '0':v = G00;
-                    break;
-                case '1':v = G01;
-                    break;
-                case '2':v = G02;
-                    break;
-                case '3':v = G03;
-                    break;
-                case '7':v = G07;
-                    break;
-                case '8':v = G08;
-                    break;
-                }
+        case '1':
+            switch (c[1]) {
+            case '7': v = G17;
                 break;
-            case '1':
-                switch (c[1]) {
-                case '7': v = G17;
-                    break;
-                case '8': v = G18;
-                    break;
-                case '9': v = G19;
-                    break;
-                }
+            case '8': v = G18;
                 break;
-            case '2':
-                switch (c[1]) {
-                case '0': v = G20;
-                    break;
-                case '1': v = G21;
-                    break;
-                }
-                break;
-            case '9':
-                switch (c[1]) {
-                case '0': v = G90;
-                    break;
-                case '1': v = G91;
-                    break;
-                }
+            case '9': v = G19;
                 break;
             }
             break;
-        case 4: // G5.1, G5.2
-            if (c[1] == '.') {
-                switch (c[0]) {
-                case '5':
-                    switch (c[2]) {
-                    case '1': v = G05_1;
-                        break;
-                    case '2': v = G05_2;
-                        break;
-                    }
-                    break;
-                }
+        case '2':
+            switch (c[1]) {
+            case '0': v = G20;
+                break;
+            case '1': v = G21;
+                break;
             }
             break;
-        case 5:
-            if (c[2] != '.') // code must be xx.y
+        case '9':
+            switch (c[1]) {
+            case '0': v = G90;
                 break;
+            case '1': v = G91;
+                break;
+            }
+            break;
+        }
+        break;
+    case 4: // G5.1, G5.2
+        if (c[1] == '.') {
             switch (c[0]) {
-            case '0':
-                if (c[1] == '5') {
-                    switch (c[3]) {
-                    case '1':v = G05_1;
-                        break;
-                    case '2':v = G05_2;
-                        break;
-                    }
-                }
-                break;
-            case '3':
-                if (c[1] == '8') {
-                    switch (c[3]) {
-                    case '2':v = G38_2;
-                        break;
-                    case '3':v = G38_3;
-                        break;
-                    case '4':v = G38_4;
-                        break;
-                    case '5':v = G38_5;
-                        break;
-                    }
-                }
-                break;
-            case '9': // 9xxx
-                switch (c[1]) {
-                case '0': if (c[3] == '1') v = G90_1;
+            case '5':
+                switch (c[2]) {
+                case '1': v = G05_1;
                     break;
-                case '1': if (c[3] == '1') v = G91_1;
+                case '2': v = G05_2;
                     break;
                 }
                 break;
             }
         }
-//        auto v = G.value(arg, unknown);
-#else
-        v = gm.value(arg, unknown);
-#endif
+        break;
+    case 5:
+        if (c[2] != '.') // code must be xx.y
+            break;
+        switch (c[0]) {
+        case '0':
+            if (c[1] == '5') {
+                switch (c[3]) {
+                case '1':v = G05_1;
+                    break;
+                case '2':v = G05_2;
+                    break;
+                }
+            }
+            break;
+        case '3':
+            if (c[1] == '8') {
+                switch (c[3]) {
+                case '2':v = G38_2;
+                    break;
+                case '3':v = G38_3;
+                    break;
+                case '4':v = G38_4;
+                    break;
+                case '5':v = G38_5;
+                    break;
+                }
+            }
+            break;
+        case '9': // 9xxx
+            switch (c[1]) {
+            case '0': if (c[3] == '1') v = G90_1;
+                break;
+            case '1': if (c[3] == '1') v = G91_1;
+                break;
+            }
+            break;
+        }
+    }
+//    if (v == unknown) {
+//        qDebug() << "Unknown code" << arg;
+//    }
+    return v;
+}
+
+GcodePreprocessorUtils::gcodesContainer GcodePreprocessorUtils::parseCodesEnum(QByteArrayList const &args, QChar /*code*/)
+{
+    gcodesContainer l;
+
+    for (auto const &arg : args) {
+        GCodes v;
+        v = parseGCodeEnum(arg);
         if (v != unknown)
             l.push_back(v);
     }
@@ -335,26 +311,35 @@ QVector3D GcodePreprocessorUtils::updatePointWithCommand(
         QByteArrayList const &commandArgs, const QVector3D &initial,
         bool absoluteMode)
 {
-    double x = qQNaN();
-    double y = qQNaN();
-    double z = qQNaN();
+    QVector3D vec(initial);
     for (auto const & command: commandArgs) {
         if (!command.isEmpty()) {
             switch (command[0]) {
-            case 'X': case 'x':
-                x = atof(command.data() +1);// command.mid(1).toDouble();
+            case 'X':
+            case 'x':
+                if (absoluteMode)
+                    vec.setX(AtoF(command.data() + 1));// command.mid(1).toDouble();
+                else
+                    vec.setX(initial.x() + AtoF(command.data() + 1));// command.mid(1).toDouble();
                 break;
-            case 'Y': case 'y':
-                y = atof(command.data() +1);// command.mid(1).toDouble();
+            case 'Y':
+            case 'y':
+                if (absoluteMode)
+                    vec.setY(AtoF(command.data() + 1));// command.mid(1).toDouble();
+                else
+                    vec.setY(initial.y() + AtoF(command.data() + 1));// command.mid(1).toDouble();
                 break;
-            case 'Z':case 'z':
-                z = atof(command.data() +1);// command.mid(1).toDouble();
+            case 'Z':
+            case 'z':
+                if (absoluteMode)
+                    vec.setZ(AtoF(command.data() + 1));// command.mid(1).toDouble();
+                else
+                    vec.setZ(initial.z() + AtoF(command.data() + 1));// command.mid(1).toDouble();
                 break;
             }
         }
     }
-
-    return updatePointWithCommand(initial, x, y, z, absoluteMode);
+    return vec;
 }
 
 /**
@@ -362,7 +347,7 @@ QVector3D GcodePreprocessorUtils::updatePointWithCommand(
 */
 QVector3D GcodePreprocessorUtils::updatePointWithCommand(const QVector3D &initial, double x, double y, double z, bool absoluteMode)
 {
-    QVector3D newPoint(initial.x(), initial.y(), initial.z());
+    QVector3D newPoint(initial);
 
     if (absoluteMode) {
         if (!qIsNaN(x)) newPoint.setX(x);
@@ -386,19 +371,22 @@ QVector3D GcodePreprocessorUtils::updateCenterWithCommand(QByteArrayList const &
 
     for (auto &t : commandArgs) {
         if (t.size() > 0) {
-            auto c = toUpper(t[0]);
-            switch (c) {
+            switch (t[0]) {
             case 'I':
-                i = t.mid(1).toDouble();
+            case 'i':
+                i = AtoF(t.data()+1);
                 break;
             case 'J':
-                j = t.mid(1).toDouble();
+            case 'j':
+                j = AtoF(t.data()+1);
                 break;
             case 'K':
-                k = t.mid(1).toDouble();
+            case 'k':
+                k = AtoF(t.data()+1);
                 break;
             case 'R':
-                r = t.mid(1).toDouble();
+            case 'r':
+                r = AtoF(t.data()+1);
                 break;
             }
         }
@@ -433,33 +421,64 @@ QString GcodePreprocessorUtils::generateG1FromPoints(QVector3D const &start, QVe
 //* This command is about the same speed as the string.split(" ") command,
 //* but might be a little faster using precompiled regex.
 //*/
-QByteArrayList GcodePreprocessorUtils::splitCommand(QByteArray const &command) {
+// modified split command to be able to process lines with comments and white space in so no trimming/comment removal needed
+// from https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=823374
+// 3.3.4 Comments and MessagesPrintable characters and white space inside parentheses is a comment.
+// A left parenthesis always starts a comment. The comment ends at the first right parenthesis found thereafter.
+// Once a leftparenthesis is placed on a line, a matching right parenthesis must appear before the end of the line.Comments  may  not  be  nested;  it  is  an  error  if  a  left  parenthesis  is  found  after  the  start  of  acomment and before the end of the comment. Here is an example of a line containing a comment:“G80 M5 (stop motion)”. Comments do not cause a machining center to do anything.
+QByteArrayList GcodePreprocessorUtils::splitCommand(QByteArray const &command)
+{
     QByteArrayList l;
     bool readNumeric = false;
-
+    bool inComment = false;
     QByteArray sb;
-    for (const auto &c:  command) {
-        if (readNumeric && !isDigit(c) && c != '.') {
-            readNumeric = false;
-            l.append(sb);
-            sb.clear();
-            if (isLetter(c)) sb.append(c);
-        } else if (isDigit(c) || c == '.' || c == '-') {
-            sb.append(c);
-            readNumeric = true;
-        } else if (isLetter(c)) sb.append(c);
+    if (command[0] != '/') { // lines beginning with '/' are comments
+        for (const auto &c:  command) {
+            // handle comments
+            if (inComment) {
+                if (c == ')')
+                    inComment = false; // getting out of comment and skipping )
+                continue;
+            }
+            if (c == '(') {
+                inComment = true;
+                continue;
+            }
+            if (c == ';') // end of line comment skip whole line
+                break;
+
+            if (readNumeric && !isDigit(c) && c != '.') {
+                readNumeric = false;
+                l.append(sb);
+                sb.clear();
+                if (isLetter(c)) sb.append(c);
+            } else if (isDigit(c) || c == '.' || c == '-' || c == '+') {
+                sb.append(c);
+                readNumeric = true;
+            } else if (isLetter(c)) sb.append(c);
+        }
     }
     if (sb.size() > 0) l.append(sb);
     return l;
 }
 
+bool GcodePreprocessorUtils::parseCoord(QByteArray const &arg, char c, double &outVal)
+{
+    auto small_c = toLower(c);
+    if (arg.size() > 0 && (arg[0] == c || arg[0] == small_c)) {
+        outVal = AtoF(arg.data() + 1);
+        return true;
+    }
+//    outVal = qQNaN();
+    return false;
+}
 // TODO: Replace everything that uses this with a loop that loops through
 // the string and creates a hash with all the values.
 double GcodePreprocessorUtils::parseCoord(QByteArrayList const &argList, char c)
 {
-    auto small_c = tolower(c);
+    auto small_c = toLower(c);
     for (auto const &t : argList) {
-        if (t.size() > 0 && (t[0] == c || t[0] == small_c)) return atof(t.data() + 1);
+        if (t.size() > 0 && (t[0] == c || t[0] == small_c)) return AtoF(t.data() + 1);
     }
     return qQNaN();
 }
@@ -683,17 +702,45 @@ GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegment::planes plane,
     return segments;
 }
 
-bool GcodePreprocessorUtils::isDigit(char c)
+double GcodePreprocessorUtils::AtoF(char const * num)
 {
-    return c > 47 && c < 58;
-}
+    if (!num || !*num)
+        return 0;
+    int integerPart = 0;
+    int fractionPart = 0;
+    int divisorForFraction = 1;
+    int sign = 1;
+    bool inFraction = false;
 
-bool GcodePreprocessorUtils::isLetter(char c)
-{
-    return (c > 64 && c < 91) || (c > 96 && c < 123);
-}
+    // skip white space at start (needed?)
+    while (*num == ' ' || *num == '\t')
+        ++num;
 
-char GcodePreprocessorUtils::toUpper(char c)
-{
-    return (c > 96 && c < 123) ? c - 32 : c;
+    /*Take care of +/- sign*/
+    if (*num == '-') {
+        ++num;
+        sign = -1;
+    } else if (*num == '+') {
+        ++num;
+    }
+    while (*num != '\0') {
+        if (*num >= '0' && *num <= '9') {
+            if (inFraction) {
+                /*See how are we converting a character to integer*/
+                fractionPart = fractionPart * 10 + (*num - '0');
+                divisorForFraction *= 10;
+            } else {
+                integerPart = integerPart * 10 + (*num - '0');
+            }
+        } else if (*num == '.') {
+            if (inFraction)
+                return double(sign) * (double(integerPart) + double(fractionPart) / double(divisorForFraction));
+            else
+                inFraction = true;
+        } else {
+            return double(sign) * (double(integerPart) + double(fractionPart) / double(divisorForFraction));
+        }
+        ++num;
+    }
+    return sign * (double(integerPart) + double(fractionPart) / double(divisorForFraction));
 }

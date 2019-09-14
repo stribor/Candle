@@ -331,6 +331,7 @@ private:
     bool saveChanges(bool heightMapMode);
     void updateControlsState();
     void openPort();
+    qint64 writeSerial(QByteArray const &data);
     void sendCommand(QString command, int tableIndex = -1, bool showInConsole = true);
     void grblReset();
     int bufferLength();
@@ -338,7 +339,7 @@ private:
     void applySettings();
     void updateParser();
     static bool dataIsFloating(QByteArray const &data);
-    bool dataIsEnd(QString const &data);
+    static bool dataIsEnd(QString const &data);
     static bool dataIsReset(QString const &data);
 
     QTime updateProgramEstimatedTime(LineSegment::Container const & lines);

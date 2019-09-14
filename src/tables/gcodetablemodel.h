@@ -7,7 +7,6 @@
 #include <QAbstractTableModel>
 #include <QString>
 #include <vector>
-Q_DECLARE_METATYPE(QByteArrayList)
 
 struct GCodeItem
 {

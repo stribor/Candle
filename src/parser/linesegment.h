@@ -22,7 +22,7 @@ public:
 //    using Container = QList<LineSegment>;
 #endif
     LineSegment();
-    LineSegment(QVector3D a, QVector3D b, int num);
+    LineSegment(QVector3D a, QVector3D b, int num, PointSegment const &ps, bool isMetric);
     LineSegment(LineSegment const &initial);
     ~LineSegment();
 
@@ -87,15 +87,27 @@ private:
     int m_lineNumber;
     int m_vertexIndex;
     PointSegment::planes m_plane;
+#if 0
+    // use less memory but bit slower
     bool m_isZMovement:1;
     bool m_isArc:1;
-    bool m_isClockwise:1;
-    bool m_isFastTraverse:1;
-    bool m_drawn:1;
     bool m_isMetric:1;
+    bool m_isFastTraverse:1;
     bool m_isAbsolute:1;
+    bool m_isClockwise:1;
     bool m_isHightlight:1;
-
+    bool m_drawn:1;
+#else
+    // bit faster but use bit more memory
+    bool m_isZMovement;
+    bool m_isArc;
+    bool m_isMetric;
+    bool m_isFastTraverse;
+    bool m_isAbsolute;
+    bool m_isClockwise;
+    bool m_isHightlight;
+    bool m_drawn;
+#endif
 };
 
 #endif // LINESEGMENT_H

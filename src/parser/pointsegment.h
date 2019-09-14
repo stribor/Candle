@@ -81,11 +81,19 @@ private:
     double m_spindleSpeed;
     double m_dwell;
     planes m_plane;
-    bool m_isMetric:1;
+#if 0
     bool m_isZMovement:1;
     bool m_isArc:1;
+    bool m_isMetric:1;
     bool m_isFastTraverse:1;
     bool m_isAbsolute:1;
+#else
+    bool m_isZMovement;
+    bool m_isArc;
+    bool m_isMetric;
+    bool m_isFastTraverse;
+    bool m_isAbsolute;
+#endif
 };
 
 #endif // POINTSEGMENT_H

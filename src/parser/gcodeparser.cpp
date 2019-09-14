@@ -100,7 +100,8 @@ void GcodeParser::reset(const QVector3D &initialPoint)
 */
 PointSegment* GcodeParser::addCommand(QByteArray const &command)
 {
-    auto stripped = GcodePreprocessorUtils::removeComment(command);
+    auto &stripped = command;
+//    auto stripped = GcodePreprocessorUtils::removeComment(command);
     auto args = GcodePreprocessorUtils::splitCommand(stripped);
     return this->addCommand(args);
 }
@@ -217,22 +218,24 @@ int GcodeParser::getCommandNumber() const
 PointSegment *GcodeParser::processCommand(QByteArrayList const &args)
 {
     PointSegment *ps = NULL;
-
-    // Handle F code
-    double speed = GcodePreprocessorUtils::parseCoord(args, 'F');
-    if (!qIsNaN(speed)) this->m_lastSpeed = this->m_isMetric ? speed : speed * 25.4;
-
-    // Handle S code
-    double spindleSpeed = GcodePreprocessorUtils::parseCoord(args, 'S');
-    if (!qIsNaN(spindleSpeed)) this->m_lastSpindleSpeed = spindleSpeed;
-
-    // Handle P code
-    double dwell = GcodePreprocessorUtils::parseCoord(args, 'P');
-    if (!qIsNaN(dwell)) this->m_points.back().setDwell(dwell);
+    GcodePreprocessorUtils::gcodesContainer gCodes;
+    double speed;
+    double spindleSpeed;
+    double dwell;
+    for (auto &arg : args) {
+        auto const gc = GcodePreprocessorUtils::parseGCodeEnum(arg);
+        if (gc != unknown) {
+            gCodes.push_back(gc);
+        } else if (GcodePreprocessorUtils::parseCoord(arg, 'F', speed)) { // Handle F code
+            this->m_lastSpeed = this->m_isMetric ? speed : speed * 25.4;
+        } else if (GcodePreprocessorUtils::parseCoord(arg, 'S', spindleSpeed)) { // Handle S code
+            this->m_lastSpindleSpeed = spindleSpeed;
+        } else if (GcodePreprocessorUtils::parseCoord(arg, 'P', dwell)) { // Handle P code
+            this->m_points.back().setDwell(dwell);
+        }
+    }
 
     // handle G codes.
-    auto gCodes = GcodePreprocessorUtils::parseCodesEnum(args, 'G');
-
     // If there was no command, add the implicit one to the party.
     if (gCodes.empty() && m_lastGcodeCommand != unknown) {
         gCodes.push_back(m_lastGcodeCommandE);
@@ -255,14 +258,11 @@ PointSegment *GcodeParser::addLinearPointSegment(const QVector3D &nextPoint, boo
 #endif
 //    PointSegment ps(nextPoint, m_commandNumber++);
 
-    bool zOnly = false;
-
     // Check for z-only
-    if ((this->m_currentPoint.x() == nextPoint.x()) &&
+    bool zOnly =
+            (this->m_currentPoint.x() == nextPoint.x()) &&
             (this->m_currentPoint.y() == nextPoint.y()) &&
-            (this->m_currentPoint.z() != nextPoint.z())) {
-        zOnly = true;
-    }
+            (this->m_currentPoint.z() != nextPoint.z());
 
     ps.setIsMetric(this->m_isMetric);
     ps.setIsZMovement(zOnly);

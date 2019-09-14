@@ -21,7 +21,7 @@ LineSegment::LineSegment()
     m_vertexIndex = -1;
 }
 
-LineSegment::LineSegment(QVector3D a, QVector3D b, int num) : LineSegment()
+LineSegment::LineSegment(QVector3D a, QVector3D b, int num,  PointSegment const &ps, bool isMetric) : LineSegment()
 {
 //    m_toolhead = 0; //DEFAULT TOOLHEAD ASSUMED TO BE 0!
 //    m_isZMovement = false;
@@ -31,6 +31,18 @@ LineSegment::LineSegment(QVector3D a, QVector3D b, int num) : LineSegment()
     m_first = a;
     m_second = b;
     m_lineNumber = num;
+
+    m_isArc = ps.isArc();
+    if (m_isArc)
+        m_isClockwise = ps.isClockwise();
+    m_plane = ps.plane();
+    m_isFastTraverse = ps.isFastTraverse();
+    m_isZMovement = ps.isZMovement();
+    m_isMetric = isMetric;
+    m_isAbsolute = ps.isAbsolute();
+    m_speed = ps.getSpeed();
+    m_spindleSpeed = ps.getSpindleSpeed();
+    m_dwell = ps.getDwell();
 }
 
 LineSegment::LineSegment(LineSegment const &initial)

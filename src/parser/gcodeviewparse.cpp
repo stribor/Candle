@@ -23,9 +23,6 @@ GcodeViewParse::GcodeViewParse(QObject *parent) :
 }
 
 GcodeViewParse::~GcodeViewParse() = default;
-//{
-//foreach (LineSegment *ls, m_lines) delete ls;
-//}
 
 QVector3D &GcodeViewParse::getMinimumExtremes()
 {
@@ -109,7 +106,7 @@ LineSegment::Container GcodeViewParse::getLinesFromParser(GcodeParser *gp, doubl
 
     int lineIndex = 0;
     for (auto &ps : psl) {
-        bool isMetric = ps.isMetric();
+        bool isMetric = ps.isMetric(); // need to keep original unit
         ps.convertToMetric();
 
         end = &ps.point();
@@ -126,39 +123,19 @@ LineSegment::Container GcodeViewParse::getLinesFromParser(GcodeParser *gp, doubl
                     QVector3D startPoint = *start;
                     for (auto const &nextPoint : points) {
                         if (nextPoint == startPoint) continue;
-                        LineSegment ls(startPoint, nextPoint, lineIndex);
-                        ls.setIsArc(ps.isArc());
-                        ls.setIsClockwise(ps.isClockwise());
-                        ls.setPlane(ps.plane());
-                        ls.setIsFastTraverse(ps.isFastTraverse());
-                        ls.setIsZMovement(ps.isZMovement());
-                        ls.setIsMetric(isMetric);
-                        ls.setIsAbsolute(ps.isAbsolute());
-                        ls.setSpeed(ps.getSpeed());
-                        ls.setSpindleSpeed(ps.getSpindleSpeed());
-                        ls.setDwell(ps.getDwell());
+                       m_lines.emplace_back(startPoint, nextPoint, lineIndex, ps, isMetric);
                         this->testExtremes(nextPoint);
-                        m_lines.push_back(ls);
-                        m_lineIndexes[ps.getLineNumber()].append(m_lines.size() - 1);
+                        m_lineIndexes[ps.getLineNumber()].push_back(m_lines.size() - 1);
                         startPoint = nextPoint;
                     }
                     lineIndex++;
                 }
             // Line
             } else {
-                LineSegment ls(*start, *end, lineIndex++);
-                ls.setIsArc(ps.isArc());
-                ls.setIsFastTraverse(ps.isFastTraverse());
-                ls.setIsZMovement(ps.isZMovement());
-                ls.setIsMetric(isMetric);
-                ls.setIsAbsolute(ps.isAbsolute());
-                ls.setSpeed(ps.getSpeed());
-                ls.setSpindleSpeed(ps.getSpindleSpeed());
-                ls.setDwell(ps.getDwell());
+                m_lines.emplace_back(*start, *end, lineIndex++, ps, isMetric);
                 this->testExtremes(*end);
                 this->testLength(*start, *end);
-                m_lines.push_back(ls);
-                m_lineIndexes[ps.getLineNumber()].append(m_lines.size() - 1);
+                m_lineIndexes[ps.getLineNumber()].push_back(m_lines.size() - 1);
             }
         }
         start = end;
@@ -172,7 +149,7 @@ LineSegment::Container & GcodeViewParse::getLines()
     return m_lines;
 }
 
-QVector<QList<int> > &GcodeViewParse::getLinesIndexes()
+indexVector &GcodeViewParse::getLinesIndexes()
 {
     return m_lineIndexes;
 }
