@@ -24,8 +24,12 @@ void main()
     // Draw dash lines
     if (!isNan(v_start.x)) {
         vec2 sub = v_position - v_start;
-        float coord = length(sub.x) > length(sub.y) ? gl_FragCoord.x : gl_FragCoord.y;
-        if (cos(coord / factor) > 0.0) discard;
+        // float coord = length(sub.x) > length(sub.y) ? gl_FragCoord.x : gl_FragCoord.y;
+        // float coord = abs(sub.x) > abs(sub.y) ? gl_FragCoord.x : gl_FragCoord.y;
+        // if (cos(coord / factor) > 0.0) discard;
+
+        float coord = length(sub);
+        if (cos(coord * factor) > 0.0) discard;
     }
 
     // Set fragment color
