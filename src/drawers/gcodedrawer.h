@@ -50,6 +50,9 @@ public:
     QColor colorNormal() const;
     void setColorNormal(const QColor &colorNormal);
 
+    QColor colorRapid() const;
+    void setColorRapid(const QColor &colorRapid);
+
     QColor colorHighlight() const;
     void setColorHighlight(const QColor &colorHighlight);
 
@@ -83,6 +86,15 @@ public:
     DrawMode drawMode() const;
     void setDrawMode(const DrawMode &drawMode);
 
+    bool drawLinearMotion() const;
+    void setDrawLinearMotion(bool value);
+    bool drawRapidMotion() const;
+    void setDrawRapidMotion(bool value);
+    bool drawRapidMotionDashed() const;
+    void setDrawRapidMotionDashed(bool value);
+    bool drawControlPoints() const;
+    void setDrawControlPoints(bool value);
+
 signals:
 
 public slots:
@@ -99,11 +111,17 @@ private:
     double m_simplifyPrecision;
     bool m_ignoreZ;
     bool m_grayscaleSegments;
+    bool m_drawLinearMotion;
+    bool m_drawRapidMotion;
+    bool m_drawRapidMotionDashed;
+    bool m_drawControlPoints;
+
     GrayscaleCode m_grayscaleCode;
     int m_grayscaleMin;
     int m_grayscaleMax;   
 
     QColor m_colorNormal;
+    QColor m_colorRapid;
     QColor m_colorDrawn;
     QColor m_colorHighlight;
     QColor m_colorZMovement;

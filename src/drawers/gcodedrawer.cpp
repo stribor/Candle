@@ -90,22 +90,43 @@ bool GcodeDrawer::prepareVectors()
             vertex.start = QVector3D(sNan, sNan, m_pointSize);
             m_points.append(vertex);
 
-//            drawFirstPoint = false;
-//            continue;
+            drawFirstPoint = false;
+            continue;
+        } else if (drawControlPoints()){
+            if (qIsNaN(list.at(i).getEnd().x()) || qIsNaN(list.at(i).getEnd().y())) continue;
+
+            // Draw toolpath point
+            vertex.color = getSegmentColorVector(list.at(i));
+//
+//            vertex.color = Util::colorToVector(m_colorNormal);
+            vertex.position = list.at(i).getEnd();
+            if (m_ignoreZ) vertex.position.setZ(0);
+            vertex.start = QVector3D(sNan, sNan, m_pointSize/2.0);
+            m_points.append(vertex);
         }
 
         // Prepare vertices
-        if (list.at(i).isFastTraverse()) vertex.start = list.at(i).getStart();
-        else vertex.start = QVector3D(sNan, sNan, sNan);
+        if (list.at(i).isFastTraverse()) {
+            if (!drawRapidMotion()) {
+                continue;
+            } else if (drawRapidMotionDashed()) {
+                vertex.start = list.at(i).getStart();
+            } else vertex.start = QVector3D(sNan, sNan, sNan);
+        } else if (!drawLinearMotion()) {
+            continue;
+        } else {
+            vertex.start = QVector3D(sNan, sNan, sNan);
+        }
 
         // Simplify geometry
-        int j = i;
+        int const j = i;
         if (m_simplify && i < static_cast<int>(list.size()) - 1) {
             QVector3D start = list.at(i).getEnd() - list.at(i).getStart();
             QVector3D next;
             double length = start.length();
             bool straight = false;
 
+            auto const currentSegmentType = getSegmentType(list.at(i));
             do {
                 list.at(i).setVertexIndex(m_lines.size()); // Store vertex index
                 i++;
@@ -116,7 +137,7 @@ bool GcodeDrawer::prepareVectors()
                 }
             // Split short & straight lines
             } while ((length < m_simplifyPrecision || straight) && i < static_cast<int>(list.size())
-                     && getSegmentType(list.at(i)) == getSegmentType(list.at(j)));
+                     && getSegmentType(list.at(i)) == currentSegmentType);
             i--;
         } else {
             list.at(i).setVertexIndex(m_lines.size()); // Store vertex index
@@ -124,6 +145,9 @@ bool GcodeDrawer::prepareVectors()
 
         // Set color
         vertex.color = getSegmentColorVector(list.at(i));
+
+//        if (list.at(i).isFastTraverse())
+//            vertex.color.setW(.30);
 
         // Line start
         vertex.position = list.at(j).getStart();
@@ -309,7 +333,7 @@ QColor GcodeDrawer::getSegmentColor(LineSegment const &segment)
 {
     if (segment.drawn()) return m_colorDrawn;//QVector3D(0.85, 0.85, 0.85);
     else if (segment.isHightlight()) return m_colorHighlight;//QVector3D(0.57, 0.51, 0.9);
-    else if (segment.isFastTraverse()) return m_colorNormal;// QVector3D(0.0, 0.0, 0.0);
+    else if (segment.isFastTraverse()) return m_colorRapid;// QVector3D(0.0, 0.0, 0.0);
     else if (segment.isZMovement()) return m_colorZMovement;//QVector3D(1.0, 0.0, 0.0);
     else if (m_grayscaleSegments) switch (m_grayscaleCode) {
     case GrayscaleCode::S:
@@ -389,6 +413,15 @@ QColor GcodeDrawer::colorNormal() const
 void GcodeDrawer::setColorNormal(const QColor &colorNormal)
 {
     m_colorNormal = colorNormal;
+}
+QColor GcodeDrawer::colorRapid() const
+{
+    return m_colorRapid;
+}
+
+void GcodeDrawer::setColorRapid(const QColor &colorRapid)
+{
+    m_colorRapid = colorRapid;
 }
 
 QColor GcodeDrawer::colorHighlight() const
@@ -501,6 +534,46 @@ bool GcodeDrawer::getGrayscaleSegments() const
 void GcodeDrawer::setGrayscaleSegments(bool grayscaleSegments)
 {
     m_grayscaleSegments = grayscaleSegments;
+}
+
+bool GcodeDrawer::drawLinearMotion() const
+{
+    return m_drawLinearMotion;
+}
+
+void GcodeDrawer::setDrawLinearMotion(bool value)
+{
+    m_drawLinearMotion = value;
+}
+
+bool GcodeDrawer::drawRapidMotion() const
+{
+    return m_drawRapidMotion;
+}
+
+void GcodeDrawer::setDrawRapidMotion(bool value)
+{
+    m_drawRapidMotion = value;
+}
+
+bool GcodeDrawer::drawRapidMotionDashed() const
+{
+    return m_drawRapidMotionDashed;
+}
+
+void GcodeDrawer::setDrawRapidMotionDashed(bool value)
+{
+    m_drawRapidMotionDashed = value;
+}
+
+bool GcodeDrawer::drawControlPoints() const
+{
+    return m_drawControlPoints;
+}
+
+void GcodeDrawer::setDrawControlPoints(bool value)
+{
+    m_drawControlPoints = value;
 }
 
 

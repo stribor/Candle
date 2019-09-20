@@ -388,6 +388,11 @@ void frmMain::loadSettings()
     m_settings->setFps(set.value("fps", 60).toInt());
     m_settings->setQueryStateTime(set.value("queryStateTime", 250).toInt());
 
+    m_settings->setShowLinearMotion(set.value("showLinearMotion", true).toBool());//chkRapidMotion
+    m_settings->setShowRapidMotion(set.value("showRapidMotion", true).toBool());//chkRapidMotion
+    m_settings->setShowRapidMotionDashed(set.value("showRapidMotionDashed", true).toBool());//chkRapidMotionDashed
+    m_settings->setShowControlPoints(set.value("showControlPoints", false).toBool());//chkControlPoints
+
     m_settings->setPanelUserCommands(set.value("panelUserCommandsVisible", true).toBool());
     m_settings->setPanelHeightmap(set.value("panelHeightmapVisible", true).toBool());
     m_settings->setPanelSpindle(set.value("panelSpindleVisible", true).toBool());
@@ -575,6 +580,11 @@ void frmMain::saveSettings()
     set.setValue("fontSize", m_settings->fontSize());
     set.setValue("consoleMinHeight", ui->grpConsole->minimumHeight());
 
+    set.setValue("showLinearMotion", m_settings->showLinearMotion());//chkLinearMotion
+    set.setValue("showRapidMotion", m_settings->showRapidMotion());//chkRapidMotion
+    set.setValue("showRapidMotionDashed", m_settings->showRapidMotionDashed());//chkRapidMotionDashed
+    set.setValue("showControlPoints", m_settings->showControlPoints());//chkControlPoints
+
     set.setValue("feedOverride", ui->slbFeedOverride->isChecked());
     set.setValue("feedOverrideValue", ui->slbFeedOverride->value());
     set.setValue("rapidOverride", ui->slbRapidOverride->isChecked());
@@ -610,7 +620,7 @@ void frmMain::saveSettings()
     set.setValue("heightmapInterpolationShow", ui->chkHeightMapInterpolationShow->isChecked());
 
     foreach (ColorPicker* pick, m_settings->colors()) {
-        set.setValue(pick->objectName().mid(3), pick->color().name());
+        set.setValue(pick->objectName().mid(3), pick->color().name(QColor::HexArgb));
     }
 
     QStringList list;
@@ -2287,6 +2297,7 @@ void frmMain::applySettings() {
     m_codeDrawer->setSimplify(m_settings->simplify());
     m_codeDrawer->setSimplifyPrecision(m_settings->simplifyPrecision());
     m_codeDrawer->setColorNormal(m_settings->colors("ToolpathNormal"));
+    m_codeDrawer->setColorRapid(m_settings->colors("ToolpathRapid"));
     m_codeDrawer->setColorDrawn(m_settings->colors("ToolpathDrawn"));
     m_codeDrawer->setColorHighlight(m_settings->colors("ToolpathHighlight"));
     m_codeDrawer->setColorZMovement(m_settings->colors("ToolpathZMovement"));
@@ -2298,7 +2309,11 @@ void frmMain::applySettings() {
     m_codeDrawer->setDrawMode(m_settings->drawModeVectors() ? GcodeDrawer::Vectors : GcodeDrawer::Raster);
     m_codeDrawer->setGrayscaleMin(m_settings->laserPowerMin());
     m_codeDrawer->setGrayscaleMax(m_settings->laserPowerMax());
-    m_codeDrawer->update();    
+    m_codeDrawer->setDrawLinearMotion(m_settings->showLinearMotion());
+    m_codeDrawer->setDrawRapidMotion(m_settings->showRapidMotion());
+    m_codeDrawer->setDrawRapidMotionDashed(m_settings->showRapidMotionDashed());
+    m_codeDrawer->setDrawControlPoints(m_settings->showControlPoints());
+    m_codeDrawer->update();
 
     m_selectionDrawer.setColor(m_settings->colors("ToolpathHighlight"));
 

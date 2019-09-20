@@ -722,3 +722,43 @@ void frmSettings::on_radGrayscaleZ_toggled(bool checked)
 {
     ui->radGrayscaleS->setChecked(!checked);
 }
+
+bool frmSettings::showLinearMotion() const
+{
+    return ui->chkLinearMotion->isChecked();
+}
+
+void frmSettings::setShowLinearMotion(bool value)
+{
+    ui->chkLinearMotion->setChecked(value);
+}
+
+bool frmSettings::showRapidMotion() const
+{
+    return ui->chkRapidMotion->isChecked();
+}
+
+void frmSettings::setShowRapidMotion(bool value)
+{
+    ui->chkRapidMotion->setChecked(value);
+}
+
+bool frmSettings::showRapidMotionDashed() const
+{
+    return ui->chkRapidMotionDashed->isChecked();
+}
+void frmSettings::setShowRapidMotionDashed(bool value)
+{
+    ui->chkRapidMotionDashed->setChecked(value);
+}
+
+bool frmSettings::showControlPoints() const
+{
+    return ui->chkControlPoints->isChecked();
+}
+
+void frmSettings::setShowControlPoints(bool value)
+{
+    ui->chkControlPoints->setChecked(value);
+}
+

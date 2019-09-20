@@ -118,6 +118,15 @@ public:
     bool autoLine();
     void setAutoLine(bool value);
 
+    bool showLinearMotion() const;
+    void setShowLinearMotion(bool value);
+    bool showRapidMotion() const;
+    void setShowRapidMotion(bool value);
+    bool showRapidMotionDashed() const;
+    void setShowRapidMotionDashed(bool value);
+    bool showControlPoints() const;
+    void setShowControlPoints(bool value);
+
 protected:
     void showEvent(QShowEvent *se) override;
 
