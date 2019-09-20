@@ -7,7 +7,7 @@
 #include <QToolButton>
 #include <QColorDialog>
 
-class ColorPicker : public QWidget
+class ColorPicker : public QToolButton
 {
     Q_OBJECT
 public:
@@ -23,11 +23,13 @@ public slots:
 
 private slots:
     void onButtonClicked();
+protected:
+    virtual void paintEvent(QPaintEvent *event) override;
 
 private:
-    QHBoxLayout *m_layout;
-    QFrame *m_frame;
-    QToolButton *m_button;
+//    QHBoxLayout *m_layout;
+//    QFrame *m_frame;
+//    QToolButton *m_button;
     QColor m_color;
 };
 
