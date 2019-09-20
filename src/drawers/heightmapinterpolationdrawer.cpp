@@ -48,13 +48,13 @@ bool HeightMapInterpolationDrawer::updateData()
         for (int j = 1; j < interpolationPointsX; j++) {
             if (qIsNaN(m_data->at(i).at(j))) continue;
             color.setHsvF(0.67 * (max - m_data->at(i).at(j - 1)) / (max - min), 1.0, 1.0);
-            vertex.color = QVector3D(color.redF(), color.greenF(), color.blueF());
+            vertex.color = VertColVec(color);
 
             vertex.position = QVector3D(m_borderRect.x() + interpolationStepX * (j - 1), m_borderRect.y() + interpolationStepY * i, m_data->at(i).at(j - 1));
             m_lines.append(vertex);
 
             color.setHsvF(0.67 * (max - m_data->at(i).at(j)) / (max - min), 1.0, 1.0);
-            vertex.color = QVector3D(color.redF(), color.greenF(), color.blueF());
+            vertex.color = VertColVec(color);
 
             vertex.position = QVector3D(m_borderRect.x() + interpolationStepX * j, m_borderRect.y() + interpolationStepY * i, m_data->at(i).at(j));
             m_lines.append(vertex);
@@ -66,13 +66,13 @@ bool HeightMapInterpolationDrawer::updateData()
         for (int i = 1; i < interpolationPointsY; i++) {
             if (qIsNaN(m_data->at(i).at(j))) continue;
             color.setHsvF(0.67 * (max - m_data->at(i - 1).at(j)) / (max - min), 1.0, 1.0);
-            vertex.color = QVector3D(color.redF(), color.greenF(), color.blueF());
+            vertex.color = VertColVec(color);
 
             vertex.position = QVector3D(m_borderRect.x() + interpolationStepX * j, m_borderRect.y() + interpolationStepY * (i - 1), m_data->at(i - 1).at(j));
             m_lines.append(vertex);
 
             color.setHsvF(0.67 * (max - m_data->at(i).at(j)) / (max - min), 1.0, 1.0);
-            vertex.color = QVector3D(color.redF(), color.greenF(), color.blueF());
+            vertex.color = VertColVec(color);
 
             vertex.position = QVector3D(m_borderRect.x() + interpolationStepX * j, m_borderRect.y() + interpolationStepY * i, m_data->at(i).at(j));
             m_lines.append(vertex);

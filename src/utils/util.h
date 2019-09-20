@@ -12,6 +12,31 @@
 #include <QEventLoop>
 #include <QTimer>
 
+// Switch between RGBA and RGB colors passed as shader attributes
+#if 1
+class VertColVec : public QVector4D {
+public:
+    using QVector4D::QVector4D;  // Inherit Base's constructors.
+    // and add QColor one
+    explicit VertColVec(QColor const &color) {
+        setX(color.redF());
+        setY(color.greenF());
+        setZ(color.blueF());
+        setW(color.alphaF());
+    };
+};
+#else
+class VertColVec : public QVector3D {
+public:
+    using QVector3D::QVector3D;  // Inherit Base's constructors.
+    // and add QColor one
+    explicit VertColVec(QColor const &color) {
+        setX(color.redF());
+        setY(color.greenF());
+        setZ(color.blueF());
+    };
+};
+#endif
 class Util
 {
 public:
@@ -31,9 +56,9 @@ public:
         else return qQNaN();
     }
 
-    static QVector3D colorToVector(QColor color)
+    static VertColVec colorToVector(QColor const &color)
     {
-        return QVector3D(color.redF(), color.greenF(), color.blueF());
+        return VertColVec(color);
     }
 
     static void waitEvents(int ms)

@@ -14,7 +14,7 @@
 struct VertexData
 {
     QVector3D position;
-    QVector3D color;
+    VertColVec color;
     QVector3D start;
 };
 
@@ -62,6 +62,7 @@ protected:
     void init();
 
 private:
+    void setAttributes(QOpenGLShaderProgram *shaderProgram);
     QOpenGLVertexArrayObject m_vao;
 
     bool m_needsUpdateGeometry;

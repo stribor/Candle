@@ -21,7 +21,7 @@ bool ToolDrawer::updateData()
 
     // Prepare vertex
     VertexData vertex;
-    vertex.color = Util::colorToVector(m_color);//QVector3D(1.0, 0.6, 0.0);
+    vertex.color = VertColVec(m_color);//QVector3D(1.0, 0.6, 0.0);
     vertex.start = QVector3D(sNan, sNan, sNan);
 
     // Draw lines
@@ -82,7 +82,7 @@ void ToolDrawer::setColor(const QColor &color)
 }
 
 
-QVector<VertexData> ToolDrawer::createCircle(QVector3D center, double radius, int arcs, QVector3D color)
+QVector<VertexData> ToolDrawer::createCircle(QVector3D center, double radius, int arcs, VertColVec const &color)
 {
     // Vertices
     QVector<VertexData> circle;

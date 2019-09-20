@@ -84,7 +84,7 @@ bool GcodeDrawer::prepareVectors()
             if (qIsNaN(list.at(i).getEnd().x()) || qIsNaN(list.at(i).getEnd().y())) continue;
 
             // Draw first toolpath point
-            vertex.color = Util::colorToVector(m_colorStart);
+            vertex.color = VertColVec(m_colorStart);
             vertex.position = list.at(i).getEnd();
             if (m_ignoreZ) vertex.position.setZ(0);
             vertex.start = QVector3D(sNan, sNan, m_pointSize);
@@ -136,13 +136,13 @@ bool GcodeDrawer::prepareVectors()
         m_lines.append(vertex);
 
         // Draw last toolpath point
-//        if (i == list.count() - 1) {
-            vertex.color = Util::colorToVector(m_colorEnd);
+        if (i == static_cast<int>(list.size()) - 1) {
+            vertex.color = VertColVec(m_colorEnd);
             vertex.position = list.at(i).getEnd();
             if (m_ignoreZ) vertex.position.setZ(0);
             vertex.start = QVector3D(sNan, sNan, m_pointSize);
             m_points.append(vertex);
-//        }
+        }
     }
     m_geometryUpdated = true;
     m_indexes.clear();
@@ -225,7 +225,7 @@ bool GcodeDrawer::prepareRaster()
     VertexData vertex;
 
     // Set color
-    vertex.color = Util::colorToVector(Qt::red);
+    vertex.color = VertColVec{Qt::red};
 
     // Rect
     vertex.start = QVector3D(sNan, 0, 0);
@@ -300,9 +300,9 @@ void GcodeDrawer::setImagePixelColor(QImage &image, double x, double y, QRgb col
     *(pixel + (int)x * 3 + 2) = qBlue(color);
 }
 
-QVector3D GcodeDrawer::getSegmentColorVector(LineSegment const &segment)
+VertColVec GcodeDrawer::getSegmentColorVector(LineSegment const &segment)
 {
-    return Util::colorToVector(getSegmentColor(segment));
+    return VertColVec{getSegmentColor(segment)};
 }
 
 QColor GcodeDrawer::getSegmentColor(LineSegment const &segment)
