@@ -143,6 +143,7 @@ private slots:
     void on_radGrayscaleZ_toggled(bool checked);
 
 private:
+    void resetDefaults();
     Ui::frmSettings *ui;
     void searchPorts();
 

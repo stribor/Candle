@@ -473,7 +473,9 @@ void frmMain::loadSettings()
     ui->chkHeightMapInterpolationShow->setChecked(set.value("heightmapInterpolationShow", false).toBool());
 
     foreach (ColorPicker* pick, m_settings->colors()) {
-        pick->setColor(QColor(set.value(pick->objectName().mid(3), "black").toString()));
+            auto colorName = pick->objectName().mid(3);
+            if (set.contains(colorName))
+               pick->setColor(QColor(set.value(colorName, QColor(Qt::black)).toString()));
     }
 
     updateRecentFilesMenu();

@@ -29,6 +29,7 @@ frmSettings::frmSettings(QWidget *parent) :
     ui->listCategories->item(0)->setSelected(true);
     connect(ui->scrollSettings->verticalScrollBar(), &QScrollBar::valueChanged, this, &frmSettings::onScrollBarValueChanged);
 
+    resetDefaults();
     searchPorts();
 }
 
@@ -626,6 +627,11 @@ void frmSettings::on_cmdDefaults_clicked()
     if (QMessageBox::warning(this, qApp->applicationDisplayName(), tr("Reset settings to default values?"),
                              QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel) != QMessageBox::Yes) return;
 
+    resetDefaults();
+}
+
+void frmSettings::resetDefaults()
+{
     setPort("");
     setBaud(115200);
 
@@ -671,7 +677,7 @@ void frmSettings::on_cmdDefaults_clicked()
     setPanelOverriding(true);
     setPanelHeightmap(true);
     setPanelJog(true);
-    setPanelSpindle(true);   
+    setPanelSpindle(true);
 
     ui->clpTool->setColor(QColor(255, 153, 0));
 
