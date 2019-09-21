@@ -1632,8 +1632,6 @@ void frmMain::dropEvent(QDropEvent *de)
 
         // Load dropped g-code file
         if (!fileName.isEmpty()) {
-            addRecentFile(fileName);
-            updateRecentFilesMenu();
             loadFile(fileName);
         // Load dropped text
         } else {
@@ -1669,9 +1667,6 @@ void frmMain::on_cmdFileOpen_clicked()
         if (!fileName.isEmpty()) m_lastFolder = fileName.left(fileName.lastIndexOf(QRegularExpression("[/\\\\]+")));
 
         if (fileName != "") {
-            addRecentFile(fileName);
-            updateRecentFilesMenu();
-
             loadFile(fileName);
         }
     } else {
@@ -1680,8 +1675,6 @@ void frmMain::on_cmdFileOpen_clicked()
         QString fileName = QFileDialog::getOpenFileName(this, tr("Open"), m_lastFolder, tr("Heightmap files (*.map)"));
 
         if (fileName != "") {
-            addRecentHeightmap(fileName);
-            updateRecentFilesMenu();
             loadHeightMap(fileName);
         }
     }
@@ -1830,9 +1823,6 @@ void frmMain::onLoadFile(const QString& fileName)
 	if (!fileName.isEmpty()) m_lastFolder = fileName.left(fileName.lastIndexOf(QRegularExpression("[/\\\\]+")));
 
 	if (fileName != "") {
-		addRecentFile(fileName);
-		updateRecentFilesMenu();
-
 		loadFile(fileName);
 	}
 }
@@ -1846,6 +1836,8 @@ void frmMain::loadFile(const QString& fileName)
         QMessageBox::critical(this, this->windowTitle(), tr("Can't open file:\n") + fileName);
         return;
     }
+    addRecentFile(fileName);
+    updateRecentFilesMenu();
 
     // Set filename
     m_programFileName = fileName;
@@ -3083,14 +3075,14 @@ void frmMain::addRecentFile(QString const &fileName)
 {
     m_recentFiles.removeAll(fileName);
     m_recentFiles.append(fileName);
-    if (m_recentFiles.size() > 5) m_recentFiles.takeFirst();
+    if (m_recentFiles.size() > 20) m_recentFiles.takeFirst();
 }
 
 void frmMain::addRecentHeightmap(QString const &fileName)
 {
     m_recentHeightmaps.removeAll(fileName);
     m_recentHeightmaps.append(fileName);
-    if (m_recentHeightmaps.size() > 5) m_recentHeightmaps.takeFirst();
+    if (m_recentHeightmaps.size() > 20) m_recentHeightmaps.takeFirst();
 }
 
 void frmMain::onActRecentFileTriggered()
@@ -3468,6 +3460,9 @@ void frmMain::loadHeightMap(QString const &fileName)
         QMessageBox::critical(this, this->windowTitle(), tr("Can't open file:\n") + fileName);
         return;
     }
+    addRecentHeightmap(fileName);
+    updateRecentFilesMenu();
+
     QTextStream textStream(&file);
 
     m_settingsLoading = true;
@@ -3552,7 +3547,6 @@ void frmMain::on_cmdHeightMapLoad_clicked()
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open"), m_lastFolder, tr("Heightmap files (*.map)"));
 
     if (fileName != "") {
-        addRecentHeightmap(fileName);
         loadHeightMap(fileName);
 
         // If using heightmap
