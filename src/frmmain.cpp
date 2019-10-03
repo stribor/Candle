@@ -1639,6 +1639,7 @@ void frmMain::dropEvent(QDropEvent *de)
             m_fileChanged = true;
             auto text = de->mimeData()->text().toUtf8();
             QBuffer textStream(&text);
+            textStream.open(QIODevice::ReadOnly);
             loadFile(textStream, text.size());
         }
     } else {
