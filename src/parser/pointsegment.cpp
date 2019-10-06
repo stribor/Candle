@@ -139,9 +139,9 @@ void PointSegment::setArcCenter(const QVector3D &center)
 {
     if (m_arcProperties == nullptr) {
         m_arcProperties = new ArcProperties(center, 0, true);
+        setIsArc(true);
     } else {
         m_arcProperties->center = center;
-        setIsArc(true);
     }
 }
 

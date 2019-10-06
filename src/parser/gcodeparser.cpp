@@ -87,7 +87,6 @@ void GcodeParser::reset(const QVector3D &initialPoint)
     qDebug() << "reseting gp" << initialPoint;
 
     this->m_points.clear();
-    this->m_points.reserve(21002710);
 
     // The unspoken home location.
     m_currentPoint = initialPoint;
@@ -339,7 +338,7 @@ PointSegment * GcodeParser::handleGCode(GCodes code, QByteArrayList const &args)
     // should this use qFuzzyCompare()?
     switch (code) {
     case G00: ps = addLinearPointSegment(nextPoint, true);break;
-    case G01: ps = addLinearPointSegment(nextPoint, false); break;
+    case G01:
     case G38_2:  ps = addLinearPointSegment(nextPoint, false); break;
     case G02: ps = addArcPointSegment(nextPoint, true, args); break;
     case G03: ps = addArcPointSegment(nextPoint, false, args); break;

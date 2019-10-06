@@ -830,7 +830,7 @@ void frmMain::grblReset()
 {
     qDebug() << "grbl reset";
 
-    m_serialPort.write(QByteArray(1, (char)24));
+    writeSerial(QByteArray(1, (char)24));
 //    m_serialPort.flush();
 
     m_processingFile = false;
@@ -1449,7 +1449,7 @@ void frmMain::onTimerConnection()
 void frmMain::onTimerStateQuery()
 {
     if (m_serialPort.isOpen() && m_resetCompleted && m_statusReceived) {
-        m_serialPort.write(QByteArray(1, '?'));
+        writeSerial(QByteArray(1, '?'));
         m_statusReceived = false;
     }
 
