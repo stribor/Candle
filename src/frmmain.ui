@@ -1638,6 +1638,9 @@ QSlider::handle:horizontal:hover {
                        <height>30</height>
                       </size>
                      </property>
+                     <property name="shortcut">
+                      <string>F2</string>
+                     </property>
                     </widget>
                    </item>
                    <item row="0" column="3">
@@ -1663,6 +1666,9 @@ QSlider::handle:horizontal:hover {
                        <width>30</width>
                        <height>30</height>
                       </size>
+                     </property>
+                     <property name="shortcut">
+                      <string>F4</string>
                      </property>
                     </widget>
                    </item>
@@ -1690,6 +1696,9 @@ QSlider::handle:horizontal:hover {
                        <height>30</height>
                       </size>
                      </property>
+                     <property name="shortcut">
+                      <string>F3</string>
+                     </property>
                     </widget>
                    </item>
                    <item row="0" column="0">
@@ -1715,6 +1724,9 @@ QSlider::handle:horizontal:hover {
                        <width>30</width>
                        <height>30</height>
                       </size>
+                     </property>
+                     <property name="shortcut">
+                      <string>F1</string>
                      </property>
                     </widget>
                    </item>
@@ -2544,7 +2556,7 @@ QSlider::handle:horizontal:hover {
               <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="1,0,0">
                <item>
                 <widget class="ComboBox" name="cboCommand">
-                <property name="editable">
+                 <property name="editable">
                   <bool>true</bool>
                  </property>
                  <property name="maxVisibleItems">
