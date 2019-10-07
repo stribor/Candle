@@ -7,6 +7,7 @@
 
 #include <QListIterator>
 #include <QDebug>
+#include <QMessageBox>
 #include "gcodeparser.h"
 
 GcodeParser::GcodeParser(QObject *parent) : QObject(parent)
@@ -349,7 +350,18 @@ PointSegment * GcodeParser::handleGCode(GCodes code, QByteArrayList const &args)
     case G21: this->m_isMetric = true; break;
     case G90: this->m_inAbsoluteMode = true; break;
     case G90_1:  this->m_inAbsoluteIJKMode = true; break;
-    case G91: this->m_inAbsoluteMode = false; break;
+    case G91: this->m_inAbsoluteMode = false;
+        if (qIsNaN(m_currentPoint.x()) || qIsNaN(m_currentPoint.y()) || qIsNaN(m_currentPoint.z())) {
+            int res = QMessageBox::warning(nullptr, tr("GcodeParser"),
+                                           tr("GcodeParser error:Switching to relative mode without previously set current position. Select Ok to set unknown coordinates to 0 or ignore to continue"),
+                                           QMessageBox::Ok | QMessageBox::Ignore);
+            if (res == QMessageBox::Ok) {
+                if (qIsNaN(m_currentPoint.x())) m_currentPoint.setX(0.0);
+                if (qIsNaN(m_currentPoint.y())) m_currentPoint.setY(0.0);
+                if (qIsNaN(m_currentPoint.z())) m_currentPoint.setZ(0.0);
+            }
+        }
+        break;
     case G91_1:  this->m_inAbsoluteIJKMode = false; break;
     default: break;
     }
