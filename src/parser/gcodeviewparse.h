@@ -20,7 +20,7 @@ using indexContainer = std::vector<int>;
 using indexVector = std::vector<indexContainer>;
 #else
 using indexContainer = QVector<int>;
-//using indexContainer = QList<int>;
+using indexVector = QList<indexContainer>;
 #endif
 
 class GcodeViewParse : public QObject

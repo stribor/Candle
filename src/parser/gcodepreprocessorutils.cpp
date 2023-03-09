@@ -95,7 +95,13 @@ QByteArray GcodePreprocessorUtils::removeAllWhitespace(QByteArray command)
 {
 #if 1
     // guess should be faster than regex
-    return command.simplified().replace(' ', QByteArray());
+#if QT_VERSION >= QT_VERSION_CHECK(6, 1, 0)
+    return command.removeIf([](char c) { return std::isspace(c); });
+#else
+    command.resize( std::distance(command.begin(), std::remove_if(command.begin(), command.end(), [](char c) { return std::isspace(c); })));
+
+    return command;
+#endif
 #else
     static QRegularExpression rx("\\s");
 

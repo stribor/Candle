@@ -128,7 +128,7 @@ bool GcodeDrawer::prepareVectors()
 
             auto const currentSegmentType = getSegmentType(list.at(i));
             do {
-                list.at(i).setVertexIndex(m_lines.size()); // Store vertex index
+                list[i].setVertexIndex(m_lines.size()); // Store vertex index
                 i++;
                 if (i < static_cast<int>(list.size()) - 1) {
                     next = list.at(i).getEnd() - list.at(i).getStart();
@@ -140,7 +140,7 @@ bool GcodeDrawer::prepareVectors()
                      && getSegmentType(list.at(i)) == currentSegmentType);
             i--;
         } else {
-            list.at(i).setVertexIndex(m_lines.size()); // Store vertex index
+            list[i].setVertexIndex(m_lines.size()); // Store vertex index
         }
 
         // Set color

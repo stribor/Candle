@@ -1058,9 +1058,9 @@ void frmMain::onSerialPortReadyRead()
                 auto &list = parser->getLineSegmentList();
 
                 for (int i = m_lastDrawnLineIndex; i < static_cast<int>(list.size())
-                     && list.at(i).getLineNumber()
+                     && list[i].getLineNumber()
                      <= (m_currentModel->data(m_currentModel->index(m_fileProcessedCommandIndex, 4)).toInt() + 1); i++) {
-                    if (list.at(i).contains(toolPosition)) {
+                    if (list[i].contains(toolPosition)) {
                         toolOntoolpath = true;
                         m_lastDrawnLineIndex = i;
                         break;
@@ -1070,7 +1070,7 @@ void frmMain::onSerialPortReadyRead()
 
                 if (toolOntoolpath) {
                     for (auto i : drawnLines) {
-                        list.at(i).setDrawn(true);
+                        list[i].setDrawn(true);
                     }
                     if (!drawnLines.empty()) m_currentDrawer->update(drawnLines);
                 } else if (m_lastDrawnLineIndex < static_cast<int>(list.size())) {
@@ -1361,19 +1361,19 @@ void frmMain::onSerialPortReadyRead()
                             indexContainer drawnLines;
 
                             for (i = m_lastDrawnLineIndex; i < static_cast<int>(list.size())
-                                 && list.at(i).getLineNumber()
+                                 && list[i].getLineNumber()
                                  <= (m_currentModel->data(m_currentModel->index(m_fileProcessedCommandIndex, 4)).toInt()); i++) {
                                 drawnLines.push_back(i);
                             }
 
                             if (!drawnLines.empty() && (i < static_cast<int>(list.size()))) {
                                 m_lastDrawnLineIndex = i;
-                                QVector3D vec = list.at(i).getEnd();
+                                QVector3D vec = list[i].getEnd();
                                 m_toolDrawer.setToolPosition(vec);
                             }
 
                             for (auto i : drawnLines) {
-                                list.at(i).setDrawn(true);
+                                list[i].setDrawn(true);
                             }
                             if (!drawnLines.empty()) m_currentDrawer->update(drawnLines);
                         } else {
@@ -1770,14 +1770,9 @@ void frmMain::loadFile(QIODevice &data, qint64 bytesAvailable)
             auto &item = model_data.back();
 #endif
             // Split command
-//            auto const stripped = GcodePreprocessorUtils::removeComment(trimmed);
             auto &args = item.args;
             args = GcodePreprocessorUtils::splitCommand(trimmed);
-//            PointSegment *ps = gp.addCommand(args);
             gp.addCommand(args);
-
-    //        if (ps && (qIsNaN(ps->point()->x()) || qIsNaN(ps->point()->y()) || qIsNaN(ps->point()->z())))
-    //                   qDebug() << "nan point segment added:" << *ps->point();
 
             item.state = GCodeItem::InQueue;
             item.line = gp.getCommandNumber();
@@ -2007,7 +2002,7 @@ void frmMain::onActSendFromLineTriggered()
     indexContainer indexes;
     auto &modelData = m_currentModel->data();
     for (int i = 0; i < static_cast<int>(list.size()); i++) {
-        list[i].setDrawn(list.at(i).getLineNumber() < modelData[commandIndex].line);
+        list[i].setDrawn(list[i].getLineNumber() < modelData[commandIndex].line);
         indexes.push_back(i);
     }
     m_codeDrawer->update(indexes);
@@ -2165,7 +2160,7 @@ void frmMain::onTableCurrentChanged(QModelIndex idx1, QModelIndex idx2)
         indexContainer indexes;
         for (int i = lineFirst + 1; i <= lineLast; i++) {
             for (auto l : lineIndexes.at(i)) {
-                list.at(l).setIsHightlight(idx1.row() > idx2.row());
+                list[l].setIsHightlight(idx1.row() > idx2.row());
                 indexes.push_back(l);
             }
         }
@@ -2327,8 +2322,8 @@ void frmMain::applySettings() {
     normal.setHsv(base.hue(), base.saturation(), base.value() + (light ? -NORMALSHIFT : NORMALSHIFT));
     highlight.setHsv(base.hue(), base.saturation(), base.value() + (light ? -HIGHLIGHTSHIFT : HIGHLIGHTSHIFT));
 
-    ui->glwVisualizer->setStyleSheet(QString("QToolButton {border: 1px solid %1; \
-                background-color: %3} QToolButton:hover {border: 1px solid %2;}")
+    ui->glwVisualizer->setStyleSheet(QString("QToolButton {border: 1px solid %1; background-color: %3}\n"
+                                             "QToolButton:hover {border: 1px solid %2;}")
                 .arg(normal.name()).arg(highlight.name())
                 .arg(base.name()));
 
@@ -3624,17 +3619,17 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
             time.start();
 
             for (int i = 0; i < static_cast<int>(list.size()); i++) {
-                if (!list.at(i).isZMovement()) {
-                    LineSegment::Container subSegments = subdivideSegment(list.at(i));
+                if (!list[i].isZMovement()) {
+                    LineSegment::Container subSegments = subdivideSegment(list[i]);
 
                     if (!subSegments.empty()) {
-                        //delete list.at(i);
+                        //delete list[i];
                         list.erase(list.begin() + i); // list.removeAt(i);
 #ifdef USE_STD_CONTAINERS
                         list.insert(list.begin() + i, subSegments.begin(), subSegments.end());
                         i += subSegments.size() - 1;
 #else
-                        foreach (LineSegment* subSegment, subSegments) list.insert(i++, subSegment);
+                        for (LineSegment& subSegment : subSegments){ list.insert(i++, subSegment);}
                         i--;
 #endif
                     }
@@ -3655,16 +3650,16 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
 
             for (int i = 0; i < static_cast<int>(list.size()); i++) {
                 if (i == 0) {
-                    x = list.at(i).getStart().x();
-                    y = list.at(i).getStart().y();
-                    z = list.at(i).getStart().z() + Interpolation::bicubicInterpolate(borderRect, &m_heightMapModel, x, y);
-                    list.at(i).setStart(QVector3D(x, y, z));
-                } else list.at(i).setStart(list.at(i - 1).getEnd());
+                    x = list[i].getStart().x();
+                    y = list[i].getStart().y();
+                    z = list[i].getStart().z() + Interpolation::bicubicInterpolate(borderRect, &m_heightMapModel, x, y);
+                    list[i].setStart(QVector3D(x, y, z));
+                } else list[i].setStart(list.at(i - 1).getEnd());
 
-                x = list.at(i).getEnd().x();
-                y = list.at(i).getEnd().y();
-                z = list.at(i).getEnd().z() + Interpolation::bicubicInterpolate(borderRect, &m_heightMapModel, x, y);
-                list.at(i).setEnd(QVector3D(x, y, z));
+                x = list[i].getEnd().x();
+                y = list[i].getEnd().y();
+                z = list[i].getEnd().z() + Interpolation::bicubicInterpolate(borderRect, &m_heightMapModel, x, y);
+                list[i].setEnd(QVector3D(x, y, z));
 
                 if (progress.isVisible() && (time.elapsed() % PROGRESSSTEP == 0)) {
                     progress.setValue(i);

@@ -20,7 +20,7 @@ public:
     using ContainerPtr = std::vector<PointSegment*>;
 #else
     using Container = QVector<PointSegment>;
-//    using Container = QList<PointSegment>;
+    using ContainerPtr = QVector<PointSegment*>;
 #endif
     enum planes {
         XY,
