@@ -27,11 +27,15 @@ public:
     void setHighlightColor(const QColor &highlightColor);
 
 protected:
-    void enterEvent(QEvent *);
-    void leaveEvent(QEvent *);
+#if QT_VERSION_MAJOR < 6
+    void enterEvent(QEvent *) override;
+#else
+    void enterEvent(QEnterEvent *) override;
+#endif
+    void leaveEvent(QEvent *) override;
 
 private:
-    void paintEvent(QPaintEvent *e);
+    void paintEvent(QPaintEvent *e) override;
 
     bool m_hovered;
     QColor m_backColor;

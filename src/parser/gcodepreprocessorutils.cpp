@@ -255,7 +255,7 @@ QList<float> GcodePreprocessorUtils::parseCodes(const QStringList &args, QChar c
     auto small_c = code.toLower();
 
     for (auto const &s : args) {
-        if (s.size() > 0 && (s[0] == code || s[0] == small_c)) l.append(s.midRef(1).toDouble());
+        if (s.size() > 0 && (s[0] == code || s[0] == small_c)) l.append(s.mid(1).toDouble());
     }
 
     return l;
@@ -606,9 +606,9 @@ GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegment::planes plane,
         m.rotate(-90, 0.0, 1.0, 0.0);
         break;
     }
-    start = m * start;
-    end = m * end;
-    center = m * center;
+    start = m.map(start);
+    end = m.map(end);
+    center = m.map(center);
 
     // Check center
     if (qIsNaN(center.length())) return {};
@@ -694,10 +694,10 @@ GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegment::planes plane,
         lineEnd.setY(sin(angle) * radius + center.y());
         lineEnd.setZ(lineEnd.z() + zIncrement);
 
-        segments.push_back(m * lineEnd);
+        segments.push_back(m.map(lineEnd));
     }
 
-    segments.push_back(m * p2);
+    segments.push_back(m.map(p2));
 
     return segments;
 }

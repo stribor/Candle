@@ -2,6 +2,8 @@
 // Copyright 2015-2016 Hayrullin Denis Ravilevich
 
 #include <QDesktopServices>
+#include <QStandardPaths>
+#include <QFile>
 #include "frmabout.h"
 #include "ui_frmabout.h"
 

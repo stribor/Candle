@@ -27,6 +27,10 @@ option(ENABLE_UNDEFINED_SANITIZER "enable undefined behaviour sanitizer if avail
 option(ENABLE_PEDANTIC_MODE "enable pedantic compiling mode that usually produces a lot of more warnings" ON)
 option(USE_STD_CONTAINERS "use std:vector instead of QList and QVector" ON)
 
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
+message(STATUS "Candle Qt Version=${QT_VERSION_MAJOR}")
+
+
 # Handle sanitizer options
 if (ENABLE_ADDRESS_SANITIZER OR ENABLE_UNDEFINED_SANITIZER)
     set(ENABLE_SANITIZER BOOL ON)
@@ -67,7 +71,13 @@ if(ENABLE_SANITIZER)
 endif()
 
 
-find_package(Qt5 COMPONENTS Core Widgets OpenGL SerialPort LinguistTools REQUIRED)
+if(QT_VERSION_MAJOR EQUAL  6)
+    find_package(Qt6 REQUIRED COMPONENTS Core Widgets OpenGL OpenGLWidgets SerialPort LinguistTools)
+else()
+    find_package(Qt5 REQUIRED COMPONENTS Core Widgets OpenGL SerialPort LinguistTools )
+endif()
+
+#find_package(Qt5 COMPONENTS Core Widgets OpenGL SerialPort LinguistTools REQUIRED)
 
 include_directories(${PROJECT_SOURCE_DIR})
 
@@ -138,7 +148,7 @@ set(SRC_HEADERS
         widgets/comboboxkey.h
 		utils/profile.cpp utils/profile.h)
 
-qt5_add_resources(SHADER_RSC 
+qt_add_resources(SHADER_RSC
     ${PROJECT_SOURCE_DIR}/shaders.qrc
     ${PROJECT_SOURCE_DIR}/images.qrc
     ${PROJECT_SOURCE_DIR}/fonts.qrc
@@ -151,7 +161,7 @@ set (TS_FILES
         translations/candle_pt.ts
         )
 if (UPDATE_TRANSLATIONS)
-    qt5_create_translation( TRANSLATIONS ${TS_FILES}
+    qt_create_translation( TRANSLATIONS ${TS_FILES}
             ${SRC_FILES}
             ${SRC_HEADERS}
             frmabout.ui
@@ -160,7 +170,7 @@ if (UPDATE_TRANSLATIONS)
             widgets/sliderbox.ui
             )
 else()
-    qt5_add_translation( TRANSLATIONS ${TS_FILES})
+    qt_add_translation( TRANSLATIONS ${TS_FILES})
 endif()
 
 
@@ -175,18 +185,18 @@ if(APPLE)
     set( MACOSX_BUNDLE_COPYRIGHT "Copyright ©2019 https://github.com/Denvi")
 
 
-    # use otool to extract minimum os version QtCore is compiled to run at so we can work as low is Qt can
-    execute_process(COMMAND otool -l ${_qt5Core_install_prefix}/lib/QtCore.framework/QtCore
-            COMMAND grep -A2 LC_VERSION_MIN_MACOSX
-            COMMAND awk "END{print $2}"
-            OUTPUT_VARIABLE MINOSX OUTPUT_STRIP_TRAILING_WHITESPACE)
-    #		message(STATUS "Min Mac OS version for Qt is ${MINOSX}")
-    if (MINOSX MATCHES "10\\.([0-9]+)" )
-        message(STATUS "Setting OSX deployment target to ${MINOSX} (based on Qt ${Qt5Widgets_VERSION})")
-        set(CMAKE_OSX_DEPLOYMENT_TARGET ${MINOSX})
-    else()
-        message(STATUS "Could not figure minimum OSX version")
-    endif()
+#    # use otool to extract minimum os version QtCore is compiled to run at so we can work as low is Qt can
+#    execute_process(COMMAND otool -l ${_qt5Core_install_prefix}/lib/QtCore.framework/QtCore
+#            COMMAND grep -A2 LC_VERSION_MIN_MACOSX
+#            COMMAND awk "END{print $2}"
+#            OUTPUT_VARIABLE MINOSX OUTPUT_STRIP_TRAILING_WHITESPACE)
+#    #		message(STATUS "Min Mac OS version for Qt is ${MINOSX}")
+#    if (MINOSX MATCHES "10\\.([0-9]+)" )
+#        message(STATUS "Setting OSX deployment target to ${MINOSX} (based on Qt ${Qt5Widgets_VERSION})")
+#        set(CMAKE_OSX_DEPLOYMENT_TARGET ${MINOSX})
+#    else()
+#        message(STATUS "Could not figure minimum OSX version")
+#    endif()
 
     set( MACOSX_BUNDLE_GUI_IDENTIFIER "")
 
@@ -217,12 +227,15 @@ if(APPLE)
 endif()
 
 target_link_libraries(Candle PRIVATE
-    Qt5::Core
-    Qt5::Widgets
-    Qt5::OpenGL
-    Qt5::Gui
-    Qt5::SerialPort
+    Qt::Core
+    Qt::Widgets
+    Qt::OpenGL
+    Qt::Gui
+    Qt::SerialPort
     )
+if(QT_VERSION_MAJOR EQUAL  6)
+    target_link_libraries(Candle PRIVATE Qt::OpenGLWidgets)
+endif()
 
 if(UNIX AND NOT APPLE)
     target_compile_definitions(Candle PRIVATE UNIX )

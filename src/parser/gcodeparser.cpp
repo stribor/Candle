@@ -305,8 +305,8 @@ PointSegment *GcodeParser::addArcPointSegment(const QVector3D &nextPoint, bool c
             break;
         }
 
-        radius = sqrt(pow((double)((m * this->m_currentPoint).x() - (m * center).x()), 2.0)
-                        + pow((double)((m * this->m_currentPoint).y() - (m * center).y()), 2.0));
+        radius = sqrt(pow((double)((m.map(this->m_currentPoint)).x() - (m.map(center)).x()), 2.0)
+                        + pow((double)((m.map(this->m_currentPoint)).y() - (m.map(center)).y()), 2.0));
     }
 
     ps.setIsMetric(this->m_isMetric);

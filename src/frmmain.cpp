@@ -4,6 +4,7 @@
 //#define INITTIME //QTime time; time.start();
 //#define PRINTTIME(x) //qDebug() << "time elapse" << QString("%1:").arg(x) << time.elapsed(); time.start();
 
+#include <QElapsedTimer>
 #define UNKNOWN 0
 #define IDLE 1
 #define ALARM 2
@@ -204,9 +205,13 @@ frmMain::frmMain(QWidget *parent) :
     connect(deleteShortcut, &QShortcut::activated, this, &frmMain::onTableDeleteLines);
 
     m_tableMenu = new QMenu(this);
+#if QT_VERSION_MAJOR >= 6
+    m_tableMenu->addAction(tr("&Insert line"), insertShortcut->key(), this, &frmMain::onTableInsertLine);
+    m_tableMenu->addAction(tr("&Delete lines"), deleteShortcut->key(), this, &frmMain::onTableDeleteLines);
+#else
     m_tableMenu->addAction(tr("&Insert line"), this, &frmMain::onTableInsertLine, insertShortcut->key());
     m_tableMenu->addAction(tr("&Delete lines"), this, &frmMain::onTableDeleteLines, deleteShortcut->key());
-
+#endif
     ui->glwVisualizer->addDrawable(m_originDrawer);
     ui->glwVisualizer->addDrawable(m_codeDrawer);
     ui->glwVisualizer->addDrawable(m_probeDrawer);
@@ -2551,7 +2556,7 @@ void frmMain::on_cmdFileReset_clicked()
     m_probeIndex = -1;
 
     if (!m_heightMapMode) {
-        QTime time;
+        QElapsedTimer time;
 
         time.start();
 
@@ -2676,7 +2681,7 @@ bool frmMain::saveProgramToFile(QString const &fileName, GCodeTableModel *model)
     QTextStream textStream(&file);
 
     for (int i = 0; i < model->rowCount() - 1; i++) {
-        textStream << model->data(model->index(i, 1)).toString() << endl;
+        textStream << model->data(model->index(i, 1)).toString() << '\n';
     }
 
     file.close();
@@ -2964,7 +2969,7 @@ bool frmMain::eventFilter(QObject *obj, QEvent *event)
 int frmMain::getConsoleMinHeight()
 {
     return ui->grpConsole->height() - ui->grpConsole->contentsRect().height()
-            + ui->spacerConsole->geometry().height() + ui->grpConsole->layout()->margin() * 2
+            + ui->spacerConsole->geometry().height() + ui->grpConsole->layout()->contentsMargins().top() + ui->grpConsole->layout()->contentsMargins().bottom()
             + ui->cboCommand->height();
 }
 
@@ -3430,20 +3435,20 @@ bool frmMain::saveHeightMap(QString const &fileName)
     textStream << ui->txtHeightMapBorderX->text() << ";"
                << ui->txtHeightMapBorderY->text() << ";"
                << ui->txtHeightMapBorderWidth->text() << ";"
-               << ui->txtHeightMapBorderHeight->text() << endl;
+               << ui->txtHeightMapBorderHeight->text() << '\n';
     textStream << ui->txtHeightMapGridX->text() << ";"
                << ui->txtHeightMapGridY->text() << ";"
                << ui->txtHeightMapGridZBottom->text() << ";"
-               << ui->txtHeightMapGridZTop->text() << endl;
+               << ui->txtHeightMapGridZTop->text() << '\n';
     textStream << ui->cboHeightMapInterpolationType->currentIndex() << ";"
                << ui->txtHeightMapInterpolationStepX->text() << ";"
-                << ui->txtHeightMapInterpolationStepY->text() << endl;
+                << ui->txtHeightMapInterpolationStepY->text() << '\n';
 
     for (int i = 0; i < m_heightMapModel.rowCount(); i++) {
         for (int j = 0; j < m_heightMapModel.columnCount(); j++) {
             textStream << m_heightMapModel.data(m_heightMapModel.index(i, j), Qt::UserRole).toString() << ((j == m_heightMapModel.columnCount() - 1) ? "" : ";");
         }
-        textStream << endl;
+        textStream << '\n';
     }
 
     file.close();
