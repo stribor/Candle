@@ -1757,11 +1757,17 @@ void frmMain::loadFile(QIODevice &data, qint64 bytesAvailable)
     progress.setFixedSize(progress.sizeHint());
     progress.setStyleSheet("QProgressBar {text-align: center; qproperty-format: \"\"}");
 
-    QByteArray lineBuf(1024,0);
+//    QByteArray lineBuf(1024,0);
+    char lineBuf[1024];
     while (!data.atEnd()) {
         // auto command = data.readLine(100);
         // Trim command
-        auto const trimmed = data.readLine().trimmed();
+#if 0
+        auto const trimmed = data.readLine(1024).trimmed();
+#else
+        auto bytes_read = data.readLine(lineBuf, 1024);
+        auto trimmed = QByteArray(lineBuf, bytes_read).trimmed();
+#endif
         if (!trimmed.isEmpty()) {
 #ifdef USE_STD_CONTAINERS
             auto &item = model_data.emplace_back();
