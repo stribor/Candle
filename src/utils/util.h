@@ -11,6 +11,7 @@
 #include <QVector3D>
 #include <QEventLoop>
 #include <QTimer>
+#include <utility>
 
 // Switch between RGBA and RGB colors passed as shader attributes
 #if 1
@@ -37,10 +38,10 @@ public:
     };
 };
 #endif
-class Util
+
+namespace Util
 {
-public:
-    static double nMin(double v1, double v2)
+    constexpr double nMin(double v1, double v2)
     {
         if (!qIsNaN(v1) && !qIsNaN(v2)) return qMin<double>(v1, v2);
         else if (!qIsNaN(v1)) return v1;
@@ -48,7 +49,7 @@ public:
         else return qQNaN();
     }
 
-    static double nMax(double v1, double v2)
+    constexpr double nMax(double v1, double v2)
     {
         if (!qIsNaN(v1) && !qIsNaN(v2)) return qMax<double>(v1, v2);
         else if (!qIsNaN(v1)) return v1;
@@ -56,20 +57,7 @@ public:
         else return qQNaN();
     }
 
-    static VertColVec colorToVector(QColor const &color)
-    {
-        return VertColVec(color);
-    }
-
-    static void waitEvents(int ms)
-    {
-        QEventLoop loop;
-
-        QTimer::singleShot(ms, &loop, SLOT(quit()));
-        loop.exec();
-    }
-
-    static QIcon invertIconColors(QIcon icon)
+    inline QIcon invertIconColors(QIcon icon)
     {
         QImage img = icon.pixmap(icon.actualSize(QSize(64, 64))).toImage();
         img.invertPixels();
@@ -77,11 +65,39 @@ public:
         return QIcon(QPixmap::fromImage(img));
     }
 
-    static void invertButtonIconColors(QAbstractButton *button)
+    inline void invertButtonIconColors(QAbstractButton *button)
     {
         button->setIcon(invertIconColors(button->icon()));
     }
-};
+
+    /// \brief copy elements from range [first, last) to range [d_first, d_first + (last - first)) while pred(first) is true
+    /// \return pair of iterators: first - iterator to the first element in the range [first, last) for which pred(first) is false,
+    ///  second - iterator to the element in the destination range, one past the last element copied
+    template<typename InputIterator, typename OutputIterator, typename Pred>
+    std::pair<InputIterator, OutputIterator> copy_while(InputIterator first, InputIterator last, OutputIterator d_first, Pred pred)
+    {
+        while (first != last && pred(first)) {
+            *d_first = *first;
+            ++first;
+            ++d_first;
+        }
+        return {first, d_first};
+    }
+
+    /// \brief copy elements from range [first, last) to range [d_first, d_first + (last - first)) while pred(first) is false
+    /// \return pair of iterators: first - iterator to the first element in the range [first, last) for which pred(first) is true,
+    ///  second - iterator to the element in the destination range, one past the last element copied
+    template<typename InputIterator, typename OutputIterator, typename Pred>
+    std::pair<InputIterator, OutputIterator> copy_until(InputIterator first, InputIterator last, OutputIterator d_first, Pred pred)
+    {
+        while (first != last && !pred(first)) {
+            *d_first = *first;
+            ++first;
+            ++d_first;
+        }
+        return {first, d_first};
+    }
+}
 
 #endif // UTIL
 
