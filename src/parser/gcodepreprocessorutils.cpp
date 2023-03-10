@@ -422,16 +422,20 @@ QString GcodePreprocessorUtils::generateG1FromPoints(QVector3D const &start, QVe
     return sb;
 }
 
-///**
-//* Splits a gcode command by each word/argument, doesn't care about spaces.
-//* This command is about the same speed as the string.split(" ") command,
-//* but might be a little faster using precompiled regex.
-//*/
+/**
+* Splits a gcode command by each word/argument, doesn't care about spaces.
+* This command is about the same speed as the string.split(" ") command,
+* but might be a little faster using precompiled regex.
+*/
 // modified split command to be able to process lines with comments and white space in so no trimming/comment removal needed
 // from https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=823374
 // 3.3.4 Comments and MessagesPrintable characters and white space inside parentheses is a comment.
 // A left parenthesis always starts a comment. The comment ends at the first right parenthesis found thereafter.
-// Once a leftparenthesis is placed on a line, a matching right parenthesis must appear before the end of the line.Comments  may  not  be  nested;  it  is  an  error  if  a  left  parenthesis  is  found  after  the  start  of  acomment and before the end of the comment. Here is an example of a line containing a comment:“G80 M5 (stop motion)”. Comments do not cause a machining center to do anything.
+// Once a left parenthesis is placed on a line, a matching right parenthesis must appear before the end of the line.
+// Comments may not be nested; it is an error if a left parenthesis is found after the start of a comment and before the end of the comment.
+// Here is an example of a line containing a comment:“G80 M5 (stop motion)”.
+// Comments do not cause a machining center to do anything.
+
 QByteArrayList GcodePreprocessorUtils::splitCommand(QByteArray const &command)
 {
     QByteArrayList l;

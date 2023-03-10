@@ -8,7 +8,7 @@
 #ifndef GCODEPREPROCESSORUTILS_H
 #define GCODEPREPROCESSORUTILS_H
 
-#include <QObject>
+#include <QByteArray>
 #include <QMatrix4x4>
 #include <cmath>
 #include "pointsegment.h"
@@ -38,9 +38,8 @@ enum GCodes{
     G91_1,
 };
 
-class GcodePreprocessorUtils : public QObject
+class GcodePreprocessorUtils
 {
-    Q_OBJECT
 public:
     using gcodesContainer = std::vector<GCodes>;
     using vectoContainer = std::vector<QVector3D>;
@@ -83,12 +82,6 @@ public:
         return (c >= 'A' && c <= 'Z') ? c + 32 : c;
     }
     static double AtoF(char const *c);
-signals:
-
-public slots:
-
-private:
-
 };
 
 #endif // GCODEPREPROCESSORUTILS_H
