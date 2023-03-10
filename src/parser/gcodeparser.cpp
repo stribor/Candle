@@ -372,32 +372,6 @@ PointSegment * GcodeParser::handleGCode(GCodes code, QByteArrayList const &args)
     return ps;
 }
 
-PointSegment * GcodeParser::handleGCode(float code, QByteArrayList const &args)
-{
-    PointSegment *ps = NULL;
-
-    QVector3D nextPoint = GcodePreprocessorUtils::updatePointWithCommand(args, this->m_currentPoint, this->m_inAbsoluteMode);
-    // should this use qFuzzyCompare()?
-    if (code == 1.0f) ps = addLinearPointSegment(nextPoint, false);
-    else if (code == 0.0f) ps = addLinearPointSegment(nextPoint, true);
-    else if (code == 38.2f) ps = addLinearPointSegment(nextPoint, false);
-    else if (code == 2.0f) ps = addArcPointSegment(nextPoint, true, args);
-    else if (code == 3.0f) ps = addArcPointSegment(nextPoint, false, args);
-    else if (code == 17.0f) this->m_currentPlane = PointSegment::XY;
-    else if (code == 18.0f) this->m_currentPlane = PointSegment::ZX;
-    else if (code == 19.0f) this->m_currentPlane = PointSegment::YZ;
-    else if (code == 20.0f) this->m_isMetric = false;
-    else if (code == 21.0f) this->m_isMetric = true;
-    else if (code == 90.0f) this->m_inAbsoluteMode = true;
-    else if (code == 90.1f) this->m_inAbsoluteIJKMode = true;
-    else if (code == 91.0f) this->m_inAbsoluteMode = false;
-    else if (code == 91.1f) this->m_inAbsoluteIJKMode = false;
-
-    if (code == 0.0f || code == 1.0f || code == 2.0f || code == 3.0f || code == 38.2f) this->m_lastGcodeCommand = code;
-
-    return ps;
-}
-
 QStringList GcodeParser::preprocessCommands(QByteArrayList const &commands) {
 
     QStringList result;

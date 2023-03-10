@@ -81,7 +81,7 @@ private:
     PointSegment *processCommand(QByteArrayList const &args);
     void handleMCode(float, QByteArrayList const &args);
     PointSegment *handleGCode(GCodes code, QByteArrayList const &args);
-    PointSegment *handleGCode(float code, QByteArrayList const &args);
+
     PointSegment *addLinearPointSegment(const QVector3D &nextPoint, bool fastTraverse);
     PointSegment *addArcPointSegment(const QVector3D &nextPoint, bool clockwise, QByteArrayList const &args);
     void setLastGcodeCommand(float num);
