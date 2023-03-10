@@ -13,10 +13,10 @@
 class ArcProperties
 {
 public:
-    ArcProperties(QVector3D const &center, double radius, bool isClockwise);
+    ArcProperties(QVector3D const &center, double radius/*, bool isClockwise*/): radius(radius), center(center)/*, isClockwise(isClockwise) */{}
     double radius;
     QVector3D center;
-    bool isClockwise;
+    // bool isClockwise; // moved to PointSegment
 };
 
 #endif // ARCPROPERTIES_H
