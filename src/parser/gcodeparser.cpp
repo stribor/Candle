@@ -16,56 +16,6 @@ GcodeParser::GcodeParser()
     reset();
 }
 
-GcodeParser::~GcodeParser() = default;
-
-bool GcodeParser::getConvertArcsToLines() const {
-    return m_convertArcsToLines;
-}
-
-void GcodeParser::setConvertArcsToLines(bool convertArcsToLines) {
-    this->m_convertArcsToLines = convertArcsToLines;
-}
-
-bool GcodeParser::getRemoveAllWhitespace() const{
-    return m_removeAllWhitespace;
-}
-
-void GcodeParser::setRemoveAllWhitespace(bool removeAllWhitespace) {
-    this->m_removeAllWhitespace = removeAllWhitespace;
-}
-
-double GcodeParser::getSmallArcSegmentLength() const {
-    return m_smallArcSegmentLength;
-}
-
-void GcodeParser::setSmallArcSegmentLength(double smallArcSegmentLength) {
-    this->m_smallArcSegmentLength = smallArcSegmentLength;
-}
-
-double GcodeParser::getSmallArcThreshold() const {
-    return m_smallArcThreshold;
-}
-
-void GcodeParser::setSmallArcThreshold(double smallArcThreshold) {
-    this->m_smallArcThreshold = smallArcThreshold;
-}
-
-double GcodeParser::getSpeedOverride() const {
-    return m_speedOverride;
-}
-
-void GcodeParser::setSpeedOverride(double speedOverride) {
-    this->m_speedOverride = speedOverride;
-}
-
-int GcodeParser::getTruncateDecimalLength() const {
-    return m_truncateDecimalLength;
-}
-
-void GcodeParser::setTruncateDecimalLength(int truncateDecimalLength) {
-    this->m_truncateDecimalLength = truncateDecimalLength;
-}
-
 // Resets the current state.
 void GcodeParser::reset(const QVector3D &initialPoint)
 {
@@ -76,7 +26,7 @@ void GcodeParser::reset(const QVector3D &initialPoint)
     // The unspoken home location.
     m_currentPoint = initialPoint;
     m_currentPlane = PointSegment::XY;
-    this->m_points.push_back(PointSegment(this->m_currentPoint, -1));
+    this->m_points.emplace_back(this->m_currentPoint, -1);
 }
 
 /**

@@ -16,21 +16,44 @@
 class GcodeParser
 {
 public:
-    explicit GcodeParser();
-    ~GcodeParser();
-
-    bool getConvertArcsToLines() const;
-    void setConvertArcsToLines(bool convertArcsToLines);
-    bool getRemoveAllWhitespace() const;
-    void setRemoveAllWhitespace(bool removeAllWhitespace);
-    double getSmallArcSegmentLength() const;
-    void setSmallArcSegmentLength(double smallArcSegmentLength);
-    double getSmallArcThreshold() const;
-    void setSmallArcThreshold(double smallArcThreshold);
-    double getSpeedOverride() const;
-    void setSpeedOverride(double speedOverride);
-    int getTruncateDecimalLength() const;
-    void setTruncateDecimalLength(int truncateDecimalLength);
+    GcodeParser();
+ 
+    [[nodiscard]] bool getConvertArcsToLines() const {
+        return m_convertArcsToLines;
+    }
+    void setConvertArcsToLines(bool convertArcsToLines){
+        m_convertArcsToLines = convertArcsToLines;
+    }
+    [[nodiscard]] bool getRemoveAllWhitespace() const{
+        return m_removeAllWhitespace;
+    }
+    void setRemoveAllWhitespace(bool removeAllWhitespace){
+        m_removeAllWhitespace = removeAllWhitespace;
+    }
+    [[nodiscard]] double getSmallArcSegmentLength() const{
+        return m_smallArcSegmentLength;
+    }
+    void setSmallArcSegmentLength(double smallArcSegmentLength){
+        m_smallArcSegmentLength = smallArcSegmentLength;
+    }
+    [[nodiscard]] double getSmallArcThreshold() const{
+        return m_smallArcThreshold;
+    }
+    void setSmallArcThreshold(double smallArcThreshold){
+        m_smallArcThreshold = smallArcThreshold;
+    }
+    [[nodiscard]] double getSpeedOverride() const {
+        return m_speedOverride;
+    }
+    void setSpeedOverride(double speedOverride){
+        m_speedOverride = speedOverride;
+    }
+    [[nodiscard]] int getTruncateDecimalLength() const{
+        return m_truncateDecimalLength;
+    }
+    void setTruncateDecimalLength(int truncateDecimalLength){
+        m_truncateDecimalLength = truncateDecimalLength;
+    }
     void reset(const QVector3D &initialPoint = QVector3D(qQNaN(), qQNaN(), qQNaN()));
     PointSegment *addCommand(QByteArray const &command);
     PointSegment *addCommand(QByteArrayList const &args);
@@ -40,9 +63,9 @@ public:
     QStringList preprocessCommand(QByteArray const &command);
     QStringList convertArcsToLines(QByteArray const &command);
     PointSegment::Container &getPointSegmentList();
-    double getTraverseSpeed() const;
+    [[nodiscard]] double getTraverseSpeed() const;
     void setTraverseSpeed(double traverseSpeed);
-    int getCommandNumber() const;
+    [[nodiscard]] int getCommandNumber() const;
 
 private:
 
