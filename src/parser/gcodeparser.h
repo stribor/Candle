@@ -8,17 +8,15 @@
 #ifndef GCODEPARSER_H
 #define GCODEPARSER_H
 
-#include <QObject>
 #include <QVector3D>
 #include <cmath>
 #include "pointsegment.h"
 #include "gcodepreprocessorutils.h"
 
-class GcodeParser : public QObject
+class GcodeParser
 {
-    Q_OBJECT
 public:
-    explicit GcodeParser(QObject *parent = 0);
+    explicit GcodeParser();
     ~GcodeParser();
 
     bool getConvertArcsToLines() const;
@@ -46,34 +44,30 @@ public:
     void setTraverseSpeed(double traverseSpeed);
     int getCommandNumber() const;
 
-signals:
-
-public slots:
-
 private:
 
     // Current state
-    bool m_isMetric;
-    bool m_inAbsoluteMode;
-    bool m_inAbsoluteIJKMode;
-    float m_lastGcodeCommand;
-    QVector3D m_currentPoint;
-    int m_commandNumber;
-    PointSegment::planes m_currentPlane;
+    bool m_isMetric{true};
+    bool m_inAbsoluteMode{true};
+    bool m_inAbsoluteIJKMode{false};
+    float m_lastGcodeCommand{-1};
+    QVector3D m_currentPoint = QVector3D(qQNaN(), qQNaN(), qQNaN());
+    int m_commandNumber{0};
+    PointSegment::planes m_currentPlane{PointSegment::XY};
     GCodes m_lastGcodeCommandE{unknown};
 
     // Settings
-    double m_speedOverride;
-    int m_truncateDecimalLength;
-    bool m_removeAllWhitespace;
-    bool m_convertArcsToLines;
-    double m_smallArcThreshold;
+    double m_speedOverride{-1};
+    int m_truncateDecimalLength{40};
+    bool m_removeAllWhitespace{true};
+    bool m_convertArcsToLines{false};
+    double m_smallArcThreshold{1.0};
     // Not configurable outside, but maybe it should be.
-    double m_smallArcSegmentLength;
+    double m_smallArcSegmentLength{0.3};
 
-    double m_lastSpeed;
-    double m_traverseSpeed;
-    double m_lastSpindleSpeed;
+    double m_lastSpeed{0};
+    double m_traverseSpeed{300};
+    double m_lastSpindleSpeed{0};
 
     // The gcode.
     PointSegment::Container m_points;

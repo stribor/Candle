@@ -8,27 +8,11 @@
 #include <QListIterator>
 #include <QDebug>
 #include <QMessageBox>
+#include <QObject>
 #include "gcodeparser.h"
 
-GcodeParser::GcodeParser(QObject *parent) : QObject(parent)
+GcodeParser::GcodeParser()
 {
-    m_isMetric = true;
-    m_inAbsoluteMode = true;
-    m_inAbsoluteIJKMode = false;
-    m_lastGcodeCommand = -1;
-    m_commandNumber = 0;
-
-    // Settings
-    m_speedOverride = -1;
-    m_truncateDecimalLength = 40;
-    m_removeAllWhitespace = true;
-    m_convertArcsToLines = false;
-    m_smallArcThreshold = 1.0;
-    // Not configurable outside, but maybe it should be.
-    m_smallArcSegmentLength = 0.3;
-    m_lastSpeed = 0;
-    m_lastSpindleSpeed = 0;
-    m_traverseSpeed = 300;
     reset();
 }
 
@@ -352,8 +336,8 @@ PointSegment * GcodeParser::handleGCode(GCodes code, QByteArrayList const &args)
     case G90_1:  this->m_inAbsoluteIJKMode = true; break;
     case G91: this->m_inAbsoluteMode = false;
         if (qIsNaN(m_currentPoint.x()) || qIsNaN(m_currentPoint.y()) || qIsNaN(m_currentPoint.z())) {
-            int res = QMessageBox::warning(nullptr, tr("GcodeParser"),
-                                           tr("GcodeParser error:Switching to relative mode without previously set current position. Select Ok to set unknown coordinates to 0 or ignore to continue"),
+            int res = QMessageBox::warning(nullptr, QObject::tr("GcodeParser"),
+                                           QObject::tr("GcodeParser error:Switching to relative mode without previously set current position. Select Ok to set unknown coordinates to 0 or ignore to continue"),
                                            QMessageBox::Ok | QMessageBox::Ignore);
             if (res == QMessageBox::Ok) {
                 if (qIsNaN(m_currentPoint.x())) m_currentPoint.setX(0.0);
