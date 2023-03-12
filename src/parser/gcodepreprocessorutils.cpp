@@ -5,12 +5,13 @@
 
 // Copyright 2015-2016 Hayrullin Denis Ravilevich
 
-#include <QDebug>
-#include <QVector3D>
-#include <QRegularExpression>
 #include "gcodepreprocessorutils.h"
-#include "limits"
-#include "../tables/gcodetablemodel.h"
+#include "utils/util.h"
+
+#include <QDebug>
+#include <QRegularExpression>
+#include <QVector3D>
+#include <limits>
 
 /**
 * Searches the command string for an 'f' and replaces the speed value
@@ -46,12 +47,12 @@ QByteArray GcodePreprocessorUtils::removeComment(QByteArray command)
     pos = command.indexOf('(');
     if (pos >= 0) {
         int pos2 = command.lastIndexOf(')', pos + 1);
-        command.remove(pos, pos2-pos+1);
+        command.remove(pos, pos2 - pos + 1);
     }
 
     // Remove any comment beginning with ';'
     pos = command.indexOf(';');
-    if (pos >= 0 )
+    if (pos >= 0)
         command.truncate(pos);
 
     return command.trimmed();
@@ -98,7 +99,7 @@ QByteArray GcodePreprocessorUtils::removeAllWhitespace(QByteArray command)
 #if QT_VERSION >= QT_VERSION_CHECK(6, 1, 0)
     return command.removeIf([](char c) { return std::isspace(c); });
 #else
-    command.resize( std::distance(command.begin(), std::remove_if(command.begin(), command.end(), [](char c) { return std::isspace(c); })));
+    command.resize(std::distance(command.begin(), std::remove_if(command.begin(), command.end(), [](char c) { return std::isspace(c); })));
 
     return command;
 #endif
@@ -114,26 +115,32 @@ GCodes GcodePreprocessorUtils::parseGCodeEnum(QByteArray const &arg)
     GCodes v = unknown;
 
     auto c = arg.data();
-    if (c[0] != 'G' && c[0] != 'g') // code must be G code
+    if (c[0] != 'G' && c[0] != 'g')// code must be G code
         return v;
 
     ++c;
 
 
     switch (arg.size()) {
-    case 2: // 0, 1, 2, 3
+    case 2:// 0, 1, 2, 3
         switch (c[0]) {
-        case '0':v = G00;
+        case '0':
+            v = G00;
             break;
-        case '1':v = G01;
+        case '1':
+            v = G01;
             break;
-        case '2':v = G02;
+        case '2':
+            v = G02;
             break;
-        case '3':v = G03;
+        case '3':
+            v = G03;
             break;
-        case '7':v = G07;
+        case '7':
+            v = G07;
             break;
-        case '8':v = G08;
+        case '8':
+            v = G08;
             break;
         }
         break;
@@ -141,56 +148,71 @@ GCodes GcodePreprocessorUtils::parseGCodeEnum(QByteArray const &arg)
         switch (c[0]) {
         case '0':
             switch (c[1]) {
-            case '0':v = G00;
+            case '0':
+                v = G00;
                 break;
-            case '1':v = G01;
+            case '1':
+                v = G01;
                 break;
-            case '2':v = G02;
+            case '2':
+                v = G02;
                 break;
-            case '3':v = G03;
+            case '3':
+                v = G03;
                 break;
-            case '7':v = G07;
+            case '7':
+                v = G07;
                 break;
-            case '8':v = G08;
+            case '8':
+                v = G08;
                 break;
             }
             break;
         case '1':
             switch (c[1]) {
-            case '7': v = G17;
+            case '7':
+                v = G17;
                 break;
-            case '8': v = G18;
+            case '8':
+                v = G18;
                 break;
-            case '9': v = G19;
+            case '9':
+                v = G19;
                 break;
             }
             break;
         case '2':
             switch (c[1]) {
-            case '0': v = G20;
+            case '0':
+                v = G20;
                 break;
-            case '1': v = G21;
+            case '1':
+                v = G21;
                 break;
             }
             break;
         case '9':
             switch (c[1]) {
-            case '0': v = G90;
+            case '0':
+                v = G90;
                 break;
-            case '1': v = G91;
+            case '1':
+                v = G91;
                 break;
             }
             break;
         }
         break;
-    case 4: // G5.1, G5.2
+    case 4:// G5.1, G5.2
         if (c[1] == '.') {
             switch (c[0]) {
             case '5':
                 switch (c[2]) {
-                case '1': v = G05_1;
+                case '1':
+                    v = G05_1;
                     break;
-                case '2': v = G05_2;
+                case '2':
+                    v = G05_2;
                     break;
                 }
                 break;
@@ -198,15 +220,17 @@ GCodes GcodePreprocessorUtils::parseGCodeEnum(QByteArray const &arg)
         }
         break;
     case 5:
-        if (c[2] != '.') // code must be xx.y
+        if (c[2] != '.')// code must be xx.y
             break;
         switch (c[0]) {
         case '0':
             if (c[1] == '5') {
                 switch (c[3]) {
-                case '1':v = G05_1;
+                case '1':
+                    v = G05_1;
                     break;
-                case '2':v = G05_2;
+                case '2':
+                    v = G05_2;
                     break;
                 }
             }
@@ -214,30 +238,36 @@ GCodes GcodePreprocessorUtils::parseGCodeEnum(QByteArray const &arg)
         case '3':
             if (c[1] == '8') {
                 switch (c[3]) {
-                case '2':v = G38_2;
+                case '2':
+                    v = G38_2;
                     break;
-                case '3':v = G38_3;
+                case '3':
+                    v = G38_3;
                     break;
-                case '4':v = G38_4;
+                case '4':
+                    v = G38_4;
                     break;
-                case '5':v = G38_5;
+                case '5':
+                    v = G38_5;
                     break;
                 }
             }
             break;
-        case '9': // 9xxx
+        case '9':// 9xxx
             switch (c[1]) {
-            case '0': if (c[3] == '1') v = G90_1;
+            case '0':
+                if (c[3] == '1') v = G90_1;
                 break;
-            case '1': if (c[3] == '1') v = G91_1;
+            case '1':
+                if (c[3] == '1') v = G91_1;
                 break;
             }
             break;
         }
     }
-//    if (v == unknown) {
-//        qDebug() << "Unknown code" << arg;
-//    }
+    //    if (v == unknown) {
+    //        qDebug() << "Unknown code" << arg;
+    //    }
     return v;
 }
 
@@ -275,7 +305,7 @@ QList<int> GcodePreprocessorUtils::parseGCodes(QString const &command)
     int pos = 0;
 
     QRegularExpressionMatch match = re.match(command, pos);
-    while ( match.hasMatch()) {
+    while (match.hasMatch()) {
         codes.append(match.captured(1).toInt());
         pos = match.capturedEnd();
         match = re.match(command, pos);
@@ -318,7 +348,7 @@ QVector3D GcodePreprocessorUtils::updatePointWithCommand(
         bool absoluteMode)
 {
     QVector3D vec(initial);
-    for (auto const & command: commandArgs) {
+    for (auto const &command : commandArgs) {
         if (!command.isEmpty()) {
             switch (command[0]) {
             case 'X':
@@ -375,24 +405,24 @@ QVector3D GcodePreprocessorUtils::updateCenterWithCommand(QByteArrayList const &
     double k = qQNaN();
     double r = qQNaN();
 
-    for (auto &t : commandArgs) {
+    for (const auto &t : commandArgs) {
         if (t.size() > 0) {
             switch (t[0]) {
             case 'I':
             case 'i':
-                i = AtoF(t.data()+1);
+                i = AtoF(t.data() + 1);
                 break;
             case 'J':
             case 'j':
-                j = AtoF(t.data()+1);
+                j = AtoF(t.data() + 1);
                 break;
             case 'K':
             case 'k':
-                k = AtoF(t.data()+1);
+                k = AtoF(t.data() + 1);
                 break;
             case 'R':
             case 'r':
-                r = AtoF(t.data()+1);
+                r = AtoF(t.data() + 1);
                 break;
             }
         }
@@ -506,12 +536,13 @@ double GcodePreprocessorUtils::parseCoord(QByteArrayList const &argList, char c)
 //    return l;
 //}
 
-QVector3D GcodePreprocessorUtils::convertRToCenter(QVector3D start, QVector3D end, double radius, bool absoluteIJK, bool clockwise) {
-    double R = radius;
+QVector3D GcodePreprocessorUtils::convertRToCenter(QVector3D start, QVector3D end, double radius, bool absoluteIJK, bool clockwise)
+{
+    double const R = radius;
     QVector3D center;
 
-    double x = end.x() - start.x();
-    double y = end.y() - start.y();
+    double const x = end.x() - start.x();
+    double const y = end.y() - start.y();
 
     double h_x2_div_d = 4 * R * R - x * x - y * y;
     if (h_x2_div_d < 0) { qDebug() << "Error computing arc radius."; }
@@ -527,8 +558,8 @@ QVector3D GcodePreprocessorUtils::convertRToCenter(QVector3D start, QVector3D en
         radius = -radius;
     }
 
-    double offsetX = 0.5 * (x - (y * h_x2_div_d));
-    double offsetY = 0.5 * (y + (x * h_x2_div_d));
+    double const offsetX = 0.5 * (x - (y * h_x2_div_d));
+    double const offsetY = 0.5 * (y + (x * h_x2_div_d));
 
     if (!absoluteIJK) {
         center.setX(start.x() + offsetX);
@@ -544,19 +575,20 @@ QVector3D GcodePreprocessorUtils::convertRToCenter(QVector3D start, QVector3D en
 /**
 * Return the angle in radians when going from start to end.
 */
-double GcodePreprocessorUtils::getAngle(QVector3D start, QVector3D end) {
-    double deltaX = end.x() - start.x();
-    double deltaY = end.y() - start.y();
+double GcodePreprocessorUtils::getAngle(QVector3D start, QVector3D end)
+{
+    double const deltaX = end.x() - start.x();
+    double const deltaY = end.y() - start.y();
 
     double angle = 0.0;
 
-    if (deltaX != 0) { // prevent div by 0
+    if (deltaX != 0) {// prevent div by 0
         // it helps to know what quadrant you are in
-        if (deltaX > 0 && deltaY >= 0) { // 0 - 90
+        if (deltaX > 0 && deltaY >= 0) {// 0 - 90
             angle = atan(deltaY / deltaX);
-        } else if (deltaX < 0 && deltaY >= 0) { // 90 to 180
+        } else if (deltaX < 0 && deltaY >= 0) {// 90 to 180
             angle = M_PI - fabs(atan(deltaY / deltaX));
-        } else if (deltaX < 0 && deltaY < 0) { // 180 - 270
+        } else if (deltaX < 0 && deltaY < 0) {// 180 - 270
             angle = M_PI + fabs(atan(deltaY / deltaX));
         } else if (deltaX > 0 && deltaY < 0) { // 270 - 360
             angle = M_PI * 2 - fabs(atan(deltaY / deltaX));
@@ -632,21 +664,21 @@ GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegment::planes plane,
 
     // Calculate radius if necessary.
     if (radius == 0) {
-        radius = sqrt(pow((double)(start.x() - center.x()), 2.0) + pow((double)(end.y() - center.y()), 2.0));
+        radius = sqrt(pow((double) (start.x() - center.x()), 2.0) + pow((double) (end.y() - center.y()), 2.0));
     }
 
-    double startAngle = getAngle(center, start);
-    double endAngle = getAngle(center, end);
-    double sweep = calculateSweep(startAngle, endAngle, clockwise);
+    double const startAngle = getAngle(center, start);
+    double const endAngle = getAngle(center, end);
+    double const sweep = calculateSweep(startAngle, endAngle, clockwise);
 
     // Convert units.
-    double arcLength = sweep * radius;
+    double const arcLength = sweep * radius;
 
     // If this arc doesn't meet the minimum threshold, don't expand.
-//    if (minArcLength > 0 && arcLength < minArcLength) {
-//        QList<QVector3D> empty;
-//        return empty;
-//    }
+    //    if (minArcLength > 0 && arcLength < minArcLength) {
+    //        QList<QVector3D> empty;
+    //        return empty;
+    //    }
 
     int numPoints;
 
@@ -694,7 +726,7 @@ GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegment::planes plane,
         radius = sqrt(pow((double)(p1.x() - center.x()), 2.0) + pow((double)(p1.y() - center.y()), 2.0));
     }
 
-    double zIncrement = (p2.z() - p1.z()) / numPoints;
+    double const zIncrement = (p2.z() - p1.z()) / numPoints;
     for (int i = 1; i < numPoints; i++)
     {
         if (isCw) {
@@ -752,8 +784,7 @@ double GcodePreprocessorUtils::AtoF(char const * num)
         } else if (*num == '.') {
             if (inFraction)
                 return double(sign) * (double(integerPart) + double(fractionPart) / double(divisorForFraction));
-            else
-                inFraction = true;
+            inFraction = true;
         } else {
             return double(sign) * (double(integerPart) + double(fractionPart) / double(divisorForFraction));
         }
