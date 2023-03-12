@@ -76,7 +76,7 @@ namespace Util
     template<typename InputIterator, typename OutputIterator, typename Pred>
     std::pair<InputIterator, OutputIterator> copy_while(InputIterator first, InputIterator last, OutputIterator d_first, Pred pred)
     {
-        while (first != last && pred(first)) {
+        while (first != last && pred(*first)) {
             *d_first = *first;
             ++first;
             ++d_first;
@@ -90,7 +90,7 @@ namespace Util
     template<typename InputIterator, typename OutputIterator, typename Pred>
     std::pair<InputIterator, OutputIterator> copy_until(InputIterator first, InputIterator last, OutputIterator d_first, Pred pred)
     {
-        while (first != last && !pred(first)) {
+        while (first != last && !pred(*first)) {
             *d_first = *first;
             ++first;
             ++d_first;
