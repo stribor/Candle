@@ -438,38 +438,45 @@ QString GcodePreprocessorUtils::generateG1FromPoints(QVector3D const &start, QVe
 
 QByteArrayList GcodePreprocessorUtils::splitCommand(QByteArray const &command)
 {
-    QByteArrayList l;
-    bool readNumeric = false;
-    bool inComment = false;
-    QByteArray sb;
-    if (command[0] != '/') { // lines beginning with '/' are comments
-        for (const auto &c:  command) {
-            // handle comments
-            if (inComment) {
-                if (c == ')')
-                    inComment = false; // getting out of comment and skipping )
-                continue;
-            }
-            if (c == '(') {
-                inComment = true;
-                continue;
-            }
-            if (c == ';') // end of line comment skip whole line
-                break;
-
-            if (readNumeric && !isDigit(c) && c != '.') {
-                readNumeric = false;
-                l.append(sb);
-                sb.clear();
-                if (isLetter(c)) sb.append(c);
-            } else if (isDigit(c) || c == '.' || c == '-' || c == '+') {
-                sb.append(c);
-                readNumeric = true;
-            } else if (isLetter(c)) sb.append(c);
-        }
+    QByteArrayList commandList;
+    if (command.isEmpty() || command[0] == '/') {
+        // lines beginning with '/' are comments
+        return commandList;
     }
-    if (sb.size() > 0) l.append(sb);
-    return l;
+
+    QByteArray sb;
+
+    auto const last = command.end();
+    for (auto f = command.begin(); f != last; ++f) {
+        // handle comments
+
+        if (*f == ';') // end of line comment skip whole line
+            break;
+
+        if (*f == '(') { // skip comment until first )
+            while (f != last && *f != ')') {
+                ++f;
+            }
+            if (f != last)
+                ++f; // skip )
+            if (f == last) break;// end of line
+        }
+
+        if (isDigit(*f) || *f == '.' || *f == '-' || *f == '+') { // read numeric
+            auto [newf, sblast] = Util::copy_while(f, last, std::back_inserter(sb),
+                                      [](char const c) { return isDigit(c) || c == '.' || c == '-' || c == '+'; });
+            f = newf;
+            if (f == last) break;// end of line
+
+            commandList.append(sb);
+            sb.clear();
+        }
+        if (isLetter(*f))
+            sb.append(*f);
+    }
+
+    if (!sb.isEmpty()) commandList.append(sb);
+    return commandList;
 }
 
 bool GcodePreprocessorUtils::parseCoord(QByteArray const &arg, char c, double &outVal)
