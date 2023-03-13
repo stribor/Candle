@@ -19,7 +19,7 @@
 * In that way all speed values become a ratio of the provided speed
 * and don't get overridden with just a fixed speed.
 */
-QByteArray GcodePreprocessorUtils::overrideSpeed(QString command, double speed, double *original)
+Command GcodePreprocessorUtils::overrideSpeed(QString command, double speed, double *original)
 {
     static QRegularExpression re("[Ff]([0-9.]+)");
 
@@ -39,7 +39,7 @@ QByteArray GcodePreprocessorUtils::overrideSpeed(QString command, double speed, 
 /**
 * Removes any comments within parentheses or beginning with a semi-colon.
 */
-QByteArray GcodePreprocessorUtils::removeComment(QByteArray command)
+Command GcodePreprocessorUtils::removeComment(Command command)
 {
     int pos;
 
@@ -76,7 +76,7 @@ QString GcodePreprocessorUtils::parseComment(QString command)
     return "";
 }
 
-QByteArray GcodePreprocessorUtils::truncateDecimals(int length, QString command)
+Command GcodePreprocessorUtils::truncateDecimals(int length, QString command)
 {
     static QRegularExpression re(R"((\d*\.\d*))");
     int pos = 0;
@@ -92,7 +92,7 @@ QByteArray GcodePreprocessorUtils::truncateDecimals(int length, QString command)
     return command.toUtf8();
 }
 
-QByteArray GcodePreprocessorUtils::removeAllWhitespace(QByteArray command)
+Command GcodePreprocessorUtils::removeAllWhitespace(Command command)
 {
 #if 1
     // guess should be faster than regex
@@ -110,7 +110,7 @@ QByteArray GcodePreprocessorUtils::removeAllWhitespace(QByteArray command)
 #endif
 }
 
-GCodes GcodePreprocessorUtils::parseGCodeEnum(QByteArray const &arg)
+GCodes GcodePreprocessorUtils::parseGCodeEnum(Command const &arg)
 {
     GCodes v = unknown;
 
@@ -271,7 +271,7 @@ GCodes GcodePreprocessorUtils::parseGCodeEnum(QByteArray const &arg)
     return v;
 }
 
-GcodePreprocessorUtils::gcodesContainer GcodePreprocessorUtils::parseCodesEnum(QByteArrayList const &args, QChar /*code*/)
+GcodePreprocessorUtils::gcodesContainer GcodePreprocessorUtils::parseCodesEnum(CommandList const &args, QChar /*code*/)
 {
     gcodesContainer l;
 
@@ -334,7 +334,7 @@ QList<int> GcodePreprocessorUtils::parseMCodes(QString const &command)
 /**
 * Update a point given the arguments of a command.
 */
-QVector3D GcodePreprocessorUtils::updatePointWithCommand(QByteArray const &command, const QVector3D &initial, bool absoluteMode)
+QVector3D GcodePreprocessorUtils::updatePointWithCommand(Command const &command, const QVector3D &initial, bool absoluteMode)
 {
     auto l = splitCommand(command);
     return updatePointWithCommand(l, initial, absoluteMode);
@@ -344,7 +344,7 @@ QVector3D GcodePreprocessorUtils::updatePointWithCommand(QByteArray const &comma
 * Update a point given the arguments of a command, using a pre-parsed list.
 */
 QVector3D GcodePreprocessorUtils::updatePointWithCommand(
-        QByteArrayList const &commandArgs, const QVector3D &initial,
+        CommandList const &commandArgs, const QVector3D &initial,
         bool absoluteMode)
 {
     QVector3D vec(initial);
@@ -398,7 +398,7 @@ QVector3D GcodePreprocessorUtils::updatePointWithCommand(const QVector3D &initia
     return newPoint;
 }
 
-QVector3D GcodePreprocessorUtils::updateCenterWithCommand(QByteArrayList const &commandArgs, QVector3D initial, QVector3D nextPoint, bool absoluteIJKMode, bool clockwise)
+QVector3D GcodePreprocessorUtils::updateCenterWithCommand(CommandList const &commandArgs, QVector3D initial, QVector3D nextPoint, bool absoluteIJKMode, bool clockwise)
 {
     double i = qQNaN();
     double j = qQNaN();
@@ -466,15 +466,15 @@ QString GcodePreprocessorUtils::generateG1FromPoints(QVector3D const &start, QVe
 // Here is an example of a line containing a comment:“G80 M5 (stop motion)”.
 // Comments do not cause a machining center to do anything.
 
-QByteArrayList GcodePreprocessorUtils::splitCommand(QByteArray const &command)
+CommandList GcodePreprocessorUtils::splitCommand(Command const &command)
 {
-    QByteArrayList commandList;
+    CommandList commandList;
     if (command.isEmpty() || command[0] == '/') {
         // lines beginning with '/' are comments
         return commandList;
     }
 
-    QByteArray sb;
+    Command sb;
 
     auto const last = command.end();
     for (auto f = command.begin(); f != last; ++f) {
@@ -509,7 +509,7 @@ QByteArrayList GcodePreprocessorUtils::splitCommand(QByteArray const &command)
     return commandList;
 }
 
-bool GcodePreprocessorUtils::parseCoord(QByteArray const &arg, char c, double &outVal)
+bool GcodePreprocessorUtils::parseCoord(Command const &arg, char c, double &outVal)
 {
     auto small_c = toLower(c);
     if (arg.size() > 0 && (arg[0] == c || arg[0] == small_c)) {
@@ -521,7 +521,7 @@ bool GcodePreprocessorUtils::parseCoord(QByteArray const &arg, char c, double &o
 }
 // TODO: Replace everything that uses this with a loop that loops through
 // the string and creates a hash with all the values.
-double GcodePreprocessorUtils::parseCoord(QByteArrayList const &argList, char c)
+double GcodePreprocessorUtils::parseCoord(CommandList const &argList, char c)
 {
     auto small_c = toLower(c);
     for (auto const &t : argList) {

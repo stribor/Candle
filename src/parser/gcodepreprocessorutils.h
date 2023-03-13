@@ -11,6 +11,9 @@
 #include <QByteArray>
 #include <QMatrix4x4>
 #include <cmath>
+#include <string>
+#include <vector>
+#include "QtCore/qcontainerfwd.h"
 #include "pointsegment.h"
 
 enum GCodes{
@@ -38,30 +41,33 @@ enum GCodes{
     G91_1,
 };
 
+using Command = QByteArray;
+using CommandList = QByteArrayList;
+
 class GcodePreprocessorUtils
 {
 public:
     using gcodesContainer = std::vector<GCodes>;
     using vectoContainer = std::vector<QVector3D>;
 
-    static QByteArray overrideSpeed(QString command, double speed, double *original = NULL);
-    static QByteArray removeComment(QByteArray command);
+    static Command overrideSpeed(QString command, double speed, double *original = NULL);
+    static Command removeComment(Command command);
     static QString parseComment(QString command);
-    static QByteArray truncateDecimals(int length, QString command);
-    static QByteArray removeAllWhitespace(QByteArray command);
-    static GCodes parseGCodeEnum(QByteArray const &arg);
-    static gcodesContainer parseCodesEnum(QByteArrayList const &args, QChar);
+    static Command truncateDecimals(int length, QString command);
+    static Command removeAllWhitespace(Command command);
+    static GCodes parseGCodeEnum(Command const &arg);
+    static gcodesContainer parseCodesEnum(CommandList const &args, QChar);
     static QList<float> parseCodes(const QStringList &args, QChar code);
     static QList<int> parseGCodes(QString const &command);
     static QList<int> parseMCodes(QString const &command);
-    static QByteArrayList splitCommand(QByteArray const &command);
-    static double parseCoord(QByteArrayList const &argList, char c);
-    static bool parseCoord(QByteArray const &arg, char c, double &outVal);
+    static CommandList splitCommand(Command const &command);
+    static double parseCoord(CommandList const &argList, char c);
+    static bool parseCoord(Command const &arg, char c, double &outVal);
     static QVector3D updatePointWithCommand(const QVector3D &initial, double x, double y, double z, bool absoluteMode);
-    static QVector3D updatePointWithCommand(QByteArrayList const &commandArgs, const QVector3D &initial, bool absoluteMode);
-    static QVector3D updatePointWithCommand(QByteArray const &command, const QVector3D &initial, bool absoluteMode);
+    static QVector3D updatePointWithCommand(CommandList const &commandArgs, const QVector3D &initial, bool absoluteMode);
+    static QVector3D updatePointWithCommand(Command const &command, const QVector3D &initial, bool absoluteMode);
     static QVector3D convertRToCenter(QVector3D start, QVector3D end, double radius, bool absoluteIJK, bool clockwise);
-    static QVector3D updateCenterWithCommand(QByteArrayList const &commandArgs, QVector3D initial, QVector3D nextPoint, bool absoluteIJKMode, bool clockwise);
+    static QVector3D updateCenterWithCommand(CommandList const &commandArgs, QVector3D initial, QVector3D nextPoint, bool absoluteIJKMode, bool clockwise);
     static QString generateG1FromPoints(QVector3D const &start, QVector3D const &end, bool absoluteMode, int precision);
     static double getAngle(QVector3D start, QVector3D end);
     static double calculateSweep(double startAngle, double endAngle, bool isCw);
