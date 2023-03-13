@@ -2,6 +2,7 @@
 // Copyright 2015-2016 Hayrullin Denis Ravilevich
 
 #include "gcodetablemodel.h"
+#include "parser/gcodepreprocessorutils.h"
 
 GCodeTableModel::GCodeTableModel(QObject *parent) :
     QAbstractTableModel(parent)
@@ -19,7 +20,7 @@ QVariant GCodeTableModel::data(const QModelIndex &index, int role) const
         switch (index.column())
         {
         case 0: return index.row() == this->rowCount() - 1 ? QString() : QString::number(index.row() + 1);
-        case 1: return m_data.at(index.row()).command;
+        case 1: return toQString(m_data.at(index.row()).command);
         case 2:
             if (index.row() == this->rowCount() - 1) return QString();
             switch (m_data.at(index.row()).state) {
@@ -51,11 +52,11 @@ bool GCodeTableModel::setData(const QModelIndex &index, const QVariant &value, i
         switch (index.column())
         {
         case 0: return false;
-        case 1: m_data[index.row()].command = value.toString().toUtf8(); break;
+        case 1: m_data[index.row()].command = fromQString(value.toString()); break;
         case 2: m_data[index.row()].state = static_cast<GCodeItem::States>(value.toInt()); break;
         case 3: m_data[index.row()].response = value.toByteArray(); break;
         case 4: m_data[index.row()].line = value.toInt(); break;
-        case 5: m_data[index.row()].args = value.value<QByteArrayList>(); break;
+        case 5: m_data[index.row()].args = value.value<CommandList>(); break;
         }
         emit dataChanged(index, index);
         return true;

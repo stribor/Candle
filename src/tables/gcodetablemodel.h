@@ -4,6 +4,7 @@
 #ifndef GCODETABLEMODEL_H
 #define GCODETABLEMODEL_H
 
+#include "parser/gcodepreprocessorutils.h"
 #include <QAbstractTableModel>
 #include <QString>
 #include <vector>
@@ -12,9 +13,9 @@ struct GCodeItem
 {
     enum States { InQueue, Sent, Processed, Skipped };
 
-    QByteArray command;
+    Command command;
     QByteArray response;
-    QByteArrayList args;
+    CommandList args;
     int line;
     States state;
 };

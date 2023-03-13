@@ -4,6 +4,7 @@
 //#define INITTIME //QTime time; time.start();
 //#define PRINTTIME(x) //qDebug() << "time elapse" << QString("%1:").arg(x) << time.elapsed(); time.start();
 
+#include "parser/gcodepreprocessorutils.h"
 #include <QElapsedTimer>
 #define UNKNOWN 0
 #define IDLE 1
@@ -1766,9 +1767,9 @@ void frmMain::loadFile(QIODevice &data, qint64 bytesAvailable)
         auto const trimmed = data.readLine(1024).trimmed();
 #else
         auto bytes_read = data.readLine(lineBuf, 1024);
-        auto trimmed = QByteArray(lineBuf, bytes_read).trimmed();
+        auto trimmed = Command(lineBuf, bytes_read);
 #endif
-        if (!trimmed.isEmpty()) {
+        if (trimmed.size() > 0) {
             auto &item = model_data.emplace_back();
 
             // Split command
@@ -2367,7 +2368,7 @@ void frmMain::updateParser()
 
     ui->tblProgram->setUpdatesEnabled(false);
 
-    QByteArrayList args;
+    CommandList args;
 
     QProgressDialog progress(tr("Updating..."), tr("Abort"), 0, m_currentModel->rowCount() - 2, this);
     progress.setWindowModality(Qt::WindowModal);
@@ -2379,7 +2380,7 @@ void frmMain::updateParser()
         args = m_currentModel->data().at(i).args;
 
         // Store args if none
-        if (args.isEmpty()) {
+        if (args.size() > 0) {
 //            auto stripped = GcodePreprocessorUtils::removeComment(m_currentModel->data().at(i).command);
             auto &stripped = m_currentModel->data().at(i).command;
             args = GcodePreprocessorUtils::splitCommand(stripped);
@@ -3690,7 +3691,7 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
             char codeChar;          // Single code char G1 -> G
             float codeNum;          // Code number      G1 -> 1
 
-            QString lastCode;
+            Command lastCode;
             bool isLinearMove;
             bool hasCommand;
 
@@ -3743,7 +3744,7 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
                     // Find first linesegment by command index
                     for (int j = lastSegmentIndex; j < static_cast<int>(list.size()); j++) {
                         if (list.at(j).getLineNumber() == line) {
-                            if (!qIsNaN(list.at(j).getEnd().length()) && (isLinearMove || (!hasCommand && !lastCode.isEmpty()))) {
+                            if (!qIsNaN(list.at(j).getEnd().length()) && (isLinearMove || (!hasCommand && lastCode.size()>0))) {
                                 // Create new commands for each linesegment with given command index
                                 while ((j < static_cast<int>(list.size())) && (list.at(j).getLineNumber() == line)) {
 
