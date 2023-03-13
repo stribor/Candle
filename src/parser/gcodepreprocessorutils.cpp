@@ -11,6 +11,8 @@
 #include <QDebug>
 #include <QRegularExpression>
 #include <QVector3D>
+#include <algorithm>
+#include <cctype>
 #include <limits>
 
 /**
@@ -19,8 +21,8 @@
 * In that way all speed values become a ratio of the provided speed
 * and don't get overridden with just a fixed speed.
 */
-Command GcodePreprocessorUtils::overrideSpeed(QString command, double speed, double *original)
-{
+Command GcodePreprocessorUtils::overrideSpeed(Command com, double speed, double *original) {
+    QString command = toQString(com);
     static QRegularExpression re("[Ff]([0-9.]+)");
 
     auto match = re.match(command);
@@ -33,29 +35,57 @@ Command GcodePreprocessorUtils::overrideSpeed(QString command, double speed, dou
     }
 
 
-    return command.toUtf8();
+    return fromQString(command);
 }
 
 /**
-* Removes any comments within parentheses or beginning with a semi-colon.
+ * Removes any comments within parentheses or beginning with a semi-colon.
+ * also removes any whitespace
 */
-Command GcodePreprocessorUtils::removeComment(Command command)
+Command GcodePreprocessorUtils::removeComment(Command const &command)
 {
-    int pos;
+    Command result;
 
-    // Remove any comments within first ( and last )
-    pos = command.indexOf('(');
-    if (pos >= 0) {
-        int pos2 = command.lastIndexOf(')', pos + 1);
-        command.remove(pos, pos2 - pos + 1);
+    auto first = command.begin();
+    auto last = command.end();
+
+    while (first != last) {
+        auto [_f, _l] = Util::copy_while(first, last, std::back_inserter(result),
+                                         [](char c) {
+                                             return c != '(' && c != ';' && !std::isspace(c);
+                                         });
+        first = _f;
+        if (first == last || *first == ';') return result;
+
+        if (*first == '(') {
+            first = std::find_if(++first, last, [](char c) {
+                return c == ')';
+            });
+            if (first != last) {
+                ++first; // skip ')'
+            }
+        } else if (std::isspace(*first)) {
+            first = std::find_if_not(first, last, [](char c) {
+                return std::isspace(c);
+            });
+        }
     }
-
-    // Remove any comment beginning with ';'
-    pos = command.indexOf(';');
-    if (pos >= 0)
-        command.truncate(pos);
-
-    return command.trimmed();
+    return result;
+//    int pos;
+//
+//    // Remove any comments within first ( and last )
+//    pos = command.indexOf('(');
+//    if (pos >= 0) {
+//        int pos2 = command.lastIndexOf(')', pos + 1);
+//        command.remove(pos, pos2 - pos + 1);
+//    }
+//
+//    // Remove any comment beginning with ';'
+//    pos = command.indexOf(';');
+//    if (pos >= 0)
+//        command.truncate(pos);
+//
+//    return command.trimmed();
 }
 
 /**
@@ -76,11 +106,13 @@ QString GcodePreprocessorUtils::parseComment(QString command)
     return "";
 }
 
-Command GcodePreprocessorUtils::truncateDecimals(int length, QString command)
+Command GcodePreprocessorUtils::truncateDecimals(int length, Command const &com)
 {
     static QRegularExpression re(R"((\d*\.\d*))");
-    int pos = 0;
 
+    QString command = toQString(com);
+
+    int pos = 0;
     QRegularExpressionMatch match = re.match(command, pos);
     while ((pos = match.capturedStart(0)) != -1) {
         QString newNum = QString::number(match.captured(1).toDouble(), 'f', length);
@@ -89,25 +121,13 @@ Command GcodePreprocessorUtils::truncateDecimals(int length, QString command)
         match = re.match(command, pos);
     }
 
-    return command.toUtf8();
+    return fromQString(command);
 }
 
 Command GcodePreprocessorUtils::removeAllWhitespace(Command command)
 {
-#if 1
-    // guess should be faster than regex
-#if QT_VERSION >= QT_VERSION_CHECK(6, 1, 0)
-    return command.removeIf([](char c) { return std::isspace(c); });
-#else
     command.resize(std::distance(command.begin(), std::remove_if(command.begin(), command.end(), [](char c) { return std::isspace(c); })));
-
     return command;
-#endif
-#else
-    static QRegularExpression rx("\\s");
-
-    return command.remove(rx);
-#endif
 }
 
 GCodes GcodePreprocessorUtils::parseGCodeEnum(Command const &arg)
@@ -349,7 +369,7 @@ QVector3D GcodePreprocessorUtils::updatePointWithCommand(
 {
     QVector3D vec(initial);
     for (auto const &command : commandArgs) {
-        if (!command.isEmpty()) {
+        if (command.size() > 1) {
             switch (command[0]) {
             case 'X':
             case 'x':
@@ -469,7 +489,7 @@ QString GcodePreprocessorUtils::generateG1FromPoints(QVector3D const &start, QVe
 CommandList GcodePreprocessorUtils::splitCommand(Command const &command)
 {
     CommandList commandList;
-    if (command.isEmpty() || command[0] == '/') {
+    if (command.size() == 0 || command[0] == '/') {
         // lines beginning with '/' are comments
         return commandList;
     }
@@ -498,14 +518,14 @@ CommandList GcodePreprocessorUtils::splitCommand(Command const &command)
             f = newf;
             if (f == last) break;// end of line
 
-            commandList.append(sb);
+            commandList.push_back(sb);
             sb.clear();
         }
         if (isLetter(*f))
-            sb.append(*f);
+            sb += *f;
     }
 
-    if (!sb.isEmpty()) commandList.append(sb);
+    if (sb.size()>0) commandList.push_back(sb);
     return commandList;
 }
 

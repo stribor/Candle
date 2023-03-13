@@ -56,8 +56,8 @@ public:
         m_truncateDecimalLength = truncateDecimalLength;
     }
     void reset(const QVector3D &initialPoint = QVector3D(qQNaN(), qQNaN(), qQNaN()));
-    PointSegment *addCommand(QByteArray const &command);
-    PointSegment *addCommand(QByteArrayList const &args);
+    PointSegment *addCommand(Command const &command);
+    PointSegment *addCommand(CommandList const &args);
 
     /**
      * Gets the point at the end of the list.
@@ -66,9 +66,9 @@ public:
         return &m_currentPoint;
     }
     PointSegment::ContainerPtr expandArc();
-    QStringList preprocessCommands(QByteArrayList const &commands);
-    QStringList preprocessCommand(QByteArray const &command);
-    QStringList convertArcsToLines(QByteArray const &command);
+    QStringList preprocessCommands(CommandList const &commands);
+    QStringList preprocessCommand(Command const &command);
+    QStringList convertArcsToLines(Command const &command);
     PointSegment::Container &getPointSegmentList() {
         return m_points;
     }
@@ -108,12 +108,12 @@ private:
     // The gcode.
     PointSegment::Container m_points;
 
-    PointSegment *processCommand(QByteArrayList const &args);
-    void handleMCode(GCodes, QByteArrayList const &args);
-    PointSegment *handleGCode(GCodes code, QByteArrayList const &args);
+    PointSegment *processCommand(CommandList const &args);
+    void handleMCode(GCodes, CommandList const &args);
+    PointSegment *handleGCode(GCodes code, CommandList const &args);
 
     PointSegment *addLinearPointSegment(const QVector3D &nextPoint, bool fastTraverse);
-    PointSegment *addArcPointSegment(const QVector3D &nextPoint, bool clockwise, QByteArrayList const &args);
+    PointSegment *addArcPointSegment(const QVector3D &nextPoint, bool clockwise, CommandList const &args);
 
     /**
      * Warning, this should only be used when modifying live gcode, such as when

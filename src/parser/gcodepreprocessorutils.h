@@ -41,19 +41,27 @@ enum GCodes{
     G91_1,
 };
 
+#ifdef USE_STD_CONTAINERS
+using Command = std::string;
+using CommandList = std::vector<std::string>;
+inline Command fromQString(QString const &str) { return str.toStdString(); }
+inline QString toQString(Command const &str) { return QString::fromStdString(str); }
+#else
 using Command = QByteArray;
 using CommandList = QByteArrayList;
-
+inline Command fromQString(QString const &str) { return str.toUtf8(); }
+inline QString toQString(Command const &str) { return str; }
+#endif
 class GcodePreprocessorUtils
 {
 public:
     using gcodesContainer = std::vector<GCodes>;
     using vectoContainer = std::vector<QVector3D>;
 
-    static Command overrideSpeed(QString command, double speed, double *original = NULL);
-    static Command removeComment(Command command);
+    static Command overrideSpeed(Command command, double speed, double *original = NULL);
+    static Command removeComment(Command const &command);
     static QString parseComment(QString command);
-    static Command truncateDecimals(int length, QString command);
+    static Command truncateDecimals(int length, Command const &command);
     static Command removeAllWhitespace(Command command);
     static GCodes parseGCodeEnum(Command const &arg);
     static gcodesContainer parseCodesEnum(CommandList const &args, QChar);

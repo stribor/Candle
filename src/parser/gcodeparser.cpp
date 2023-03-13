@@ -6,6 +6,8 @@
 // Copyright 2015-2016 Hayrullin Denis Ravilevich
 
 #include "gcodeparser.h"
+#include "gcodepreprocessorutils.h"
+#include "pointsegment.h"
 
 #include <QDebug>
 #include <QListIterator>
@@ -33,7 +35,7 @@ void GcodeParser::reset(const QVector3D &initialPoint)
 /**
 * Add a command to be processed.
 */
-PointSegment* GcodeParser::addCommand(QByteArray const &command)
+PointSegment* GcodeParser::addCommand(Command const &command)
 {
     const auto &stripped = command;
     //    auto stripped = GcodePreprocessorUtils::removeComment(command);
@@ -44,9 +46,8 @@ PointSegment* GcodeParser::addCommand(QByteArray const &command)
 /**
 * Add a command which has already been broken up into its arguments.
 */
-PointSegment* GcodeParser::addCommand(QByteArrayList const &args)
-{
-    if (args.isEmpty()) {
+PointSegment* GcodeParser::addCommand(CommandList const &args) {
+    if (args.size() == 0) {
         return nullptr;
     }
     return processCommand(args);
@@ -115,7 +116,7 @@ PointSegment::ContainerPtr GcodeParser::expandArc()
     return psl;
 }
 
-PointSegment *GcodeParser::processCommand(QByteArrayList const &args)
+PointSegment *GcodeParser::processCommand(CommandList const &args)
 {
     PointSegment *ps = nullptr;
     GcodePreprocessorUtils::gcodesContainer gCodes;
@@ -176,7 +177,7 @@ PointSegment *GcodeParser::addLinearPointSegment(const QVector3D &nextPoint, boo
     return &ps;
 }
 
-PointSegment *GcodeParser::addArcPointSegment(const QVector3D &nextPoint, bool clockwise, QByteArrayList const &args)
+PointSegment *GcodeParser::addArcPointSegment(const QVector3D &nextPoint, bool clockwise, CommandList const &args)
 {
 #ifdef USE_STD_CONTAINERS
     auto &ps = m_points.emplace_back(nextPoint, m_commandNumber++);
@@ -221,13 +222,13 @@ PointSegment *GcodeParser::addArcPointSegment(const QVector3D &nextPoint, bool c
     return &ps;
 }
 
-void GcodeParser::handleMCode(GCodes /*code*/, QByteArrayList const &args)
+void GcodeParser::handleMCode(GCodes /*code*/, CommandList const &args)
 {
     double const spindleSpeed = GcodePreprocessorUtils::parseCoord(args, 'S');
     if (!qIsNaN(spindleSpeed)) m_lastSpindleSpeed = spindleSpeed;
 }
 
-PointSegment * GcodeParser::handleGCode(GCodes code, QByteArrayList const &args)
+PointSegment * GcodeParser::handleGCode(GCodes code, CommandList const &args)
 {
     PointSegment *ps = nullptr;
 
@@ -269,7 +270,7 @@ PointSegment * GcodeParser::handleGCode(GCodes code, QByteArrayList const &args)
     return ps;
 }
 
-QStringList GcodeParser::preprocessCommands(QByteArrayList const &commands) {
+QStringList GcodeParser::preprocessCommands(CommandList const &commands) {
 
     QStringList result;
 
@@ -280,7 +281,7 @@ QStringList GcodeParser::preprocessCommands(QByteArrayList const &commands) {
     return result;
 }
 
-QStringList GcodeParser::preprocessCommand(QByteArray const &command) {
+QStringList GcodeParser::preprocessCommand(Command const &command) {
 
     QStringList result;
 
@@ -310,24 +311,24 @@ QStringList GcodeParser::preprocessCommand(QByteArray const &command) {
             if (!arcLines.empty()) {
                 result.append(arcLines);
             } else {
-                result.append(newCommand);
+                result.append(toQString(newCommand));
             }
         } else if (hasComment) {
             // Maintain line level comment.
-            QString origCmd = command; // to keep command const as comments should be rare case
-            result.append(origCmd.replace(rawCommand, newCommand));
+            QString origCmd = toQString(command); // to keep command const as comments should be rare case
+            result.append(origCmd.replace(toQString(rawCommand), toQString(newCommand)));
         } else {
-            result.append(newCommand);
+            result.append(toQString(newCommand));
         }
     } else if (hasComment) {
         // Reinsert comment-only lines.
-        result.append(command);
+        result.append(toQString(command));
     }
 
     return result;
 }
 
-QStringList GcodeParser::convertArcsToLines(QByteArray const &command)
+QStringList GcodeParser::convertArcsToLines(Command const &command)
 {
     QVector3D start = m_currentPoint;
 

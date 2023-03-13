@@ -56,7 +56,7 @@ void GcodeViewParse::testLength(const QVector3D &start, const QVector3D &end)
     if (!qIsNaN(length) && length != 0) m_minLength = qIsNaN(m_minLength) ? length : qMin<double>(m_minLength, length);
 }
 
-LineSegment::Container GcodeViewParse::toObjRedux(QByteArrayList const &gcode, double arcPrecision, bool arcDegreeMode)
+LineSegment::Container GcodeViewParse::toObjRedux(CommandList const &gcode, double arcPrecision, bool arcDegreeMode)
 {
     GcodeParser gp;
 
