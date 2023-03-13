@@ -12,98 +12,104 @@
 #include "pointsegment.h"
 #include <vector>
 
-class LineSegment
-{
+class LineSegment {
 public:
 #ifdef USE_STD_CONTAINERS
     using Container = std::vector<LineSegment>;
 #else
     using Container = QVector<LineSegment>;
 #endif
-    LineSegment() = default;
-    LineSegment(QVector3D a, QVector3D b, int num, PointSegment const &ps, bool isMetric) : LineSegment() {
-        m_first = a;
-        m_second = b;
-        m_lineNumber = num;
 
-        m_isArc = ps.isArc();
+    LineSegment() = default;
+
+    LineSegment(QVector3D a, QVector3D b, int num, PointSegment const &ps, bool isMetric)
+            : m_speed(ps.getSpeed()),
+              m_spindleSpeed(ps.getSpindleSpeed()),
+              m_dwell(ps.getDwell()),
+              m_first(a),
+              m_second(b),
+              m_lineNumber(num),
+              m_plane(ps.plane()),
+              m_isZMovement(ps.isZMovement()),
+              m_isArc(ps.isArc()),
+              m_isMetric(isMetric),
+              m_isFastTraverse(ps.isFastTraverse()),
+              m_isAbsolute(ps.isAbsolute()) {
+
         if (m_isArc)
             m_isClockwise = ps.isClockwise();
-        m_plane = ps.plane();
-        m_isFastTraverse = ps.isFastTraverse();
-        m_isZMovement = ps.isZMovement();
-        m_isMetric = isMetric;
-        m_isAbsolute = ps.isAbsolute();
-        m_speed = ps.getSpeed();
-        m_spindleSpeed = ps.getSpindleSpeed();
-        m_dwell = ps.getDwell();
     }
-    LineSegment(LineSegment const &initial){
-        m_toolhead = initial.getToolhead();
-        m_isZMovement = initial.isZMovement();
-        m_isArc = initial.isArc();
-        m_isFastTraverse = initial.isFastTraverse();
-        m_drawn = initial.drawn();
-        m_first = initial.getStart();
-        m_second = initial.getEnd();
-        m_lineNumber = initial.getLineNumber();
-        m_speed = initial.getSpeed();
-        m_isMetric = initial.isMetric();
-        m_isAbsolute = initial.isAbsolute();
-        m_isHightlight = initial.isHightlight();
-        m_vertexIndex = initial.vertexIndex();
-    }
-
-    ~LineSegment() = default;
 
     [[nodiscard]] int getLineNumber() const { return m_lineNumber; }
+
     [[nodiscard]] QList<QVector3D> getPointArray();
+
     [[nodiscard]] QList<double> getPoints();
 
     [[nodiscard]] QVector3D const &getStart() const { return m_first; }
+
     void setStart(QVector3D vector) { m_first = vector; }
 
     QVector3D const &getEnd() const { return m_second; }
+
     void setEnd(QVector3D vector) { m_second = vector; }
 
     void setToolHead(int head) { m_toolhead = head; }
+
     [[nodiscard]] int getToolhead() const { return m_toolhead; }
+
     void setSpeed(double s) { m_speed = s; }
+
     [[nodiscard]] double getSpeed() const { return m_speed; }
+
     void setIsZMovement(bool isZ) { m_isZMovement = isZ; }
+
     [[nodiscard]] bool isZMovement() const { return m_isZMovement; }
+
     void setIsArc(bool isA) { m_isArc = isA; }
+
     [[nodiscard]] bool isArc() const { return m_isArc; }
+
     void setIsFastTraverse(bool isF) { m_isFastTraverse = isF; }
+
     [[nodiscard]] bool isFastTraverse() const { return m_isFastTraverse; }
 
     bool contains(const QVector3D &point) const;
 
     [[nodiscard]] bool drawn() const { return m_drawn; }
+
     void setDrawn(bool drawn) { m_drawn = drawn; }
 
     [[nodiscard]] bool isMetric() const { return m_isMetric; }
+
     void setIsMetric(bool isMetric) { m_isMetric = isMetric; }
 
     [[nodiscard]] bool isAbsolute() const { return m_isAbsolute; }
+
     void setIsAbsolute(bool isAbsolute) { m_isAbsolute = isAbsolute; }
 
     [[nodiscard]] bool isHightlight() const { return m_isHightlight; }
+
     void setIsHightlight(bool isHightlight) { m_isHightlight = isHightlight; }
 
     [[nodiscard]] int vertexIndex() const { return m_vertexIndex; }
+
     void setVertexIndex(int vertexIndex) { m_vertexIndex = vertexIndex; }
 
     [[nodiscard]] double getSpindleSpeed() const { return m_spindleSpeed; }
+
     void setSpindleSpeed(double spindleSpeed) { m_spindleSpeed = spindleSpeed; }
 
     [[nodiscard]] double getDwell() const { return m_dwell; }
+
     void setDwell(double dwell) { m_dwell = dwell; }
 
     [[nodiscard]] bool isClockwise() const { return m_isClockwise; }
+
     void setIsClockwise(bool isClockwise) { m_isClockwise = isClockwise; }
 
     [[nodiscard]] PointSegment::planes plane() const { return m_plane; }
+
     void setPlane(const PointSegment::planes &plane) { m_plane = plane; }
 
 private:

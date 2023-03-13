@@ -20,7 +20,7 @@ public:
     using ContainerPtr = std::vector<PointSegment *>;
 #else
     using Container = QVector<PointSegment>;
-    using ContainerPtr = QVector<PointSegment*>;
+    using ContainerPtr = QVector<PointSegment *>;
 #endif
     enum planes {
         XY,
@@ -30,31 +30,52 @@ public:
 
     PointSegment() = default;
 
-    PointSegment(PointSegment const &ps) : PointSegment(ps.m_point, ps.getLineNumber()) {
-        m_toolhead = ps.getToolhead();
-        m_speed = ps.getSpeed();
-        m_isMetric = ps.isMetric();
-        m_isZMovement = ps.isZMovement();
-        m_isFastTraverse = ps.isFastTraverse();
-        m_isAbsolute = ps.isAbsolute();
+    PointSegment(PointSegment const &ps) noexcept
+            : m_point(ps.m_point),
+              m_toolhead(ps.m_toolhead),
+              m_lineNumber(ps.m_lineNumber),
+              m_speed(ps.m_speed),
+              m_plane(ps.m_plane),
+              m_isZMovement(ps.m_isZMovement),
+              m_isArc(ps.m_isArc),
+              m_isMetric(ps.m_isMetric),
+              m_isFastTraverse(ps.m_isFastTraverse),
+              m_isAbsolute(ps.m_isAbsolute),
+              m_isClockwise(ps.m_isClockwise) {
 
-        if (ps.isArc()) {
-            setArcCenter(ps.center());
-            setRadius(ps.getRadius());
-            setIsClockwise(ps.isClockwise());
-            m_plane = ps.plane();
+        if (ps.m_arcProperties) {
+            m_arcProperties = std::make_unique<ArcProperties>(ps.center(), ps.getRadius()/*, ps.isClockwise()*/);
         }
     }
 
-    PointSegment(QVector3D const &b, int num) : PointSegment() {
-        m_point = b;
-        m_lineNumber = num;
+    PointSegment &operator=(PointSegment &&other) noexcept {
+        // Guard self assignment
+        if (this == &other)
+            return *this;
+
+        m_point = other.m_point;
+        m_toolhead = other.m_toolhead;
+        m_lineNumber = other.m_lineNumber;
+        m_speed = other.m_speed;
+        m_plane = other.m_plane;
+        m_isZMovement = other.m_isZMovement;
+        m_isMetric = other.m_isMetric;
+        m_isFastTraverse = other.m_isFastTraverse;
+        m_isAbsolute = other.m_isAbsolute;
+        m_isClockwise = other.m_isClockwise;
+        m_isArc = other.m_isArc;
+        m_arcProperties = std::move(other.m_arcProperties);
+        return *this;
+    }
+
+    PointSegment(QVector3D const &b, int num) : m_point(b), m_lineNumber(num) {
     }
 
     PointSegment(QVector3D const &point, int num, QVector3D const &center, double radius, bool clockwise)
-            : PointSegment(point, num) {
-        m_isArc = true;
-        m_isClockwise = clockwise;
+            : m_point(point),
+              m_lineNumber(num),
+              m_isArc(true),
+              m_isClockwise(clockwise) {
         m_arcProperties = std::make_unique<ArcProperties>(center, radius/*, clockwise*/);
     }
 
