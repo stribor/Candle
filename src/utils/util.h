@@ -74,7 +74,7 @@ namespace Util
     /// \return pair of iterators: first - iterator to the first element in the range [first, last) for which pred(first) is false,
     ///  second - iterator to the element in the destination range, one past the last element copied
     template<typename InputIterator, typename OutputIterator, typename Pred>
-    std::pair<InputIterator, OutputIterator> copy_while(InputIterator first, InputIterator last, OutputIterator d_first, Pred pred)
+    constexpr std::pair<InputIterator, OutputIterator> copy_while(InputIterator first, InputIterator last, OutputIterator d_first, Pred pred)
     {
         while (first != last && pred(*first)) {
             *d_first = *first;
@@ -88,7 +88,7 @@ namespace Util
     /// \return pair of iterators: first - iterator to the first element in the range [first, last) for which pred(first) is true,
     ///  second - iterator to the element in the destination range, one past the last element copied
     template<typename InputIterator, typename OutputIterator, typename Pred>
-    std::pair<InputIterator, OutputIterator> copy_until(InputIterator first, InputIterator last, OutputIterator d_first, Pred pred)
+    constexpr std::pair<InputIterator, OutputIterator> copy_until(InputIterator first, InputIterator last, OutputIterator d_first, Pred pred)
     {
         while (first != last && !pred(*first)) {
             *d_first = *first;
