@@ -1769,12 +1769,8 @@ void frmMain::loadFile(QIODevice &data, qint64 bytesAvailable)
         auto trimmed = QByteArray(lineBuf, bytes_read).trimmed();
 #endif
         if (!trimmed.isEmpty()) {
-#ifdef USE_STD_CONTAINERS
             auto &item = model_data.emplace_back();
-#else
-            model_data.push_back({});
-            auto &item = model_data.back();
-#endif
+
             // Split command
             auto &args = item.args;
             args = GcodePreprocessorUtils::splitCommand(trimmed);
