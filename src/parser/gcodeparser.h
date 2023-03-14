@@ -56,7 +56,7 @@ public:
         m_truncateDecimalLength = truncateDecimalLength;
     }
     void reset(const QVector3D &initialPoint = QVector3D(qQNaN(), qQNaN(), qQNaN()));
-    PointSegment *addCommand(Command const &command);
+    PointSegment *addCommand(CommandView command);
     PointSegment *addCommand(CommandList const &args);
 
     /**
@@ -67,8 +67,8 @@ public:
     }
     PointSegment::ContainerPtr expandArc();
     QStringList preprocessCommands(CommandList const &commands);
-    QStringList preprocessCommand(Command const &command);
-    QStringList convertArcsToLines(Command const &command);
+    QStringList preprocessCommand(CommandView command);
+    QStringList convertArcsToLines(CommandView command);
     PointSegment::Container &getPointSegmentList() {
         return m_points;
     }

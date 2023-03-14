@@ -19,6 +19,7 @@
 #include <exception>
 
 #include <QElapsedTimer>
+#include "parser/gcodepreprocessorutils.h"
 #include "parser/gcodeviewparse.h"
 
 #include "drawers/origindrawer.h"
@@ -54,11 +55,11 @@ struct CommandAttributes {
     int length;
     int consoleIndex;
     int tableIndex;
-    QString command;
+    Command command;
 };
 
 struct CommandQueue {
-    QString command;
+    Command command;
     int tableIndex;
     bool showInConsole;
 };
@@ -332,8 +333,10 @@ private:
     bool saveChanges(bool heightMapMode);
     void updateControlsState();
     void openPort();
-    qint64 writeSerial(QByteArray const &data);
-    void sendCommand(QString command, int tableIndex = -1, bool showInConsole = true);
+    qint64 writeSerial(char data) { return writeSerial(CommandView(&data, 1));}
+    qint64 writeSerial(CommandView data);
+    void sendCommand(Command command, int tableIndex = -1, bool showInConsole = true);
+    void sendCommand(QString command, int tableIndex = -1, bool showInConsole = true) { sendCommand(fromQString(command), tableIndex, showInConsole); }
     void grblReset();
     int bufferLength();
     void sendNextFileCommands();

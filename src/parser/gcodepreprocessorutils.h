@@ -12,6 +12,7 @@
 #include <QMatrix4x4>
 #include <cmath>
 #include <string>
+#include <string_view>
 #include <vector>
 #include "QtCore/qcontainerfwd.h"
 #include "pointsegment.h"
@@ -43,14 +44,18 @@ enum GCodes{
 
 #ifdef USE_STD_CONTAINERS
 using Command = std::string;
+using CommandView = std::string_view;
 using CommandList = std::vector<std::string>;
 inline Command fromQString(QString const &str) { return str.toStdString(); }
-inline QString toQString(Command const &str) { return QString::fromStdString(str); }
+inline QString toQString(CommandView str) { return QString::fromUtf8(str); }
+inline bool commandContains(CommandView str, CommandView lookFor) { return str.find(lookFor) != Command::npos; }
 #else
 using Command = QByteArray;
+using CommandView = QByteArrayView;
 using CommandList = QByteArrayList;
 inline Command fromQString(QString const &str) { return str.toUtf8(); }
-inline QString toQString(Command const &str) { return str; }
+inline QString toQString(CommandView str) { return QString::fromUtf8(str); }
+inline bool commandContains(CommandView str, CommandView lookFor) { return str.contains(lookFor); }
 #endif
 class GcodePreprocessorUtils
 {
@@ -59,21 +64,22 @@ public:
     using vectoContainer = std::vector<QVector3D>;
 
     static Command overrideSpeed(Command command, double speed, double *original = NULL);
-    static Command removeComment(Command const &command);
+    static Command removeComment(CommandView command);
     static QString parseComment(QString command);
-    static Command truncateDecimals(int length, Command const &command);
+    static Command truncateDecimals(int length, CommandView command);
     static Command removeAllWhitespace(Command command);
-    static GCodes parseGCodeEnum(Command const &arg);
+    static GCodes parseGCodeEnum(CommandView arg);
     static gcodesContainer parseCodesEnum(CommandList const &args, QChar);
     static QList<float> parseCodes(const QStringList &args, QChar code);
     static QList<int> parseGCodes(QString const &command);
     static QList<int> parseMCodes(QString const &command);
-    static CommandList splitCommand(Command const &command);
+    static CommandList splitCommand(CommandView command);
     static double parseCoord(CommandList const &argList, char c);
-    static bool parseCoord(Command const &arg, char c, double &outVal);
+    static bool parseCoord(CommandView arg, char c, double &outVal);
+    static bool has_M2_M30(CommandList const &command);
     static QVector3D updatePointWithCommand(const QVector3D &initial, double x, double y, double z, bool absoluteMode);
     static QVector3D updatePointWithCommand(CommandList const &commandArgs, const QVector3D &initial, bool absoluteMode);
-    static QVector3D updatePointWithCommand(Command const &command, const QVector3D &initial, bool absoluteMode);
+    static QVector3D updatePointWithCommand(CommandView command, const QVector3D &initial, bool absoluteMode);
     static QVector3D convertRToCenter(QVector3D start, QVector3D end, double radius, bool absoluteIJK, bool clockwise);
     static QVector3D updateCenterWithCommand(CommandList const &commandArgs, QVector3D initial, QVector3D nextPoint, bool absoluteIJKMode, bool clockwise);
     static QString generateG1FromPoints(QVector3D const &start, QVector3D const &end, bool absoluteMode, int precision);

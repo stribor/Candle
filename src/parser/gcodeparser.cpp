@@ -35,7 +35,7 @@ void GcodeParser::reset(const QVector3D &initialPoint)
 /**
 * Add a command to be processed.
 */
-PointSegment* GcodeParser::addCommand(Command const &command)
+PointSegment* GcodeParser::addCommand(CommandView command)
 {
     const auto &stripped = command;
     //    auto stripped = GcodePreprocessorUtils::removeComment(command);
@@ -151,12 +151,7 @@ PointSegment *GcodeParser::processCommand(CommandList const &args)
 
 PointSegment *GcodeParser::addLinearPointSegment(const QVector3D &nextPoint, bool fastTraverse)
 {
-#ifdef USE_STD_CONTAINERS
     auto &ps = m_points.emplace_back(nextPoint, m_commandNumber++);
-#else
-    m_points.push_back(PointSegment(nextPoint, m_commandNumber++));
-    auto &ps = m_points.back();
-#endif
 
     // Check for z-only
     bool const zOnly =
@@ -179,12 +174,8 @@ PointSegment *GcodeParser::addLinearPointSegment(const QVector3D &nextPoint, boo
 
 PointSegment *GcodeParser::addArcPointSegment(const QVector3D &nextPoint, bool clockwise, CommandList const &args)
 {
-#ifdef USE_STD_CONTAINERS
     auto &ps = m_points.emplace_back(nextPoint, m_commandNumber++);
-#else
-    m_points.push_back(PointSegment(nextPoint, m_commandNumber++));
-    auto &ps = m_points.back();
-#endif
+
     QVector3D const center = GcodePreprocessorUtils::updateCenterWithCommand(args, m_currentPoint, nextPoint, m_inAbsoluteIJKMode, clockwise);
     double radius = GcodePreprocessorUtils::parseCoord(args, 'R');
 
@@ -281,7 +272,7 @@ QStringList GcodeParser::preprocessCommands(CommandList const &commands) {
     return result;
 }
 
-QStringList GcodeParser::preprocessCommand(Command const &command) {
+QStringList GcodeParser::preprocessCommand(CommandView command) {
 
     QStringList result;
 
@@ -328,7 +319,7 @@ QStringList GcodeParser::preprocessCommand(Command const &command) {
     return result;
 }
 
-QStringList GcodeParser::convertArcsToLines(Command const &command)
+QStringList GcodeParser::convertArcsToLines(CommandView command)
 {
     QVector3D start = m_currentPoint;
 

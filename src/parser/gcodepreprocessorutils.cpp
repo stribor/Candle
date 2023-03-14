@@ -43,7 +43,7 @@ Command GcodePreprocessorUtils::overrideSpeed(Command com, double speed, double 
  * Removes any comments within parentheses or beginning with a semi-colon.
  * also removes any whitespace
 */
-Command GcodePreprocessorUtils::removeComment(Command const &command)
+Command GcodePreprocessorUtils::removeComment(CommandView command)
 {
     Command result;
 
@@ -107,7 +107,7 @@ QString GcodePreprocessorUtils::parseComment(QString command)
     return "";
 }
 
-Command GcodePreprocessorUtils::truncateDecimals(int length, Command const &com)
+Command GcodePreprocessorUtils::truncateDecimals(int length, CommandView com)
 {
     static QRegularExpression re(R"((\d*\.\d*))");
 
@@ -131,7 +131,7 @@ Command GcodePreprocessorUtils::removeAllWhitespace(Command command)
     return command;
 }
 
-GCodes GcodePreprocessorUtils::parseGCodeEnum(Command const &arg)
+GCodes GcodePreprocessorUtils::parseGCodeEnum(CommandView arg)
 {
     GCodes v = unknown;
 
@@ -355,7 +355,7 @@ QList<int> GcodePreprocessorUtils::parseMCodes(QString const &command)
 /**
 * Update a point given the arguments of a command.
 */
-QVector3D GcodePreprocessorUtils::updatePointWithCommand(Command const &command, const QVector3D &initial, bool absoluteMode)
+QVector3D GcodePreprocessorUtils::updatePointWithCommand(CommandView command, const QVector3D &initial, bool absoluteMode)
 {
     auto l = splitCommand(command);
     return updatePointWithCommand(l, initial, absoluteMode);
@@ -375,23 +375,23 @@ QVector3D GcodePreprocessorUtils::updatePointWithCommand(
             case 'X':
             case 'x':
                 if (absoluteMode)
-                    vec.setX(AtoF(command.data() + 1));// command.mid(1).toDouble();
+                    vec.setX(AtoF(std::string_view(command.data() + 1, command.size() - 1)));// command.mid(1).toDouble();
                 else
-                    vec.setX(initial.x() + AtoF(command.data() + 1));// command.mid(1).toDouble();
+                    vec.setX(initial.x() + AtoF(std::string_view(command.data() + 1, command.size() - 1)));// command.mid(1).toDouble();
                 break;
             case 'Y':
             case 'y':
                 if (absoluteMode)
-                    vec.setY(AtoF(command.data() + 1));// command.mid(1).toDouble();
+                    vec.setY(AtoF(std::string_view(command.data() + 1, command.size() - 1)));// command.mid(1).toDouble();
                 else
-                    vec.setY(initial.y() + AtoF(command.data() + 1));// command.mid(1).toDouble();
+                    vec.setY(initial.y() + AtoF(std::string_view(command.data() + 1, command.size() - 1)));// command.mid(1).toDouble();
                 break;
             case 'Z':
             case 'z':
                 if (absoluteMode)
-                    vec.setZ(AtoF(command.data() + 1));// command.mid(1).toDouble();
+                    vec.setZ(AtoF(std::string_view(command.data() + 1, command.size() - 1)));// command.mid(1).toDouble();
                 else
-                    vec.setZ(initial.z() + AtoF(command.data() + 1));// command.mid(1).toDouble();
+                    vec.setZ(initial.z() + AtoF(std::string_view(command.data() + 1, command.size() - 1)));// command.mid(1).toDouble();
                 break;
             }
         }
@@ -487,7 +487,7 @@ QString GcodePreprocessorUtils::generateG1FromPoints(QVector3D const &start, QVe
 // Here is an example of a line containing a comment:“G80 M5 (stop motion)”.
 // Comments do not cause a machining center to do anything.
 
-CommandList GcodePreprocessorUtils::splitCommand(Command const &command)
+CommandList GcodePreprocessorUtils::splitCommand(CommandView command)
 {
     CommandList commandList;
     if (command.size() == 0 || command[0] == '/') {
@@ -513,9 +513,9 @@ CommandList GcodePreprocessorUtils::splitCommand(Command const &command)
             if (f == last) break;// end of line
         }
 
-        if (isDigit(*f) || *f == '.' || *f == '-' || *f == '+') { // read numeric
+        if (isDigit(*f) || *f == '.' || *f == '-' || *f == '+') {// read numeric
             auto [newf, sblast] = Util::copy_while(f, last, std::back_inserter(sb),
-                                      [](char const c) { return isDigit(c) || c == '.' || c == '-' || c == '+'; });
+                                                   [](char const c) { return isDigit(c) || c == '.' || c == '-' || c == '+'; });
             f = newf;
             if (f == last) break;// end of line
 
@@ -526,11 +526,11 @@ CommandList GcodePreprocessorUtils::splitCommand(Command const &command)
             sb += *f;
     }
 
-    if (sb.size()>0) commandList.push_back(sb);
+    if (sb.size() > 0) commandList.push_back(sb);
     return commandList;
 }
 
-bool GcodePreprocessorUtils::parseCoord(Command const &arg, char c, double &outVal)
+bool GcodePreprocessorUtils::parseCoord(CommandView arg, char c, double &outVal)
 {
     auto small_c = toLower(c);
     if (arg.size() > 0 && (arg[0] == c || arg[0] == small_c)) {
@@ -770,6 +770,19 @@ GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegment::planes plane,
     segments.push_back(m.map(p2));
 
     return segments;
+}
+
+bool GcodePreprocessorUtils::has_M2_M30(const CommandList &commandList)
+{
+    // Set M2 & M30 commands sent flag
+    return std::any_of(commandList.begin(), commandList.end(),
+                       [](auto const &command) {
+                           if (command.size() > 1 && command[0] == 'M') {
+                               if (command == "M02" || command == "M2" || command == "M30") return true;
+                           }
+                           return false;
+                       });
+
 }
 
 double GcodePreprocessorUtils::AtoF(std::string_view str)
