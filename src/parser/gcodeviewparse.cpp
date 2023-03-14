@@ -8,8 +8,7 @@
 #include <QDebug>
 #include "gcodeviewparse.h"
 
-GcodeViewParse::GcodeViewParse(QObject *parent) :
-    QObject(parent)
+GcodeViewParse::GcodeViewParse()
 {
     absoluteMode = true;
     absoluteIJK = false;
@@ -21,8 +20,6 @@ GcodeViewParse::GcodeViewParse(QObject *parent) :
 
     m_minLength = qQNaN();
 }
-
-GcodeViewParse::~GcodeViewParse() = default;
 
 QVector3D &GcodeViewParse::getMinimumExtremes()
 {
@@ -123,7 +120,7 @@ LineSegment::Container GcodeViewParse::getLinesFromParser(GcodeParser *gp, doubl
                     QVector3D startPoint = *start;
                     for (auto const &nextPoint : points) {
                         if (nextPoint == startPoint) continue;
-                       m_lines.emplace_back(startPoint, nextPoint, lineIndex, ps, isMetric);
+                        m_lines.emplace_back(startPoint, nextPoint, lineIndex, ps, isMetric);
                         this->testExtremes(nextPoint);
                         m_lineIndexes[ps.getLineNumber()].push_back(m_lines.size() - 1);
                         startPoint = nextPoint;

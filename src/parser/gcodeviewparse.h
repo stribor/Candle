@@ -23,13 +23,11 @@ using indexContainer = QVector<int>;
 using indexVector = QList<indexContainer>;
 #endif
 
-class GcodeViewParse : public QObject
+class GcodeViewParse
 {
-    Q_OBJECT
 public:
 
-    explicit GcodeViewParse(QObject *parent = 0);
-    ~GcodeViewParse() override;
+    explicit GcodeViewParse();
 
     QVector3D &getMinimumExtremes();
     QVector3D &getMaximumExtremes();
@@ -43,10 +41,6 @@ public:
     indexVector &getLinesIndexes();
 
     void reset();
-
-signals:
-
-public slots:
 
 private:
 
