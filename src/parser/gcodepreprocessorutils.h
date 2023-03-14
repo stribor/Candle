@@ -95,7 +95,7 @@ public:
     constexpr static char toLower(char c) {
         return (c >= 'A' && c <= 'Z') ? c + 32 : c;
     }
-    static double AtoF(char const *c);
+    static double AtoF(std::string_view c);
 };
 
 #endif // GCODEPREPROCESSORUTILS_H

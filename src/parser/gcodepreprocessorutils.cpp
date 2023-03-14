@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <cctype>
 #include <limits>
+#include <string_view>
 
 /**
 * Searches the command string for an 'f' and replaces the speed value
@@ -771,19 +772,23 @@ GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegment::planes plane,
     return segments;
 }
 
-double GcodePreprocessorUtils::AtoF(char const * num)
+double GcodePreprocessorUtils::AtoF(std::string_view str)
 {
-    if (!num || !*num)
+    auto num = str.begin();
+
+    // skip white space at start (needed?)
+    while (num != str.end() && (*num == ' ' || *num == '\t')) {
+        ++num;
+    }
+
+    if (num == str.end())
         return 0;
+
     int integerPart = 0;
     int fractionPart = 0;
     int divisorForFraction = 1;
     int sign = 1;
     bool inFraction = false;
-
-    // skip white space at start (needed?)
-    while (*num == ' ' || *num == '\t')
-        ++num;
 
     /*Take care of +/- sign*/
     if (*num == '-') {
@@ -792,7 +797,7 @@ double GcodePreprocessorUtils::AtoF(char const * num)
     } else if (*num == '+') {
         ++num;
     }
-    while (*num != '\0') {
+    while (num != str.end() && *num != '\0') {
         if (*num >= '0' && *num <= '9') {
             if (inFraction) {
                 /*See how are we converting a character to integer*/
