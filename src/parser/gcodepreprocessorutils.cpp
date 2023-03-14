@@ -774,13 +774,10 @@ GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegment::planes plane,
 
 double GcodePreprocessorUtils::AtoF(std::string_view str)
 {
+    // skip white space at start
+    str.remove_prefix(std::min(str.find_first_not_of(" \t"), str.size()));
+
     auto num = str.begin();
-
-    // skip white space at start (needed?)
-    while (num != str.end() && (*num == ' ' || *num == '\t')) {
-        ++num;
-    }
-
     if (num == str.end())
         return 0;
 
