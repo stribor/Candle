@@ -4,12 +4,12 @@ project(Candle VERSION 1.1.9)
 # set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # In-source builds just create a mess, so we disable it
-if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
+if ("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
     message(SEND_ERROR "In-source builds are not allowed.")
     return()
-endif()
+endif ()
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 # instruct CMake to run moc automatically when needed
 set(CMAKE_AUTOMOC ON)
@@ -27,6 +27,8 @@ option(ENABLE_UNDEFINED_SANITIZER "enable undefined behaviour sanitizer if avail
 option(ENABLE_PEDANTIC_MODE "enable pedantic compiling mode that usually produces a lot of more warnings" ON)
 option(USE_STD_CONTAINERS "use std:vector instead of QList and QVector" ON)
 
+option(ENABLE_EXTERNAL "enable pulling in external stuff used for testing/benchmarking" ON)
+
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 message(STATUS "Candle Qt Version=${QT_VERSION_MAJOR}")
 
@@ -34,55 +36,54 @@ message(STATUS "Candle Qt Version=${QT_VERSION_MAJOR}")
 # Handle sanitizer options
 if (ENABLE_ADDRESS_SANITIZER OR ENABLE_UNDEFINED_SANITIZER)
     set(ENABLE_SANITIZER BOOL ON)
-else()
+else ()
     set(ENABLE_SANITIZER BOOL OFF)
-endif()
-if(ENABLE_SANITIZER)
-    if(ENABLE_ADDRESS_SANITIZER AND ENABLE_UNDEFINED_SANITIZER)
+endif ()
+if (ENABLE_SANITIZER)
+    if (ENABLE_ADDRESS_SANITIZER AND ENABLE_UNDEFINED_SANITIZER)
         message(FATAL_ERROR "Only one option of ENABLE_ADDRESS_SANITIZER and ENABLE_UB_SANITIZER is allowed")
-    endif()
+    endif ()
 
-    if(NOT MSVC)
+    if (NOT MSVC)
         INCLUDE(CheckCCompilerFlag)
 
         if (ENABLE_ADDRESS_SANITIZER)
             set(CMAKE_REQUIRED_FLAGS "-Werror -fsanitize=address") # Also needs to be a link flag for test to pass
             check_c_compiler_flag("-fsanitize=address" HAVE_FLAG_SANITIZE_ADDRESS)
-            if(HAVE_FLAG_SANITIZE_ADDRESS)
+            if (HAVE_FLAG_SANITIZE_ADDRESS)
                 message(STATUS "Address sanitizer enabled for debug builds")
                 set(SANITIZE_FLAG "-fsanitize=address")
-            else()
+            else ()
                 message(STATUS "Address sanitizer not supported")
-            endif()
-        endif()
+            endif ()
+        endif ()
 
         if (ENABLE_UNDEFINED_SANITIZER)
             set(CMAKE_REQUIRED_FLAGS "-Werror -fsanitize=undefined") # Also needs to be a link flag for test to pass
             check_c_compiler_flag("-fsanitize=undefined" HAVE_FLAG_SANITIZE_UNDEFINED)
 
-            if(HAVE_FLAG_SANITIZE_UNDEFINED)
+            if (HAVE_FLAG_SANITIZE_UNDEFINED)
                 message(STATUS "Undefined behaviour sanitizer enabled for debug builds")
                 set(SANITIZE_FLAG "-fsanitize=undefined")
-            else()
+            else ()
                 message(STATUS "Undefined behaviour sanitizer not supported")
-            endif()
-        endif()
-    endif()
-endif()
+            endif ()
+        endif ()
+    endif ()
+endif ()
 
 
-if(QT_VERSION_MAJOR EQUAL  6)
+if (QT_VERSION_MAJOR EQUAL 6)
     find_package(Qt6 REQUIRED COMPONENTS Core Widgets OpenGL OpenGLWidgets SerialPort LinguistTools)
-else()
-    find_package(Qt5 REQUIRED COMPONENTS Core Widgets OpenGL SerialPort LinguistTools )
-endif()
+else ()
+    find_package(Qt5 REQUIRED COMPONENTS Core Widgets OpenGL SerialPort LinguistTools)
+endif ()
 
 #find_package(Qt5 COMPONENTS Core Widgets OpenGL SerialPort LinguistTools REQUIRED)
 
 include_directories(${PROJECT_SOURCE_DIR})
 
-set (SRC_FILES
-        main.cpp
+set(SRC_FILES
         frmmain.cpp
         frmsettings.cpp
         frmabout.cpp
@@ -112,7 +113,7 @@ set (SRC_FILES
         widgets/sliderbox.cpp
         drawers/selectiondrawer.cpp
         widgets/comboboxkey.cpp
-		utils/profile.cpp utils/profile.h)
+        utils/profile.cpp utils/profile.h)
 
 set(SRC_HEADERS
         frmmain.h
@@ -146,22 +147,23 @@ set(SRC_HEADERS
         widgets/sliderbox.h
         drawers/selectiondrawer.h
         widgets/comboboxkey.h
-		utils/profile.cpp utils/profile.h)
+        utils/profile.cpp utils/profile.h)
 
 qt_add_resources(SHADER_RSC
-    ${PROJECT_SOURCE_DIR}/shaders.qrc
-    ${PROJECT_SOURCE_DIR}/images.qrc
-    ${PROJECT_SOURCE_DIR}/fonts.qrc
-    )
+        ${PROJECT_SOURCE_DIR}/shaders.qrc
+        ${PROJECT_SOURCE_DIR}/images.qrc
+        ${PROJECT_SOURCE_DIR}/fonts.qrc
+        )
 
-set (TS_FILES
+set(TS_FILES
         translations/candle_ru.ts
         translations/candle_es.ts
         translations/candle_fr.ts
         translations/candle_pt.ts
         )
 if (UPDATE_TRANSLATIONS)
-    qt_create_translation( TRANSLATIONS ${TS_FILES}
+    qt_create_translation(TRANSLATIONS ${TS_FILES}
+            main.cpp
             ${SRC_FILES}
             ${SRC_HEADERS}
             frmabout.ui
@@ -169,40 +171,40 @@ if (UPDATE_TRANSLATIONS)
             frmsettings.ui
             widgets/sliderbox.ui
             )
-else()
-    qt_add_translation( TRANSLATIONS ${TS_FILES})
-endif()
+else ()
+    qt_add_translation(TRANSLATIONS ${TS_FILES})
+endif ()
 
 
-add_executable(Candle ${SRC_FILES} ${SRC_HEADERS} ${SHADER_RSC} utils/profile.cpp utils/profile.h)
+add_executable(Candle main.cpp ${SRC_FILES} ${SRC_HEADERS} ${SHADER_RSC} utils/profile.cpp utils/profile.h)
 
-if(APPLE)
-    set( MACOSX_BUNDLE_INFO_STRING "${CMAKE_PROJECT_NAME}")
-    set( MACOSX_BUNDLE_LONG_VERSION_STRING ${CMAKE_PROJECT_VERSION})
-    set( MACOSX_BUNDLE_BUNDLE_NAME "${CMAKE_PROJECT_NAME}")
-    set( MACOSX_BUNDLE_SHORT_VERSION_STRING ${CMAKE_PROJECT_VERSION})
-    set( MACOSX_BUNDLE_BUNDLE_VERSION ${CMAKE_PROJECT_VERSION})
-    set( MACOSX_BUNDLE_COPYRIGHT "Copyright ©2019 https://github.com/Denvi")
+if (APPLE)
+    set(MACOSX_BUNDLE_INFO_STRING "${CMAKE_PROJECT_NAME}")
+    set(MACOSX_BUNDLE_LONG_VERSION_STRING ${CMAKE_PROJECT_VERSION})
+    set(MACOSX_BUNDLE_BUNDLE_NAME "${CMAKE_PROJECT_NAME}")
+    set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${CMAKE_PROJECT_VERSION})
+    set(MACOSX_BUNDLE_BUNDLE_VERSION ${CMAKE_PROJECT_VERSION})
+    set(MACOSX_BUNDLE_COPYRIGHT "Copyright ©2019 https://github.com/Denvi")
 
 
-#    # use otool to extract minimum os version QtCore is compiled to run at so we can work as low is Qt can
-#    execute_process(COMMAND otool -l ${_qt5Core_install_prefix}/lib/QtCore.framework/QtCore
-#            COMMAND grep -A2 LC_VERSION_MIN_MACOSX
-#            COMMAND awk "END{print $2}"
-#            OUTPUT_VARIABLE MINOSX OUTPUT_STRIP_TRAILING_WHITESPACE)
-#    #		message(STATUS "Min Mac OS version for Qt is ${MINOSX}")
-#    if (MINOSX MATCHES "10\\.([0-9]+)" )
-#        message(STATUS "Setting OSX deployment target to ${MINOSX} (based on Qt ${Qt5Widgets_VERSION})")
-#        set(CMAKE_OSX_DEPLOYMENT_TARGET ${MINOSX})
-#    else()
-#        message(STATUS "Could not figure minimum OSX version")
-#    endif()
+    #    # use otool to extract minimum os version QtCore is compiled to run at so we can work as low is Qt can
+    #    execute_process(COMMAND otool -l ${_qt5Core_install_prefix}/lib/QtCore.framework/QtCore
+    #            COMMAND grep -A2 LC_VERSION_MIN_MACOSX
+    #            COMMAND awk "END{print $2}"
+    #            OUTPUT_VARIABLE MINOSX OUTPUT_STRIP_TRAILING_WHITESPACE)
+    #    #		message(STATUS "Min Mac OS version for Qt is ${MINOSX}")
+    #    if (MINOSX MATCHES "10\\.([0-9]+)" )
+    #        message(STATUS "Setting OSX deployment target to ${MINOSX} (based on Qt ${Qt5Widgets_VERSION})")
+    #        set(CMAKE_OSX_DEPLOYMENT_TARGET ${MINOSX})
+    #    else()
+    #        message(STATUS "Could not figure minimum OSX version")
+    #    endif()
 
-    set( MACOSX_BUNDLE_GUI_IDENTIFIER "")
+    set(MACOSX_BUNDLE_GUI_IDENTIFIER "")
 
     macro(add_osx_resource TARGET ASSET LOCATION)
-        set_source_files_properties("${ASSET}" PROPERTIES MACOSX_PACKAGE_LOCATION ${LOCATION} )
-        set_source_files_properties("${ASSET}"  PROPERTIES XCODE_EXPLICIT_FILE_TYPE "compiled" )
+        set_source_files_properties("${ASSET}" PROPERTIES MACOSX_PACKAGE_LOCATION ${LOCATION})
+        set_source_files_properties("${ASSET}" PROPERTIES XCODE_EXPLICIT_FILE_TYPE "compiled")
         target_sources(${TARGET} PRIVATE "${ASSET}")
     endmacro()
 
@@ -214,34 +216,34 @@ if(APPLE)
     add_osx_resource(Candle images/gcode.icns Resources)
     add_osx_resource(Candle ../LICENSE Resources)
 
-    foreach(_qm ${TRANSLATIONS})
-        add_osx_resource(Candle ${_qm}  Resources/translations)
-    endforeach()
+    foreach (_qm ${TRANSLATIONS})
+        add_osx_resource(Candle ${_qm} Resources/translations)
+    endforeach ()
 
     # Touch app bundle so finder updates icon etc.
-    add_custom_command( TARGET Candle
+    add_custom_command(TARGET Candle
             POST_BUILD
             COMMAND touch "$<TARGET_FILE_DIR:Candle>/../.."
             COMMENT "Touching Candle")
 
-endif()
+endif ()
 
 target_link_libraries(Candle PRIVATE
-    Qt::Core
-    Qt::Widgets
-    Qt::OpenGL
-    Qt::Gui
-    Qt::SerialPort
-    )
-if(QT_VERSION_MAJOR EQUAL  6)
+        Qt::Core
+        Qt::Widgets
+        Qt::OpenGL
+        Qt::Gui
+        Qt::SerialPort
+        )
+if (QT_VERSION_MAJOR EQUAL 6)
     target_link_libraries(Candle PRIVATE Qt::OpenGLWidgets)
-endif()
+endif ()
 
-if(UNIX AND NOT APPLE)
-    target_compile_definitions(Candle PRIVATE UNIX )
-endif()
+if (UNIX AND NOT APPLE)
+    target_compile_definitions(Candle PRIVATE UNIX)
+endif ()
 
-target_compile_definitions(Candle PRIVATE APP_VERSION="${CMAKE_PROJECT_VERSION}" )
+target_compile_definitions(Candle PRIVATE APP_VERSION="${CMAKE_PROJECT_VERSION}")
 # enable warnings
 target_compile_options(Candle PRIVATE
         $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
@@ -253,18 +255,86 @@ if (ENABLE_SANITIZER AND (HAVE_FLAG_SANITIZE_ADDRESS OR HAVE_FLAG_SANITIZE_UNDEF
     target_compile_options(Candle PRIVATE $<$<CONFIG:Debug>:${SANITIZE_FLAG}>)
     target_link_libraries(Candle PRIVATE $<$<CONFIG:Debug>:${SANITIZE_FLAG}>)
 
-    if(APPLE)
+    if (APPLE)
         # Xcode adds this when sanitizer is enabled
         target_compile_definitions(Candle PRIVATE $<$<CONFIG:Debug>:_LIBCPP_HAS_NO_ASAN>)
-    endif()
-endif()
+    endif ()
+endif ()
 if (USE_STD_CONTAINERS)
     target_compile_definitions(Candle PRIVATE USE_STD_CONTAINERS)
-endif()
+endif ()
 
 if (ENABLE_PEDANTIC_MODE)
-    if(NOT MSVC)
+    if (NOT MSVC)
         target_compile_options(Candle PRIVATE -Wextra -pedantic)
-#        -Wpadded
-    endif()
-endif()
+        #        -Wpadded
+    endif ()
+endif ()
+
+if (ENABLE_EXTERNAL)
+    include(FetchContent)
+    # Externally provided libraries
+
+    FetchContent_Declare(fmt
+            GIT_REPOSITORY git@github.com:fmtlib/fmt.git
+            GIT_TAG master) # need master for benchmark::benchmark
+
+    FetchContent_Declare(catch2
+            GIT_REPOSITORY git@github.com:catchorg/Catch2.git
+            GIT_TAG devel) # need master for benchmark::benchmark
+
+    FetchContent_Declare(googletest
+            GIT_REPOSITORY git@github.com:google/googletest.git
+            GIT_TAG main)
+
+    FetchContent_Declare(googlebenchmark
+            GIT_REPOSITORY git@github.com:google/benchmark.git
+            GIT_TAG main)
+
+    FetchContent_MakeAvailable(
+            fmt
+            catch2
+            googletest
+            googlebenchmark
+    )
+
+    add_executable(candle_benchmark benchmark.cpp ${SRC_FILES} ${SRC_HEADERS} ${SHADER_RSC})
+
+    target_link_libraries(candle_benchmark PRIVATE benchmark::benchmark benchmark::benchmark_main fmt::fmt
+            Qt::Core
+            Qt::Widgets
+            Qt::OpenGL
+            Qt::Gui
+            Qt::SerialPort)
+
+    if (USE_STD_CONTAINERS)
+        target_compile_definitions(candle_benchmark PRIVATE USE_STD_CONTAINERS)
+    endif ()
+
+    if (QT_VERSION_MAJOR EQUAL 6)
+        target_link_libraries(candle_benchmark PRIVATE Qt::OpenGLWidgets)
+    endif ()
+
+    add_executable(candle_test tests.cpp ${SRC_FILES} ${SRC_HEADERS} ${SHADER_RSC})
+    target_link_libraries(candle_test PRIVATE
+            Catch2::Catch2WithMain
+            fmt::fmt
+            Qt::Core
+            Qt::Widgets
+            Qt::OpenGL
+            Qt::Gui
+            Qt::SerialPort)
+
+    if (USE_STD_CONTAINERS)
+        target_compile_definitions(candle_test PRIVATE USE_STD_CONTAINERS)
+    endif ()
+
+    if (QT_VERSION_MAJOR EQUAL 6)
+        target_link_libraries(candle_test PRIVATE Qt::OpenGLWidgets)
+    endif ()
+
+    list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+    include(CTest)
+    include(Catch)
+    catch_discover_tests(candle_test)
+endif ()
