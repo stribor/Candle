@@ -22,7 +22,7 @@
 * In that way all speed values become a ratio of the provided speed
 * and don't get overridden with just a fixed speed.
 */
-Command GcodePreprocessorUtils::overrideSpeed(Command com, double speed, double *original) {
+Command GcodePreprocessorUtils::overrideSpeed(CommandView com, double speed, double *original) {
     QString command = toQString(com);
     static QRegularExpression re("[Ff]([0-9.]+)");
 
@@ -125,10 +125,12 @@ Command GcodePreprocessorUtils::truncateDecimals(int length, CommandView com)
     return fromQString(command);
 }
 
-Command GcodePreprocessorUtils::removeAllWhitespace(Command command)
+Command GcodePreprocessorUtils::removeAllWhitespace(CommandView command)
 {
-    command.resize(std::distance(command.begin(), std::remove_if(command.begin(), command.end(), [](char c) { return std::isspace(c); })));
-    return command;
+    Command result;
+    std::remove_copy_if(command.begin(), command.end(), std::back_inserter(result), std::isspace);
+
+    return result;
 }
 
 GCodes GcodePreprocessorUtils::parseGCodeEnum(CommandView arg)
