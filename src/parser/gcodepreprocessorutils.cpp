@@ -35,7 +35,7 @@ Command GcodePreprocessorUtils::overrideSpeed(CommandView input, double speedPer
         if (next_f != input.end()) {
             auto start = next_f + 1;
             auto end = std::find_if(start, input.end(), [](char c) { return !std::isdigit(c) && c != '.'; });
-            CommandView number_str(start, end);
+            CommandView number_str(start, std::distance(start, end));
 
             double orig_val = AtoF(number_str);
             if (original) {
