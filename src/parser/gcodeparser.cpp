@@ -22,7 +22,7 @@ GcodeParser::GcodeParser()
 // Resets the current state.
 void GcodeParser::reset(const QVector3D &initialPoint)
 {
-    qDebug() << "reseting gp" << initialPoint;
+    //qDebug() << "reseting gp" << initialPoint;
 
     m_points.clear();
 
