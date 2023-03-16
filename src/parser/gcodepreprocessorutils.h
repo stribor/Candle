@@ -34,6 +34,7 @@ enum GCodes{
     G19,
     G20,
     G21,
+    G05, // not yet used
     G05_1, // not yet used
     G05_2, // not yet used
     G90,
@@ -42,29 +43,22 @@ enum GCodes{
     G91_1,
 };
 
-#ifdef USE_STD_CONTAINERS
 using Command = std::string;
 using CommandView = std::string_view;
 using CommandList = std::vector<std::string>;
+
 inline Command fromQString(QString const &str) { return str.toStdString(); }
 inline QString toQString(CommandView str) { return QString::fromUtf8(str); }
 inline bool commandContains(CommandView str, CommandView lookFor) { return str.find(lookFor) != Command::npos; }
-#else
-using Command = QByteArray;
-using CommandView = QByteArrayView;
-using CommandList = QByteArrayList;
-inline Command fromQString(QString const &str) { return str.toUtf8(); }
-inline QString toQString(CommandView str) { return QString::fromUtf8(str); }
-inline bool commandContains(CommandView str, CommandView lookFor) { return str.contains(lookFor); }
-#endif
+
 namespace GcodePreprocessorUtils
 {
     using gcodesContainer = std::vector<GCodes>;
     using vectoContainer = std::vector<QVector3D>;
 
-    Command overrideSpeed(CommandView command, double speed, double *original = NULL);
+    Command overrideSpeed(CommandView command, double speedPercentage, double *original = NULL);
     Command removeComment(CommandView command);
-    QString parseComment(QString command);
+    Command parseComment(CommandView command);
     Command truncateDecimals(int length, CommandView command);
     Command removeAllWhitespace(CommandView command);
     GCodes parseGCodeEnum(CommandView arg);
