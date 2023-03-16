@@ -53,22 +53,25 @@ static void BM_AtoF(benchmark::State &state)
 
 std::size_t loadFile(QIODevice &data, qint64 bytesAvailable)
 {
+    Command cmd;
+
+#if 0
     // Prepare parser
     GcodeParser gp;
     gp.reset(QVector3D(qQNaN(), qQNaN(), 0));
     GCodeTableModel programModel;
     auto &model_data = programModel.data();
-
+#endif
     char lineBuf[1024];
     while (!data.atEnd()) {
         // auto command = data.readLine(100);
         // Trim command
-#if 0
-        auto const trimmed = data.readLine(1024).trimmed();
-#else
         auto bytes_read = data.readLine(lineBuf, 1024);
         auto trimmed = Command(lineBuf, bytes_read);
-#endif
+#if 1
+        cmd = GcodePreprocessorUtils::removeComment(trimmed);
+        benchmark::DoNotOptimize(cmd);
+#else
         if (trimmed.size() > 0) {
             auto &item = model_data.emplace_back();
 
@@ -81,9 +84,11 @@ std::size_t loadFile(QIODevice &data, qint64 bytesAvailable)
             item.line = gp.getCommandNumber();
             item.command = trimmed;
         }
+#endif
     }
-    auto &psl = gp.getPointSegmentList();
-    return psl.size();
+//    auto &psl = gp.getPointSegmentList();
+//    return psl.size();
+    return 0;
 }
 
 void benchmark_parser(benchmark::State &state)
@@ -104,7 +109,7 @@ void benchmark_parser(benchmark::State &state)
     }
 }
 
-//BENCHMARK(benchmark_parser);//->Threads(4);
+BENCHMARK(benchmark_parser);//->Threads(4);
 
 Command removeWS(Command const &command)
 {
