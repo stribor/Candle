@@ -456,47 +456,59 @@ QString GcodePreprocessorUtils::generateG1FromPoints(QVector3D const &start, QVe
 // Here is an example of a line containing a comment:“G80 M5 (stop motion)”.
 // Comments do not cause a machining center to do anything.
 
-CommandList GcodePreprocessorUtils::splitCommand(CommandView command)
+CommandList GcodePreprocessorUtils::splitCommand(CommandView gcode)
 {
-    CommandList commandList;
-    if (command.size() == 0 || command[0] == '/') {
-        // lines beginning with '/' are comments
-        return commandList;
-    }
+    CommandList commands;
+    Command current_command;
 
-    Command sb;
+    for (auto it = gcode.begin(); it != gcode.end();) {
+        char c = *it;
 
-    auto const last = command.end();
-    for (auto f = command.begin(); f != last; ++f) {
-        // handle comments
-
-        if (*f == ';') // end of line comment skip whole line
+        if (c == ';') { // End processing for inline comments
             break;
-
-        if (*f == '(') { // skip comment until first )
-            while (f != last && *f != ')') {
-                ++f;
+        } else if (c == '(') { // Skip to the closing parenthesis for parenthetical comments
+            it = std::find(it, gcode.end(), ')');
+            if (it != gcode.end()) {
+                ++it;
             }
-            if (f != last)
-                ++f; // skip )
-            if (f == last) break;// end of line
-        }
+        } else if (c == '[' || c == ']') { // Ignore '[' and ']'
+            ++it;
+        } else if (!std::isspace(c)) {
+            bool is_new_command = c == 'G' || c == 'M' || c == 'T' || c == 'S' || c == 'F' || c == 'X' || c == 'Y' || c == 'Z' || c == 'I' || c == 'J' || c == '$';
 
-        if (isDigit(*f) || *f == '.' || *f == '-' || *f == '+') {// read numeric
-            auto [newf, sblast] = Util::copy_while(f, last, std::back_inserter(sb),
-                                                   [](char const c) { return isDigit(c) || c == '.' || c == '-' || c == '+'; });
-            f = newf;
-            if (f == last) break;// end of line
+            if (is_new_command && !current_command.empty()) {
+                commands.push_back(current_command);
+                current_command.clear();
+            }
 
-            commandList.push_back(sb);
-            sb.clear();
+            current_command += c;
+            ++it;
+
+            if (c == '$') [[unlikely]] {
+                while (it != gcode.end() && !std::isspace(*it)) {
+                    if (*it == ';') {
+                        break;
+                    } else if (*it == '(') {
+                        it = std::find(it, gcode.end(), ')');
+                        if (it != gcode.end()) {
+                            ++it;
+                        }
+                    } else {
+                        current_command += *it;
+                        ++it;
+                    }
+                }
+            }
+        } else {
+            ++it;
         }
-        if (isLetter(*f))
-            sb += *f;
     }
 
-    if (sb.size() > 0) commandList.push_back(sb);
-    return commandList;
+    if (!current_command.empty()) {
+        commands.push_back(current_command);
+    }
+
+    return commands;
 }
 
 bool GcodePreprocessorUtils::parseCoord(CommandView arg, char c, double &outVal)
