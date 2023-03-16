@@ -9,10 +9,10 @@
 #include "utils/util.h"
 
 #include <QDebug>
-#include <QRegularExpression>
 #include <QVector3D>
 #include <algorithm>
 #include <cctype>
+#include <fmt/core.h>
 #include <limits>
 #include <string_view>
 
@@ -22,21 +22,34 @@
 * In that way all speed values become a ratio of the provided speed
 * and don't get overridden with just a fixed speed.
 */
-Command GcodePreprocessorUtils::overrideSpeed(CommandView com, double speed, double *original) {
-    QString command = toQString(com);
-    static QRegularExpression re("[Ff]([0-9.]+)");
+Command GcodePreprocessorUtils::overrideSpeed(CommandView input, double speedPercentage, double *original)
+{
+    Command command;
+    command.reserve(input.size());
+    auto it = input.begin();
 
-    auto match = re.match(command);
-    if (match.hasMatch()) {
-        Q_ASSERT(command.count(re) == 1); // otherwise all matches would get overridden with first match
-        auto const orig_val = match.captured(1).toDouble();
-        command.replace(re, QString("F%1").arg(orig_val / 100.0 * speed));
+    while (it != input.end()) {
+        auto next_f = std::find_if(it, input.end(), [](char c) { return c == 'F' || c == 'f'; });
+        command.append(it, next_f);
 
-        if (original) *original = orig_val;
+        if (next_f != input.end()) {
+            auto start = next_f + 1;
+            auto end = std::find_if(start, input.end(), [](char c) { return !std::isdigit(c) && c != '.'; });
+            CommandView number_str(start, end);
+
+            double orig_val = AtoF(number_str);
+            if (original) {
+                *original = orig_val;
+            }
+            fmt::format_to(std::back_inserter(command), "F{:.2f}", orig_val / 100.0 * speedPercentage);
+
+            it = end;
+        } else {
+            it = next_f;
+        }
     }
 
-
-    return fromQString(command);
+    return command;
 }
 
 /**
@@ -47,82 +60,96 @@ Command GcodePreprocessorUtils::removeComment(CommandView command)
 {
     Command result;
 
-    auto first = command.begin();
-    auto last = command.end();
+    // Find the semicolon and get the substring until that point
+    CommandView lineUntilSemicolon = command.substr(0, command.find(';'));
 
-    while (first != last) {
-        auto [_f, _l] = Util::copy_while(first, last, std::back_inserter(result),
-                                         [](char c) {
-                                             return c != '(' && c != ';' && !std::isspace(c);
-                                         });
-        first = _f;
-        if (first == last || *first == ';') return result;
+    // Remove comments in parentheses and copy the remaining characters
+    bool inComment = false;
+    std::copy_if(lineUntilSemicolon.begin(), lineUntilSemicolon.end(), std::back_inserter(result),
+                 [&inComment](char c) {
+                     if (c == '(') {
+                         inComment = true;
+                     } else if (c == ')') {
+                         inComment = false;
+                         return false;
+                     }
+                     return !inComment && !std::isspace(c);
+                 });
 
-        if (*first == '(') {
-            first = std::find_if(++first, last, [](char c) {
-                return c == ')';
-            });
-            if (first != last) {
-                ++first; // skip ')'
-            }
-        } else if (std::isspace(*first)) {
-            first = std::find_if_not(first, last, [](char c) {
-                return std::isspace(c);
-            });
-        }
-    }
     return result;
-//    int pos;
-//
-//    // Remove any comments within first ( and last )
-//    pos = command.indexOf('(');
-//    if (pos >= 0) {
-//        int pos2 = command.lastIndexOf(')', pos + 1);
-//        command.remove(pos, pos2 - pos + 1);
-//    }
-//
-//    // Remove any comment beginning with ';'
-//    pos = command.indexOf(';');
-//    if (pos >= 0)
-//        command.truncate(pos);
-//
-//    return command.trimmed();
 }
 
 /**
 * Searches for a comment in the input string and returns the first match.
 */
-QString GcodePreprocessorUtils::parseComment(QString command)
+Command GcodePreprocessorUtils::parseComment(CommandView command)
 {
-    // REGEX: Find any comment, includes the comment characters:
-    // "(?<=\()[^\(\)]*|(?<=\;)[^;]*"
-    // "(?<=\\()[^\\(\\)]*|(?<=\\;)[^;]*"
+    std::string firstComment;
 
-    static QRegularExpression re(R"((\([^\(\)]*\)|;[^;].*))");
+    // Find the start of the comment
+    const auto *it = std::find_if(command.begin(), command.end(), [](char c) {
+        return c == '(' || c == ';';
+    });
 
-    auto match = re.match(command);
-    if (match.isValid()) {
-        return match.captured(1);
+    if (it != command.end()) {
+        if (*it == '(') {
+            Util::copy_until(it + 1, command.end(), std::back_inserter(firstComment), [](char c) { return c == ')'; });
+        } else if (*it == ';') {
+            // Copy characters until the end of the line, excluding the semicolon
+            std::copy(it + 1, command.end(), std::back_inserter(firstComment));
+        }
     }
-    return "";
+
+    return firstComment;
 }
 
-Command GcodePreprocessorUtils::truncateDecimals(int length, CommandView com)
+/// \brief returns reformatted string with all decimal numbers truncated to specified number of digits (or less if trailing zeros)
+/// \param decimals number of digits after decimal point
+/// \param input
+/// \return
+Command GcodePreprocessorUtils::truncateDecimals(int decimals, CommandView input)
 {
-    static QRegularExpression re(R"((\d*\.\d*))");
+    Command result;
+    auto pos = input.begin();
 
-    QString command = toQString(com);
+    auto is_number_start = [](char c) { return std::isdigit(c) || c == '-'; };
 
-    int pos = 0;
-    QRegularExpressionMatch match = re.match(command, pos);
-    while ((pos = match.capturedStart(0)) != -1) {
-        QString newNum = QString::number(match.captured(1).toDouble(), 'f', length);
-        command = command.left(pos) + newNum + command.mid(match.capturedEnd(0));
-        pos += newNum.size() + 1;
-        match = re.match(command, pos);
+    while (pos != input.end()) {
+        if (is_number_start(*pos)) {
+            // Found a number
+            auto end = std::find_if_not(pos, input.end(), [](char c) { return std::isdigit(c) || c == '.' || c == '-'; });
+            CommandView number_str(pos, std::distance(pos, end));
+
+            if (number_str.find('.') != std::string_view::npos) {
+                // Decimal number found
+                double number = AtoF(number_str);
+#if 0
+                size_t initial_size = result.size();
+#endif
+                result.append(fmt::format("{:.{}f}", number, decimals));
+
+#if 0
+                // Remove trailing zeros
+                while (result.size() > initial_size && result.back() == '0') {
+                    result.pop_back();
+                }
+                // Remove trailing decimal point
+                if (result.size() > initial_size && result.back() == '.') {
+                    result.pop_back();
+                }
+#endif
+            } else {
+                // Integer found
+                result.append(number_str);
+            }
+            pos = end;
+        } else {
+            result.push_back(*pos);
+            ++pos;
+        }
     }
 
-    return fromQString(command);
+    return result;
 }
 
 Command GcodePreprocessorUtils::removeAllWhitespace(CommandView command)
