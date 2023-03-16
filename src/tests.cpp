@@ -94,4 +94,8 @@ TEST_CASE("splitCommand", "[GcodePreprocessorUtils]")
     REQUIRE(GcodePreprocessorUtils::splitCommand("   G01 (comment   )X0Y0Z0") == std::vector<std::string>{"G01", "X0", "Y0", "Z0"});
     REQUIRE(GcodePreprocessorUtils::splitCommand("G0 X0 Y10 Z200 F123 G0 X0 Y10 Z200 F233") == std::vector<std::string>{"G0", "X0", "Y10", "Z200", "F123", "G0", "X0", "Y10", "Z200", "F233"});
     REQUIRE(GcodePreprocessorUtils::splitCommand("GF0") == std::vector<std::string>{"G", "F0"});
+    REQUIRE(GcodePreprocessorUtils::splitCommand("[GC:G0 G54 G17 G21 G90 G94 M0 M5 M9 T0 S0.0 F500.0]") == std::vector<std::string> { "GC:", "G0", "G54", "G17", "G21", "G90", "G94", "M0", "M5", "M9", "T0",
+                                                                                                                                    "S0.0", "F500.0" });
+    REQUIRE(GcodePreprocessorUtils::splitCommand("$G") == std::vector<std::string>{"$G"});
+    REQUIRE(GcodePreprocessorUtils::splitCommand("X0.5 Y0. I0. J-0.5") == std::vector<std::string>{"X0.5", "Y0.", "I0.", "J-0.5"});
 }
