@@ -229,6 +229,7 @@ if (APPLE)
 endif ()
 
 target_link_libraries(Candle PRIVATE
+        fmt::fmt
         Qt::Core
         Qt::Widgets
         Qt::OpenGL

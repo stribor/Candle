@@ -294,66 +294,6 @@ GCodes GcodePreprocessorUtils::parseGCodeEnum(CommandView arg)
     return v;
 }
 
-GcodePreprocessorUtils::gcodesContainer GcodePreprocessorUtils::parseCodesEnum(CommandList const &args, QChar /*code*/)
-{
-    gcodesContainer l;
-
-    for (auto const &arg : args) {
-        GCodes v;
-        v = parseGCodeEnum(arg);
-        if (v != unknown)
-            l.push_back(v);
-    }
-    return l;
-}
-
-QList<float> GcodePreprocessorUtils::parseCodes(const QStringList &args, QChar code)
-{
-    QList<float> l;
-
-    auto small_c = code.toLower();
-
-    for (auto const &s : args) {
-        if (s.size() > 0 && (s[0] == code || s[0] == small_c)) l.append(s.mid(1).toDouble());
-    }
-
-    return l;
-}
-
-QList<int> GcodePreprocessorUtils::parseGCodes(QString const &command)
-{
-    static QRegularExpression re("[Gg]0*(\\d+)");
-
-    QList<int> codes;
-    int pos = 0;
-
-    QRegularExpressionMatch match = re.match(command, pos);
-    while (match.hasMatch()) {
-        codes.append(match.captured(1).toInt());
-        pos = match.capturedEnd();
-        match = re.match(command, pos);
-    }
-
-    return codes;
-}
-
-QList<int> GcodePreprocessorUtils::parseMCodes(QString const &command)
-{
-    static QRegularExpression re("[Mm]0*(\\d+)");
-
-    QList<int> codes;
-    int pos = 0;
-
-    QRegularExpressionMatch match = re.match(command, pos);
-    while (match.hasMatch()) {
-        codes.append(match.captured(1).toInt());
-        pos = match.capturedEnd();
-        match = re.match(command, pos);
-    }
-
-    return codes;
-}
-
 /**
 * Update a point given the arguments of a command.
 */

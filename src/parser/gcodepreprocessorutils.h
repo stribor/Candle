@@ -62,10 +62,6 @@ namespace GcodePreprocessorUtils
     Command truncateDecimals(int length, CommandView command);
     Command removeAllWhitespace(CommandView command);
     GCodes parseGCodeEnum(CommandView arg);
-    gcodesContainer parseCodesEnum(CommandList const &args, QChar);
-    QList<float> parseCodes(const QStringList &args, QChar code);
-    QList<int> parseGCodes(QString const &command);
-    QList<int> parseMCodes(QString const &command);
     CommandList splitCommand(CommandView command);
     double parseCoord(CommandList const &argList, char c);
     bool parseCoord(CommandView arg, char c, double &outVal);
