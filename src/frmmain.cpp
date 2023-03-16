@@ -3727,7 +3727,7 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
                 } else {
                     // Get commands args
                     auto const &args = m_programModel.data().at(i).args;
-                    QByteArray newCommand;
+                    Command newCommand;
 
                     // Parse command args
                     for (auto &arg : args) {                   // arg examples: G1, G2, M3, X100...
@@ -3771,7 +3771,7 @@ void frmMain::on_chkHeightMapUse_clicked(bool checked)
                                     if (!list.at(j).isMetric()) point /= 25.4;
                                     auto coords = QString("X%1Y%2Z%3")
                                             .arg(point.x(), 0, 'f', 3).arg(point.y(), 0, 'f', 3).arg(point.z(), 0, 'f', 3);
-                                    item.command = newCommand + coords.toUtf8();
+                                    item.command = newCommand + fromQString(coords);
                                     modelData.push_back(item);
 
                                     newCommand.clear();

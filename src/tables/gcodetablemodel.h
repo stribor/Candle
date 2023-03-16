@@ -20,6 +20,8 @@ struct GCodeItem
     States state;
 };
 
+Q_DECLARE_METATYPE(CommandList)
+
 class GCodeTableModel : public QAbstractTableModel
 {
     Q_OBJECT

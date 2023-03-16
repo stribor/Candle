@@ -48,7 +48,7 @@ using CommandView = std::string_view;
 using CommandList = std::vector<std::string>;
 
 inline Command fromQString(QString const &str) { return str.toStdString(); }
-inline QString toQString(CommandView str) { return QString::fromUtf8(str); }
+inline QString toQString(CommandView str) { return QString::fromUtf8(str.data(), str.size()); }
 inline bool commandContains(CommandView str, CommandView lookFor) { return str.find(lookFor) != Command::npos; }
 
 namespace GcodePreprocessorUtils
