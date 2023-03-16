@@ -17,8 +17,8 @@
 #include <string_view>
 
 /**
-* Searches the command string for an 'f' and replaces the speed value
-* between the 'f' and the next space with a percentage of that speed.
+* Searches the gcode command string for an 'F' and replaces the speed value
+* between the 'F' and the next space with a percentage of that speed.
 * In that way all speed values become a ratio of the provided speed
 * and don't get overridden with just a fixed speed.
 */
@@ -186,6 +186,9 @@ GCodes GcodePreprocessorUtils::parseGCodeEnum(CommandView arg)
         case '3':
             v = G03;
             break;
+        case '5':
+            v = G05;
+            break;
         case '7':
             v = G07;
             break;
@@ -209,6 +212,9 @@ GCodes GcodePreprocessorUtils::parseGCodeEnum(CommandView arg)
                 break;
             case '3':
                 v = G03;
+                break;
+            case '5':
+                v = G05;
                 break;
             case '7':
                 v = G07;
@@ -518,9 +524,9 @@ bool GcodePreprocessorUtils::parseCoord(CommandView arg, char c, double &outVal)
         outVal = AtoF(arg.data() + 1);
         return true;
     }
-//    outVal = qQNaN();
     return false;
 }
+
 // TODO: Replace everything that uses this with a loop that loops through
 // the string and creates a hash with all the values.
 double GcodePreprocessorUtils::parseCoord(CommandList const &argList, char c)
@@ -592,11 +598,10 @@ double GcodePreprocessorUtils::getAngle(QVector3D start, QVector3D end)
             angle = M_PI - fabs(atan(deltaY / deltaX));
         } else if (deltaX < 0 && deltaY < 0) {// 180 - 270
             angle = M_PI + fabs(atan(deltaY / deltaX));
-        } else if (deltaX > 0 && deltaY < 0) { // 270 - 360
+        } else if (deltaX > 0 && deltaY < 0) {// 270 - 360
             angle = M_PI * 2 - fabs(atan(deltaY / deltaX));
         }
-    }
-    else {
+    } else {
         // 90 deg
         if (deltaY > 0) {
             angle = M_PI / 2.0;
@@ -690,7 +695,7 @@ GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegment::planes plane,
         if (arcPrecision <= 0 && minArcLength > 0) {
             arcPrecision = minArcLength;
         }
-        numPoints = (int)ceil(arcLength/arcPrecision);
+        numPoints = (int) ceil(arcLength / arcPrecision);
     }
 
     return generatePointsAlongArcBDring(plane, start, end, center, clockwise, radius, startAngle, sweep, numPoints);
@@ -701,9 +706,9 @@ GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegment::planes plane,
 */
 GcodePreprocessorUtils::vectoContainer
 GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegment::planes plane, QVector3D p1, QVector3D p2,
-                                                                      QVector3D center, bool isCw,
-                                                                      double radius, double startAngle,
-                                                                      double sweep, int numPoints)
+                                                     QVector3D center, bool isCw,
+                                                     double radius, double startAngle,
+                                                     double sweep, int numPoints)
 {
     // Prepare rotation matrix to restore plane
     QMatrix4x4 m;
@@ -725,12 +730,11 @@ GcodePreprocessorUtils::generatePointsAlongArcBDring(PointSegment::planes plane,
 
     // Calculate radius if necessary.
     if (radius == 0) {
-        radius = sqrt(pow((double)(p1.x() - center.x()), 2.0) + pow((double)(p1.y() - center.y()), 2.0));
+        radius = sqrt(pow((double) (p1.x() - center.x()), 2.0) + pow((double) (p1.y() - center.y()), 2.0));
     }
 
     double const zIncrement = (p2.z() - p1.z()) / numPoints;
-    for (int i = 1; i < numPoints; i++)
-    {
+    for (int i = 1; i < numPoints; i++) {
         if (isCw) {
             angle = (startAngle - i * sweep / numPoints);
         } else {
@@ -763,7 +767,6 @@ bool GcodePreprocessorUtils::has_M2_M30(const CommandList &commandList)
                            }
                            return false;
                        });
-
 }
 
 double GcodePreprocessorUtils::AtoF(std::string_view str)
