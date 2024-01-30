@@ -139,8 +139,8 @@ frmMain::frmMain(QWidget *parent) :
 
     ui->cboJogStep->setValidator(new QDoubleValidator(0, 10000, 2));
     ui->cboJogFeed->setValidator(new QIntValidator(0, 100000));
-    connect(ui->cboJogStep, &ComboBoxKey::currentTextChanged, [=] (const QString&) {updateJogTitle();});
-    connect(ui->cboJogFeed, &ComboBoxKey::currentTextChanged, [=] (const QString&) {updateJogTitle();});
+    connect(ui->cboJogStep, &ComboBoxKey::currentTextChanged, [this] (const QString&) {updateJogTitle();});
+    connect(ui->cboJogFeed, &ComboBoxKey::currentTextChanged, [this] (const QString&) {updateJogTitle();});
 
     // Prepare "Send"-button
     ui->cmdFileSend->setMinimumWidth(qMax(ui->cmdFileSend->width(), ui->cmdFileOpen->width()));
@@ -162,10 +162,10 @@ frmMain::frmMain(QWidget *parent) :
     ui->slbFeedOverride->setTitle(tr("Feed rate:"));
     ui->slbFeedOverride->setSuffix("%");
     connect(ui->slbFeedOverride, &SliderBox::toggled, this, &frmMain::onOverridingToggled);
-    connect(ui->slbFeedOverride, &SliderBox::toggled, [=] {
+    connect(ui->slbFeedOverride, &SliderBox::toggled, [this] {
         updateProgramEstimatedTime(m_currentDrawer->viewParser()->getLineSegmentList());
     });
-    connect(ui->slbFeedOverride, &SliderBox::valueChanged, [=] {
+    connect(ui->slbFeedOverride, &SliderBox::valueChanged, [this] {
         updateProgramEstimatedTime(m_currentDrawer->viewParser()->getLineSegmentList());
     });
 
@@ -176,10 +176,10 @@ frmMain::frmMain(QWidget *parent) :
     ui->slbRapidOverride->setTitle(tr("Rapid speed:"));
     ui->slbRapidOverride->setSuffix("%");
     connect(ui->slbRapidOverride, &SliderBox::toggled, this, &frmMain::onOverridingToggled);
-    connect(ui->slbRapidOverride, &SliderBox::toggled, [=] {
+    connect(ui->slbRapidOverride, &SliderBox::toggled, [this] {
         updateProgramEstimatedTime(m_currentDrawer->viewParser()->getLineSegmentList());
     });
-    connect(ui->slbRapidOverride, &SliderBox::valueChanged, [=] {
+    connect(ui->slbRapidOverride, &SliderBox::valueChanged, [this] {
         updateProgramEstimatedTime(m_currentDrawer->viewParser()->getLineSegmentList());
     });
 
@@ -230,7 +230,7 @@ frmMain::frmMain(QWidget *parent) :
     connect(&m_programModel, &GCodeTableModel::dataChanged, this,  &frmMain::onTableCellChanged);
     connect(&m_programHeightmapModel, &GCodeTableModel::dataChanged, this, &frmMain::onTableCellChanged);
     connect(&m_probeModel, &GCodeTableModel::dataChanged, this, &frmMain::onTableCellChanged);
-    connect(&m_heightMapModel, &HeightMapTableModel::dataChangedByUserInput, this, [=](){updateHeightMapInterpolationDrawer();});
+    connect(&m_heightMapModel, &HeightMapTableModel::dataChangedByUserInput, this, [this](){updateHeightMapInterpolationDrawer();});
 
     ui->tblProgram->setModel(&m_programModel);
     ui->tblProgram->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Stretch);
@@ -264,8 +264,8 @@ frmMain::frmMain(QWidget *parent) :
     ui->slbSpindle->setTitle(tr("Speed:"));
     ui->slbSpindle->setCheckable(false);
     ui->slbSpindle->setChecked(true);
-    connect(ui->slbSpindle, &SliderBox::valueUserChanged, [=] {m_updateSpindleSpeed = true;});
-    connect(ui->slbSpindle, &SliderBox::valueChanged, [=] {
+    connect(ui->slbSpindle, &SliderBox::valueUserChanged, [this] {m_updateSpindleSpeed = true;});
+    connect(ui->slbSpindle, &SliderBox::valueChanged, [this] {
         if (!ui->grpSpindle->isChecked() && ui->cmdSpindle->isChecked())
             ui->grpSpindle->setTitle(tr("Spindle") + QString(tr(" (%1)")).arg(ui->slbSpindle->value()));
     });
