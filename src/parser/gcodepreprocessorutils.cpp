@@ -155,7 +155,7 @@ Command GcodePreprocessorUtils::truncateDecimals(int decimals, CommandView input
 Command GcodePreprocessorUtils::removeAllWhitespace(CommandView command)
 {
     Command result;
-    std::remove_copy_if(command.begin(), command.end(), std::back_inserter(result), std::isspace);
+    std::remove_copy_if(command.begin(), command.end(), std::back_inserter(result), [](unsigned char c) { return std::isspace(c); });
 
     return result;
 }
